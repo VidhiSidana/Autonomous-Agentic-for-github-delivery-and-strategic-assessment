@@ -267,4 +267,4 @@ Implemented and tested:
 **Chintan Sood**
 
 GitHub: [VidhiSidana](https://github.com/VidhiSidana)
-GitHub: [VidhiSidana](https://github.com/chintansood)
+GitHub: [ChintanSood](https://github.com/chintansood)
