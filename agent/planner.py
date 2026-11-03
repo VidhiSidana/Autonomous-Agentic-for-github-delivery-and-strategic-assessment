@@ -5,57 +5,53 @@ class AgentPlanner:
 
         query = user_input.lower()
 
-        # Code analysis requests
-        if any(word in query for word in [
-            "function",
-            "code",
-            "caller",
-            "callers",
-            "source code",
-            "module"
-        ]):
-            return "code_analysis"
-
-        # Binary analysis requests
-        elif any(word in query for word in [
-            "binary",
-            "executable",
-            "decompile",
-            "assembly",
-            "disassembly"
-        ]):
-            return "binary_analysis"
-
-        # Memory requests
-        elif any(word in query for word in [
+        # Memory-related queries
+        memory_keywords = [
             "remember",
             "save finding",
             "retrieve",
             "recall",
-            "memory"
-        ]):
+            "memory",
+            "search finding"
+        ]
+
+        if any(word in query for word in memory_keywords):
             return "memory"
 
-        # General requests
-        else:
-            return "general"
+        # Binary analysis queries
+        binary_keywords = [
+            "binary",
+            "executable",
+            "disassembly",
+            "disassemble",
+            "decompile",
+            "assembly",
+            "reverse engineering"
+        ]
 
+        if any(word in query for word in binary_keywords):
+            return "binary_analysis"
 
-if __name__ == "__main__":
+        # Code analysis queries
+        code_keywords = [
+            "source code",
+            "code analysis",
+            "find function",
+            "function",
+            "functions",
+            "caller",
+            "callers",
+            "calls",
+            "who calls",
+            "call ",
+            "module",
+            "modules",
+            "python file",
+            "codebase"
+        ]
 
-    planner = AgentPlanner()
+        if any(word in query for word in code_keywords):
+            return "code_analysis"
 
-    test_queries = [
-        "Find the callers of main function",
-        "Inspect this binary executable",
-        "Remember this engineering finding",
-        "Explain what MCP means"
-    ]
+        return "general"
 
-    for query in test_queries:
-
-        category = planner.plan(query)
-
-        print(f"Query: {query}")
-        print(f"Category: {category}")
-        print("-" * 40)

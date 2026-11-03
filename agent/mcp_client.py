@@ -1,68 +1,68 @@
 
 import asyncio
+import sys
+from pathlib import Path
+
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client, StdioServerParameters
 
 
-class MCPClient:
+async def call_mcp_tool(tool_name, arguments, server="test"):
+    """Connect to the selected MCP server and execute a tool."""
 
-    def __init__(self):
-        self.session = None
-        self.exit_stack = None
+    project_root = Path(__file__).resolve().parent.parent
 
-    async def connect_to_server(self, command, args):
-        """
-        Connect to an MCP server using stdio.
-        """
-
-        server_params = StdioServerParameters(
-            command=command,
-            args=args
+    if server == "code":
+        server_path = (
+            project_root / "code_analysis" / "code_server.py"
         )
 
-        self.exit_stack = stdio_client(server_params)
+    elif server == "binary":
+        server_path = (
+            project_root / "binary_analysis" / "binary_server.py"
+        )
 
-        read, write = await self.exit_stack.__aenter__()
+    elif server == "test":
+        server_path = (
+            project_root / "mcp_server" / "test_server.py"
+        )
 
-        self.session = ClientSession(read, write)
+    else:
+        raise ValueError(f"Unknown MCP server: {server}")
 
-        await self.session.__aenter__()
+    server_params = StdioServerParameters(
+        command=sys.executable,
+        args=[str(server_path)]
+    )
 
-        await self.session.initialize()
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
 
-        print("Connected to MCP server successfully!")
+            result = await session.call_tool(
+                tool_name,
+                arguments=arguments
+            )
 
-    async def list_tools(self):
-        """
-        Retrieve the available tools from the MCP server.
-        """
+            return result
 
-        if self.session is None:
-            print("Not connected to an MCP server.")
-            return []
 
-        result = await self.session.list_tools()
+async def main():
+    print("Testing Binary Analysis MCP Server...")
 
-        print("\nAvailable MCP Tools:")
+    result = await call_mcp_tool(
+        "analyze_binary",
+        {
+            "binary_path": "C:\\Windows\\System32\\notepad.exe"
+        },
+        server="binary"
+    )
 
-        for tool in result.tools:
-            print(f"- {tool.name}: {tool.description}")
-
-        return result.tools
-
-    async def disconnect(self):
-        """
-        Disconnect from the MCP server.
-        """
-
-        if self.exit_stack is not None:
-            await self.exit_stack.__aexit__(None, None, None)
-
-        self.session = None
-        self.exit_stack = None
-
-        print("Disconnected from MCP server.")
+    print("\nBinary Analysis Result:")
+    print(result)
 
 
 if __name__ == "__main__":
-    print("MCP Client module loaded successfully!")
+    asyncio.run(main())
+
+
