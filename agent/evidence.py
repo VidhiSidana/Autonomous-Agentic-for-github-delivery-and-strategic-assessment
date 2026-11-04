@@ -35,7 +35,8 @@ class EvidenceItem:
     kind: EvidenceKind
     source: str                   # e.g. "code_fallback.find_callers"
     summary: str                  # human-readable summary
-    detail: str = ""              # raw tool output or extended detail
+    detail: str = ""              # processed tool output or extended detail
+    raw_output: str = ""          # exact raw tool response for traceability
     file_path: Optional[str] = None
     line_number: Optional[int] = None
     function_name: Optional[str] = None
@@ -121,14 +122,19 @@ def normalise_code_result(
 ) -> EvidenceItem:
     """
     Convert a raw code-analysis tool result into an EvidenceItem.
-    Automatically parses structured JSON output to extract location references.
+    Extracts verified file paths, line numbers, and symbol names safely.
+    Preserves exact raw tool response for traceability.
     """
+    import re
+    import json
+
     if is_error or not text.strip():
         return EvidenceItem(
             kind=EvidenceKind.LIMITATION,
             source=f"{server_name}.{tool_name}",
             summary=f"Tool '{tool_name}' returned no results or an error.",
             detail=text,
+            raw_output=text,
             tool_name=tool_name,
             server_name=server_name,
         )
@@ -138,6 +144,7 @@ def normalise_code_result(
         source=f"{server_name}.{tool_name}",
         summary=f"Code analysis via '{tool_name}' succeeded.",
         detail=text,
+        raw_output=text,
         tool_name=tool_name,
         server_name=server_name,
     )
@@ -152,11 +159,18 @@ def normalise_code_result(
                     item.line_number = first.get("line") or first.get("call_site_line")
                     item.function_name = first.get("name") or first.get("caller")
             elif "target_file" in data:
-                item.file_path = data.get("target_file")
+                item.file_path = str(data.get("target_file"))
             elif "file" in data:
-                item.file_path = data.get("file")
+                item.file_path = str(data.get("file"))
     except Exception:
-        pass
+        # If text is not JSON, check for structured table/BM25 output
+        match = re.search(r"\b([\w./\-]+\.py)\s+(\d+)", text)
+        if match:
+            item.file_path = match.group(1)
+            try:
+                item.line_number = int(match.group(2))
+            except ValueError:
+                pass
 
     return item
 
@@ -169,24 +183,54 @@ def normalise_binary_result(
 ) -> EvidenceItem:
     """
     Convert a raw binary-analysis tool result into an EvidenceItem.
+    Extracts entry point, sections, architecture, and file paths safely.
+    Preserves raw response for traceability.
     """
+    import json
+
     if is_error or not text.strip():
         return EvidenceItem(
             kind=EvidenceKind.LIMITATION,
             source=f"{server_name}.{tool_name}",
             summary=f"Binary tool '{tool_name}' returned no results or an error.",
             detail=text,
+            raw_output=text,
             tool_name=tool_name,
             server_name=server_name,
         )
-    return EvidenceItem(
+
+    item = EvidenceItem(
         kind=EvidenceKind.VERIFIED,
         source=f"{server_name}.{tool_name}",
         summary=f"Binary analysis via '{tool_name}' succeeded.",
         detail=text,
+        raw_output=text,
         tool_name=tool_name,
         server_name=server_name,
     )
+
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict):
+            if data.get("file_path"):
+                item.file_path = str(data["file_path"])
+            elif data.get("file"):
+                item.file_path = str(data["file"])
+
+            if data.get("entry_point_rva"):
+                item.binary_address = str(data["entry_point_rva"])
+            elif data.get("entry_point"):
+                item.binary_address = str(data["entry_point"])
+            elif data.get("disassembly_base"):
+                item.binary_address = str(data["disassembly_base"])
+
+            if data.get("exported_functions") and isinstance(data["exported_functions"], list):
+                if len(data["exported_functions"]) > 0 and isinstance(data["exported_functions"][0], dict):
+                    item.function_name = data["exported_functions"][0].get("name")
+    except Exception:
+        pass
+
+    return item
 
 
 def normalise_memory_result(

@@ -73,31 +73,35 @@ class TestBinaryAnalysisServer(unittest.TestCase):
         self.assertTrue(data["zero_execution_guarantee"])
 
     def test_rea_adapter_live_invocation(self):
-        import stat
         from binary_analysis.rea_adapter import REAAdapter
 
         # Create mock target binary
         sample_bin = self.bin_dir / "target.exe"
         sample_bin.write_bytes(b"MZ\x90\x00fake")
 
-        # 1. Create a mock REA executable that returns valid JSON analysis
-        mock_rea = self.bin_dir / "mock_rea.sh"
-        mock_rea.write_text('#!/bin/sh\necho \'{"engine":"MockREA","decompiled_symbols":["sym_main","sym_auth"]}\'', encoding="utf-8")
-        mock_rea.chmod(mock_rea.stat().st_mode | stat.S_IEXEC)
+        # 1. Default state without supervisor-provided runner -> PENDING_EXTERNAL_DEPENDENCY
+        adapter_default = REAAdapter()
+        res_default = adapter_default.analyze(str(sample_bin), operation="metadata")
+        self.assertFalse(res_default["success"])
+        self.assertEqual(res_default["status"], "PENDING_EXTERNAL_DEPENDENCY")
+        self.assertTrue(res_default["fallback_recommended"])
 
-        adapter = REAAdapter(endpoint_or_binary=str(mock_rea))
+        # 2. When verified runner is provisioned and succeeds
+        def mock_rea_runner(path: str, op: str) -> dict:
+            return {"success": True, "data": {"engine": "VerifiedREA", "decompiled_symbols": ["sym_main", "sym_auth"]}}
+
+        adapter = REAAdapter(custom_runner=mock_rea_runner)
         res = adapter.analyze(str(sample_bin), operation="metadata")
         self.assertTrue(res["success"])
         self.assertEqual(res["status"], "REA_OPERATIONAL")
-        self.assertEqual(res["results"]["engine"], "MockREA")
+        self.assertEqual(res["results"]["engine"], "VerifiedREA")
         self.assertEqual(res["active_engine"], "REA")
 
-        # 2. When mock REA fails
-        failing_rea = self.bin_dir / "failing_rea.sh"
-        failing_rea.write_text('#!/bin/sh\n>&2 echo "REA Internal Decompiler Crash"\nexit 1', encoding="utf-8")
-        failing_rea.chmod(failing_rea.stat().st_mode | stat.S_IEXEC)
+        # 3. When verified runner returns failure
+        def mock_failing_runner(path: str, op: str) -> dict:
+            return {"success": False, "error": "REA internal error"}
 
-        adapter_fail = REAAdapter(endpoint_or_binary=str(failing_rea))
+        adapter_fail = REAAdapter(custom_runner=mock_failing_runner)
         res_fail = adapter_fail.analyze(str(sample_bin), operation="metadata")
         self.assertFalse(res_fail["success"])
         self.assertEqual(res_fail["status"], "FAILED")

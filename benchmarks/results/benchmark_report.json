@@ -1,17 +1,25 @@
 {
-  "timestamp_utc": "2026-11-04T08:31:26.478626+00:00",
+  "timestamp_utc": "2026-11-04T08:49:14.800710+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 8,
   "passed_tasks": 8,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.2436,
+  "average_elapsed_seconds": 0.1591,
+  "cross_process_persistence": {
+    "success": true,
+    "process_a_exit": 0,
+    "process_b_exit": 0,
+    "items_retrieved": 2,
+    "content_verified": true,
+    "status_verified": true
+  },
   "results": [
     {
       "task_id": "C1",
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 0.8512,
+      "elapsed_seconds": 0.8387,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -21,7 +29,7 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.0407,
+      "elapsed_seconds": 0.0427,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -31,7 +39,7 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0064,
+      "elapsed_seconds": 0.0068,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -41,7 +49,7 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.3545,
+      "elapsed_seconds": 0.3417,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -61,7 +69,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0017,
+      "elapsed_seconds": 0.0014,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -71,8 +79,8 @@
       "category": "memory",
       "description": "Cross-session retrieval of verified finding",
       "passed": true,
-      "elapsed_seconds": 0.001,
-      "evidence_count": 1,
+      "elapsed_seconds": 0.0015,
+      "evidence_count": 2,
       "limitations_count": 0,
       "reasons": []
     },
@@ -81,10 +89,23 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.6927,
-      "evidence_count": 3,
+      "elapsed_seconds": 0.039,
+      "evidence_count": 2,
       "limitations_count": 0,
-      "reasons": []
+      "reasons": [],
+      "multi_tool_execution": {
+        "code_branch": {
+          "tool": "find_functions",
+          "success": true,
+          "source": "code_fallback.find_functions"
+        },
+        "binary_branch": {
+          "tool": "find_binary_functions",
+          "success": true,
+          "source": "binary.find_binary_functions",
+          "file": "/users/chintansood7/samsung prism/autonomous-agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/sample_authorized.exe"
+        }
+      }
     }
   ]
 }

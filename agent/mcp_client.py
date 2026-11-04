@@ -106,7 +106,13 @@ def _build_server_params(config: dict) -> StdioServerParameters:
         for arg in config.get("args", [])
     ]
 
-    return StdioServerParameters(command=command, args=args)
+    import os
+    env = dict(os.environ)
+    import config.settings
+    if config.settings.BINARY_ALLOWED_DIRS:
+        env["BINARY_ALLOWED_DIRS"] = ",".join(str(p) for p in config.settings.BINARY_ALLOWED_DIRS)
+
+    return StdioServerParameters(command=command, args=args, env=env)
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +176,7 @@ class MCPClientManager:
             session = ClientSession(read, write)
             await session.__aenter__()
             await session.initialize()
-            self._sessions[server_name] = (cm, session)
+            self._sessions[server_name] = (cm, session, write)
             logger.info("Connected to MCP server '%s'.", server_name)
             return session
         except Exception as exc:
@@ -325,18 +331,30 @@ class MCPClientManager:
         )
 
     async def disconnect(self, server_name: str) -> None:
-        """Close the session for a specific server cleanly with timeouts."""
+        """Close the session for a specific server cleanly with timeouts and stream closure."""
         if server_name not in self._sessions:
             return
-        cm, session = self._sessions.pop(server_name)
+        session_info = self._sessions.pop(server_name)
+        cm = session_info[0]
+        session = session_info[1]
+        write = session_info[2] if len(session_info) > 2 else None
+
         try:
-            await asyncio.wait_for(session.__aexit__(None, None, None), timeout=2.0)
+            await asyncio.wait_for(session.__aexit__(None, None, None), timeout=1.0)
         except (asyncio.TimeoutError, BaseException) as exc:
             logger.debug("Session aexit on '%s': %s", server_name, exc)
+
+        if write and hasattr(write, "aclose"):
+            try:
+                await write.aclose()
+            except BaseException as exc:
+                logger.debug("Write stream aclose on '%s': %s", server_name, exc)
+
         try:
-            await asyncio.wait_for(cm.__aexit__(None, None, None), timeout=2.0)
+            await asyncio.wait_for(cm.__aexit__(None, None, None), timeout=1.0)
         except (asyncio.TimeoutError, BaseException) as exc:
             logger.debug("Context manager aexit on '%s': %s", server_name, exc)
+
         logger.info("Disconnected from MCP server '%s'.", server_name)
         self._tool_cache.pop(server_name, None)
         self._tool_schemas.pop(server_name, None)

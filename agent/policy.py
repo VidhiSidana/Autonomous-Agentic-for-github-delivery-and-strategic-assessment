@@ -76,14 +76,21 @@ def redact_secrets(text: str) -> str:
 
 def _get_allowed_dirs() -> list[Path]:
     """
-    Load the binary allowlist from configuration.
+    Load the binary allowlist from configuration and environment.
     Falls back to an empty list (deny all) if not configured.
     Returns resolved absolute Path objects.
     """
-    # Import here to avoid circular imports
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from config.settings import BINARY_ALLOWED_DIRS
-    return [Path(d).resolve() for d in BINARY_ALLOWED_DIRS]
+    import config.settings
+    dirs = [Path(d).resolve() for d in config.settings.BINARY_ALLOWED_DIRS]
+
+    env_raw = os.getenv("BINARY_ALLOWED_DIRS", "")
+    if env_raw:
+        for d in env_raw.split(","):
+            if d.strip():
+                p = Path(d.strip()).resolve()
+                if p not in dirs:
+                    dirs.append(p)
+    return dirs
 
 
 def authorize_binary_path(binary_path: str) -> tuple[bool, str]:
@@ -128,7 +135,13 @@ def authorize_binary_path(binary_path: str) -> tuple[bool, str]:
             resolved.relative_to(allowed)
             return True, f"Authorized: path is within '{allowed}'."
         except ValueError:
-            continue
+            pass
+
+        # Handle case-insensitive filesystems (such as macOS APFS / Windows NTFS)
+        res_str = str(resolved).lower()
+        all_str = str(allowed).lower().rstrip(os.sep) + os.sep
+        if res_str.startswith(all_str) or res_str == str(allowed).lower():
+            return True, f"Authorized: path is within '{allowed}'."
 
     readable_dirs = ", ".join(str(d) for d in allowed_dirs)
     return False, (

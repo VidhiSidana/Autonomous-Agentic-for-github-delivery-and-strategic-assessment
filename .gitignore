@@ -5,3 +5,4 @@ __pycache__/
 memory/*.db
 memory/*.log
 benchmarks/results/*.db
+benchmarks/results/*.exe
