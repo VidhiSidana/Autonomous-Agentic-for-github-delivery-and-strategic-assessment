@@ -21,7 +21,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pefile
 from capstone import Cs, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
@@ -108,7 +108,8 @@ def analyze_binary(binary_path: str) -> str:
             })
 
         rea = REAAdapter()
-        rea_available, rea_msg = rea.is_rea_available()
+        rea_result = rea.analyze(str(file_path), operation="metadata")
+        rea_operational = (rea_result.get("status") == "REA_OPERATIONAL")
 
         data = {
             "file_name": file_path.name,
@@ -122,11 +123,9 @@ def analyze_binary(binary_path: str) -> str:
             "subsystem": getattr(pe.OPTIONAL_HEADER, "Subsystem", "Unknown"),
             "sections": sections,
             "evidence_type": "PE_METADATA",
-            "rea_integration": {
-                "status": "OPERATIONAL" if rea_available else "PENDING_EXTERNAL_DEPENDENCY",
-                "message": rea_msg,
-                "active_engine": "REA" if rea_available else "pefile/Capstone static fallback",
-            },
+            "rea_integration": rea_result,
+            "active_engine": "REA" if rea_operational else "pefile/Capstone static fallback",
+            "rea_analysis": rea_result.get("results") if rea_operational else None,
         }
 
         write_audit_event(
@@ -160,6 +159,26 @@ def analyze_binary(binary_path: str) -> str:
             extra=str(exc),
         )
         return json.dumps({"error": f"Binary analysis failed: {exc}"})
+
+
+@mcp.tool()
+def query_rea_status(binary_path: Optional[str] = None) -> str:
+    """
+    Query the active status, health, and availability of the Reverse-Engineering Analysis (REA) engine.
+    Optionally test REA analysis against an authorized target binary.
+    """
+    rea = REAAdapter()
+    if binary_path:
+        res = rea.analyze(binary_path, operation="status_check")
+        return json.dumps(res, indent=2)
+    available, msg = rea.is_rea_available()
+    return json.dumps({
+        "rea_configured": available,
+        "status": "OPERATIONAL" if available else "PENDING_EXTERNAL_DEPENDENCY",
+        "message": msg,
+        "fallback_engine": "pefile/Capstone static fallback",
+        "zero_execution_guarantee": True,
+    }, indent=2)
 
 
 @mcp.tool()
@@ -211,9 +230,23 @@ def find_binary_functions(binary_path: str) -> str:
             "limitation": "Listing only reflects exported symbols. Internal static functions require full decompiler.",
         }, indent=2)
 
-    except pefile.PEFormatError:
-        return json.dumps({"error": "Invalid or unsupported Windows PE binary."})
+    except pefile.PEFormatError as e:
+        write_audit_event(
+            operation="find_binary_functions",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="INVALID_PE",
+            extra=str(e),
+        )
+        return json.dumps({"error": "Invalid or unsupported Windows PE binary.", "details": str(e)})
     except Exception as exc:
+        write_audit_event(
+            operation="find_binary_functions",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="ERROR",
+            extra=str(exc),
+        )
         return json.dumps({"error": f"Export discovery failed: {exc}"})
 
 
@@ -229,6 +262,12 @@ def find_binary_imports(binary_path: str) -> str:
     try:
         pe = pefile.PE(str(file_path))
         if not hasattr(pe, "DIRECTORY_ENTRY_IMPORT"):
+            write_audit_event(
+                operation="find_binary_imports",
+                target_path=str(file_path),
+                authorized=True,
+                result_status="NO_IMPORTS",
+            )
             return json.dumps({
                 "file": file_path.name,
                 "imports": [],
@@ -266,9 +305,23 @@ def find_binary_imports(binary_path: str) -> str:
             "evidence_type": "PE_IMPORTS",
         }, indent=2)
 
-    except pefile.PEFormatError:
-        return json.dumps({"error": "Invalid or unsupported Windows PE binary."})
+    except pefile.PEFormatError as e:
+        write_audit_event(
+            operation="find_binary_imports",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="INVALID_PE",
+            extra=str(e),
+        )
+        return json.dumps({"error": "Invalid or unsupported Windows PE binary.", "details": str(e)})
     except Exception as exc:
+        write_audit_event(
+            operation="find_binary_imports",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="ERROR",
+            extra=str(exc),
+        )
         return json.dumps({"error": f"Import extraction failed: {exc}"})
 
 
@@ -305,6 +358,13 @@ def extract_binary_strings(binary_path: str, min_length: int = 5, limit: int = 6
         }, indent=2)
 
     except Exception as exc:
+        write_audit_event(
+            operation="extract_binary_strings",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="ERROR",
+            extra=str(exc),
+        )
         return json.dumps({"error": f"String extraction failed: {exc}"})
 
 
@@ -326,6 +386,13 @@ def disassemble_binary(binary_path: str, max_instructions: int = 50) -> str:
         elif machine == 0x8664:
             md = Cs(CS_ARCH_X86, CS_MODE_64)
         else:
+            write_audit_event(
+                operation="disassemble_binary",
+                target_path=str(file_path),
+                authorized=True,
+                result_status="UNSUPPORTED_ARCH",
+                extra=f"Machine {hex(machine)}",
+            )
             return json.dumps({
                 "error": f"Unsupported machine architecture for Capstone disassembly: {hex(machine)}",
                 "supported": ["x86 (0x14c)", "x64 (0x8664)"],
@@ -367,9 +434,23 @@ def disassemble_binary(binary_path: str, max_instructions: int = 50) -> str:
             "limitation": "Disassembly starts at entry point offset; internal non-contiguous procedures are not mapped.",
         }, indent=2)
 
-    except pefile.PEFormatError:
-        return json.dumps({"error": "Invalid or unsupported Windows PE binary."})
+    except pefile.PEFormatError as e:
+        write_audit_event(
+            operation="disassemble_binary",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="INVALID_PE",
+            extra=str(e),
+        )
+        return json.dumps({"error": "Invalid or unsupported Windows PE binary.", "details": str(e)})
     except Exception as exc:
+        write_audit_event(
+            operation="disassemble_binary",
+            target_path=str(file_path),
+            authorized=True,
+            result_status="ERROR",
+            extra=str(exc),
+        )
         return json.dumps({"error": f"Disassembly failed: {exc}"})
 
 

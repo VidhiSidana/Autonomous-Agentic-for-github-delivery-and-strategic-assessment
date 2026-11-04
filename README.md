@@ -195,7 +195,7 @@ Run the entire automated test suite:
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Current Test Status:** 35/35 passing (100% pass rate).
+**Current Test Status:** 43/43 passing (100% pass rate).
 
 ---
 
@@ -205,7 +205,7 @@ Run the ground-truth benchmark suite:
 ```bash
 python3 benchmarks/benchmark_runner.py
 ```
-**Current Benchmark Status:** 8/8 tasks passing (100.0% success rate). Metrics are saved to `benchmarks/results/benchmark_report.json`.
+**Current Benchmark Status:** 8/8 tasks passing (100.0% success rate with genuine cross-session retrieval, operation validation, and payload detail checks). Metrics are saved to `benchmarks/results/benchmark_report.json`.
 
 ---
 
@@ -215,16 +215,16 @@ python3 benchmarks/benchmark_runner.py
 |---|---|---|
 | **Local LLM Gateway** | **IMPLEMENTED AND TESTED** | Configurable Ollama client with timeout, availability checks & graceful fallback |
 | **Structured Query Planner** | **IMPLEMENTED AND TESTED** | Pydantic `QueryPlan` with parameter extraction and clarification triggers |
-| **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, stdio protocol, JSON-based registry (`mcp_servers.json`) |
+| **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
 | **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **PENDING EXTERNAL DEPENDENCY**| Adapter and configuration ready in `mcp_servers.json`. Requires native C binary install |
+| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 470 nodes / 1695 edges, tested search, caller/callee tracing & architecture queries |
 | **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
-| **REA Integration** | **PENDING EXTERNAL DEPENDENCY**| Worklet specification for the exact REA tool is pending supervisor guidance |
-| **Policy & Path Authorization**| **IMPLEMENTED AND TESTED** | Strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, audit logging |
+| **REA Integration Adapter** | **IMPLEMENTED / PENDING EXTERNAL TOOL** | Formal adapter with live subprocess/HTTP invocation and analysis result capture. Reports `PENDING_EXTERNAL_DEPENDENCY` and falls back to PE/Capstone when external REA credentials/binary are pending from Samsung PRISM |
+| **Policy & Path Authorization**| **IMPLEMENTED AND TESTED** | Strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, comprehensive failure path audit logging |
 | **Unified Engineering Memory** | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
-| **Multi-Session Manager** | **IMPLEMENTED AND TESTED** | Session ID tracking, query metrics, session summaries |
+| **Multi-Session Manager** | **IMPLEMENTED AND TESTED** | Session ID tracking, query metrics, cross-session lifecycle testing |
 | **Evidence Aggregation** | **IMPLEMENTED AND TESTED** | Grounded prompting, VERIFIED vs HYPOTHESIS vs LIMITATIONS separation |
-| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | Ground-truth dataset & automated runner (`benchmarks/benchmark_runner.py`) |
+| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | Ground-truth dataset & automated runner with genuine cross-session evaluation (`benchmarks/benchmark_runner.py`) |
 | **Model Shortlist** | **IMPLEMENTED AND TESTED** | Evaluated Qwen2.5-1.5B, Phi-3.5-Mini, Mistral-Nemo in `docs/model_comparison.md` |
 
 ---

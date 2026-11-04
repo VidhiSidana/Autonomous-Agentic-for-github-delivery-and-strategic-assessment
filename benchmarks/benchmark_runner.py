@@ -56,6 +56,11 @@ async def run_benchmarks(
         query = task["query"]
         expected_cat = task.get("expected_category")
 
+        # If testing cross-session memory retrieval (M2), cycle session lifecycle
+        if task_id == "M2":
+            orchestrator.session_mgr.end_session(summary="M1 benchmark session completed")
+            orchestrator.session_mgr.start_session()
+
         start_time = time.perf_counter()
         try:
             orch_result = await orchestrator.process_query(query)
@@ -68,6 +73,13 @@ async def run_benchmarks(
             if expected_cat and orch_result.category != expected_cat:
                 passed = False
                 reasons.append(f"Expected category {expected_cat}, got {orch_result.category}")
+
+            if task.get("expected_operation"):
+                exp_op = task["expected_operation"]
+                actual_op = orch_result.plan.memory_operation
+                if actual_op != exp_op:
+                    passed = False
+                    reasons.append(f"Expected memory operation '{exp_op}', got '{actual_op}'")
 
             if task.get("clarification_needed") and not orch_result.clarification_needed:
                 passed = False
@@ -99,6 +111,13 @@ async def run_benchmarks(
                 if not tool_matched:
                     passed = False
                     reasons.append(f"Expected tool invocation matching '{exp_tool}' not found in evidence items")
+
+            # Validate actual tool execution payload
+            if not task.get("clarification_needed") and not task.get("expected_policy_result"):
+                has_payload = any(len(it.detail or "") > 0 for it in orch_result.evidence_bundle.items)
+                if not has_payload:
+                    passed = False
+                    reasons.append("Tool execution produced no detailed payload content")
 
             if task.get("expected_verification_status"):
                 status = orch_result.plan.memory_verification_status

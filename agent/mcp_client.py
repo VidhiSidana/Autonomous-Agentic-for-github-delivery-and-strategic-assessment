@@ -133,6 +133,7 @@ class MCPClientManager:
         # Active sessions: server_name → (exit_stack_cm, session)
         self._sessions: dict[str, tuple[Any, ClientSession]] = {}
         self._tool_cache: dict[str, list[str]] = {}  # server → list of tool names
+        self._tool_schemas: dict[str, dict[str, dict[str, Any]]] = {}  # server → {tool_name: schema_dict}
 
     def available_servers(self) -> list[str]:
         """Return names of all configured and enabled servers."""
@@ -177,6 +178,37 @@ class MCPClientManager:
                 f"Failed to connect to MCP server '{server_name}': {exc}"
             ) from exc
 
+    async def list_tools_with_schemas(self, server_name: str) -> dict[str, dict[str, Any]]:
+        """
+        Discover and return complete tool definitions (name, description, inputSchema)
+        for *server_name*. Retains raw schemas for dynamic runtime argument validation.
+        """
+        if server_name in self._tool_schemas:
+            return self._tool_schemas[server_name]
+
+        session = await self._ensure_connected(server_name)
+        result = await session.list_tools()
+        schemas: dict[str, dict[str, Any]] = {}
+        for t in result.tools:
+            raw_schema = getattr(t, "input_schema", getattr(t, "inputSchema", None))
+            if hasattr(raw_schema, "model_dump"):
+                schema_dict = raw_schema.model_dump()
+            elif isinstance(raw_schema, dict):
+                schema_dict = raw_schema
+            else:
+                schema_dict = {}
+
+            schemas[t.name] = {
+                "name": t.name,
+                "description": t.description or "",
+                "inputSchema": schema_dict,
+            }
+
+        self._tool_schemas[server_name] = schemas
+        self._tool_cache[server_name] = list(schemas.keys())
+        logger.debug("Discovered %d tool schemas on '%s'", len(schemas), server_name)
+        return schemas
+
     async def list_tools(self, server_name: str) -> list[str]:
         """
         Discover and return tool names available on *server_name*.
@@ -185,12 +217,50 @@ class MCPClientManager:
         if server_name in self._tool_cache:
             return self._tool_cache[server_name]
 
-        session = await self._ensure_connected(server_name)
-        result = await session.list_tools()
-        names = [t.name for t in result.tools]
-        self._tool_cache[server_name] = names
-        logger.debug("Tools on '%s': %s", server_name, names)
-        return names
+        schemas = await self.list_tools_with_schemas(server_name)
+        return list(schemas.keys())
+
+    def get_tool_schema(self, server_name: str, tool_name: str) -> Optional[dict[str, Any]]:
+        """Return the cached schema for a specific tool, if discovered."""
+        return self._tool_schemas.get(server_name, {}).get(tool_name)
+
+    def validate_tool_arguments(
+        self,
+        server_name: str,
+        tool_name: str,
+        arguments: dict,
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Validate *arguments* against the dynamically discovered inputSchema of *tool_name*.
+        Checks required fields and fundamental data types.
+        """
+        schema_info = self.get_tool_schema(server_name, tool_name)
+        if not schema_info:
+            # If schemas haven't been fetched yet, allow invocation
+            return True, None
+
+        input_schema = schema_info.get("inputSchema", {})
+        required = input_schema.get("required", [])
+        for field in required:
+            if field not in arguments:
+                return False, f"Missing required parameter '{field}' for tool '{tool_name}'."
+
+        properties = input_schema.get("properties", {})
+        for key, val in arguments.items():
+            if key in properties and isinstance(properties[key], dict):
+                prop_type = properties[key].get("type")
+                if prop_type == "string" and not isinstance(val, str):
+                    return False, f"Parameter '{key}' must be string, got {type(val).__name__}."
+                elif prop_type == "integer" and not isinstance(val, int):
+                    return False, f"Parameter '{key}' must be integer, got {type(val).__name__}."
+                elif prop_type == "boolean" and not isinstance(val, bool):
+                    return False, f"Parameter '{key}' must be boolean, got {type(val).__name__}."
+                elif prop_type == "object" and not isinstance(val, dict):
+                    return False, f"Parameter '{key}' must be object/dict, got {type(val).__name__}."
+                elif prop_type == "array" and not isinstance(val, list):
+                    return False, f"Parameter '{key}' must be array/list, got {type(val).__name__}."
+
+        return True, None
 
     async def call_tool(
         self,
@@ -200,6 +270,7 @@ class MCPClientManager:
     ) -> ToolResult:
         """
         Call *tool_name* on *server_name* with *arguments*.
+        Validates arguments dynamically against the server's discovered tool schema.
 
         Returns a ToolResult. Never raises — errors are captured in the result.
         """
@@ -211,6 +282,21 @@ class MCPClientManager:
             return ToolResult(
                 success=False,
                 error_message=str(exc),
+            )
+
+        # Dynamic schema discovery & argument validation
+        if server_name not in self._tool_schemas:
+            try:
+                await self.list_tools_with_schemas(server_name)
+            except Exception as e:
+                logger.debug("Schema discovery on '%s' failed: %s", server_name, e)
+
+        valid, val_err = self.validate_tool_arguments(server_name, tool_name, arguments)
+        if not valid:
+            return ToolResult(
+                success=False,
+                is_error=True,
+                error_message=f"Dynamic schema validation failed: {val_err}",
             )
 
         try:
@@ -239,20 +325,21 @@ class MCPClientManager:
         )
 
     async def disconnect(self, server_name: str) -> None:
-        """Close the session for a specific server."""
+        """Close the session for a specific server cleanly with timeouts."""
         if server_name not in self._sessions:
             return
         cm, session = self._sessions.pop(server_name)
         try:
-            await session.__aexit__(None, None, None)
-        except BaseException:
-            pass
+            await asyncio.wait_for(session.__aexit__(None, None, None), timeout=2.0)
+        except (asyncio.TimeoutError, BaseException) as exc:
+            logger.debug("Session aexit on '%s': %s", server_name, exc)
         try:
-            await cm.__aexit__(None, None, None)
-        except BaseException:
-            pass
+            await asyncio.wait_for(cm.__aexit__(None, None, None), timeout=2.0)
+        except (asyncio.TimeoutError, BaseException) as exc:
+            logger.debug("Context manager aexit on '%s': %s", server_name, exc)
         logger.info("Disconnected from MCP server '%s'.", server_name)
         self._tool_cache.pop(server_name, None)
+        self._tool_schemas.pop(server_name, None)
 
     async def close_all(self) -> None:
         """Close all open MCP sessions."""
