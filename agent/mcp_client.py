@@ -86,10 +86,20 @@ def _build_server_params(config: dict) -> StdioServerParameters:
     """
     Build StdioServerParameters from a server config dict.
     Replaces ${PYTHON} with sys.executable.
+    Resolves commands in PATH or ~/.local/bin.
     """
+    import shutil
     command = config["command"]
     if command == "${PYTHON}":
         command = sys.executable
+    else:
+        resolved = shutil.which(command)
+        if not resolved:
+            local_bin = Path.home() / ".local" / "bin" / command
+            if local_bin.exists():
+                resolved = str(local_bin)
+        if resolved:
+            command = resolved
 
     args = [
         str(PROJECT_ROOT / arg) if not Path(arg).is_absolute() else arg

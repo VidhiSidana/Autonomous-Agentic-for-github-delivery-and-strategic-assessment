@@ -33,7 +33,7 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.category, "code_analysis")
         self.assertTrue(len(result.evidence_bundle.items) > 0)
         item = result.evidence_bundle.items[0]
-        self.assertEqual(item.tool_name, "find_callers")
+        self.assertIn(item.tool_name, ("find_callers", "search_graph", "trace_path (inbound)"))
 
     async def test_memory_save_and_retrieve_flow(self):
         # 1. Save memory

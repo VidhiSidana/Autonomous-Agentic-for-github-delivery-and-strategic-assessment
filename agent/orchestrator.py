@@ -201,6 +201,29 @@ class AgentOrchestrator:
             if not items:
                 bundle.add_limitation("No stored engineering findings found in memory.")
 
+    async def _resolve_code_graph_project(self, target_dir: str) -> Optional[str]:
+        """Find or create an indexed project in codebase-memory-mcp."""
+        if "code_graph" not in self.mcp.available_servers():
+            return None
+        try:
+            lp_res = await self.mcp.call_tool("code_graph", "list_projects", {})
+            if lp_res.success and lp_res.text:
+                for line in lp_res.text.splitlines():
+                    parts = line.strip().split()
+                    if parts and not parts[0].startswith("projects:") and not parts[0].startswith("total:"):
+                        return parts[0]
+            # Index if none found
+            idx_res = await self.mcp.call_tool("code_graph", "index_repository", {"repo_path": target_dir})
+            if idx_res.success and idx_res.text:
+                try:
+                    data = json.loads(idx_res.text)
+                    return data.get("project")
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.debug("code_graph project lookup failed: %s", e)
+        return None
+
     async def _handle_code_analysis(
         self,
         plan: QueryPlan,
@@ -209,33 +232,83 @@ class AgentOrchestrator:
         target_dir = str(plan.repository_path or self.default_repo_dir)
         q = plan.raw_query.lower()
 
-        # Select appropriate tool based on query and extracted parameters
-        server_name = "code_fallback"
+        # Step 1: Try Tree-sitter Code Knowledge Graph (codebase-memory-mcp)
+        graph_used = False
+        project_name = await self._resolve_code_graph_project(target_dir)
 
-        if plan.function_name and any(kw in q for kw in ["caller", "callers", "who calls", "called by"]):
-            tool_name = "find_callers"
-            args = {"directory": target_dir, "function_name": plan.function_name}
-        elif plan.function_name and any(kw in q for kw in ["callee", "callees", "calls made", "what does"]):
-            tool_name = "find_callees"
-            args = {"directory": target_dir, "function_name": plan.function_name}
-        elif plan.function_name and any(kw in q for kw in ["impact", "affect", "change impact"]):
-            tool_name = "find_change_impact"
-            args = {"directory": target_dir, "function_name": plan.function_name}
-        elif plan.file_path and any(kw in q for kw in ["import", "imports", "module", "depend", "dependencies"]):
-            tool_name = "find_module_relationships"
-            args = {"directory": target_dir, "filename": plan.file_path}
-        elif any(kw in q for kw in ["class", "classes", "methods"]):
-            tool_name = "find_classes"
-            args = {"directory": target_dir}
-        else:
-            tool_name = "find_functions"
-            args = {"directory": target_dir}
+        if project_name:
+            try:
+                if plan.function_name:
+                    # Search for symbol definition
+                    sr = await self.mcp.call_tool("code_graph", "search_graph", {
+                        "project": project_name,
+                        "query": plan.function_name,
+                    })
+                    first_qn = None
+                    if sr.success and "results: 0" not in sr.text:
+                        item = normalise_code_result("search_graph", "code_graph", sr.text, sr.is_error)
+                        item.function_name = plan.function_name
+                        bundle.add(item)
+                        graph_used = True
 
-        result = await self.mcp.call_tool(server_name, tool_name, args)
-        item = normalise_code_result(tool_name, server_name, result.text, result.is_error)
-        item.file_path = plan.file_path
-        item.function_name = plan.function_name
-        bundle.add(item)
+                        for line in sr.text.splitlines():
+                            parts = line.strip().split()
+                            if len(parts) >= 2 and parts[1] in ("Method", "Function", "Constructor"):
+                                first_qn = parts[0]
+                                break
+
+                    target_fn = first_qn or plan.function_name
+                    direction = "inbound" if any(kw in q for kw in ["caller", "callers", "who calls", "called by", "that call", "calling", "calls "]) else \
+                                "outbound" if any(kw in q for kw in ["callee", "callees", "calls made", "what does"]) else "both"
+
+                    tr = await self.mcp.call_tool("code_graph", "trace_path", {
+                        "project": project_name,
+                        "function_name": target_fn,
+                        "direction": direction,
+                        "include_tests": True,
+                    })
+                    if tr.success and "ambiguous" not in tr.text and "not found" not in tr.text:
+                        item = normalise_code_result(f"trace_path ({direction})", "code_graph", tr.text, tr.is_error)
+                        item.function_name = plan.function_name
+                        bundle.add(item)
+                        graph_used = True
+
+                elif any(kw in q for kw in ["architecture", "overview", "components"]):
+                    res = await self.mcp.call_tool("code_graph", "get_architecture", {"project": project_name})
+                    if res.success:
+                        bundle.add(normalise_code_result("get_architecture", "code_graph", res.text, res.is_error))
+                        graph_used = True
+            except Exception as exc:
+                logger.debug("Code graph query failed: %s", exc)
+
+        # Step 2: Fallback to local AST server if code_graph was not used
+        if not graph_used:
+            server_name = "code_fallback"
+
+            if plan.function_name and any(kw in q for kw in ["caller", "callers", "who calls", "called by"]):
+                tool_name = "find_callers"
+                args = {"directory": target_dir, "function_name": plan.function_name}
+            elif plan.function_name and any(kw in q for kw in ["callee", "callees", "calls made", "what does"]):
+                tool_name = "find_callees"
+                args = {"directory": target_dir, "function_name": plan.function_name}
+            elif plan.function_name and any(kw in q for kw in ["impact", "affect", "change impact"]):
+                tool_name = "find_change_impact"
+                args = {"directory": target_dir, "function_name": plan.function_name}
+            elif plan.file_path and any(kw in q for kw in ["import", "imports", "module", "depend", "dependencies"]):
+                tool_name = "find_module_relationships"
+                args = {"directory": target_dir, "filename": plan.file_path}
+            elif any(kw in q for kw in ["class", "classes", "methods"]):
+                tool_name = "find_classes"
+                args = {"directory": target_dir}
+            else:
+                tool_name = "find_functions"
+                args = {"directory": target_dir}
+
+            result = await self.mcp.call_tool(server_name, tool_name, args)
+            item = normalise_code_result(tool_name, server_name, result.text, result.is_error)
+            item.file_path = plan.file_path
+            item.function_name = plan.function_name
+            bundle.add(item)
 
     async def _handle_binary_analysis(
         self,

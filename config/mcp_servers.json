@@ -22,12 +22,10 @@
       "enabled": true
     },
     "code_graph": {
-      "description": "codebase-memory-mcp: full code knowledge graph (requires separate installation)",
+      "description": "codebase-memory-mcp: full Tree-sitter code knowledge graph",
       "command": "codebase-memory-mcp",
       "args": [],
-      "enabled": false,
-      "_pending": "Install codebase-memory-mcp: curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"
+      "enabled": true
     }
   }
 }
-
