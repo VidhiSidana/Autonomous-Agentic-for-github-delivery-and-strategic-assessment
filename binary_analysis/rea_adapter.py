@@ -99,3 +99,4 @@ class REAAdapter:
             "operation": operation,
             "target": binary_path,
         }
+

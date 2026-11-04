@@ -245,10 +245,13 @@ class MCPClientManager:
         cm, session = self._sessions.pop(server_name)
         try:
             await session.__aexit__(None, None, None)
+        except BaseException:
+            pass
+        try:
             await cm.__aexit__(None, None, None)
-            logger.info("Disconnected from MCP server '%s'.", server_name)
-        except BaseException as exc:
-            logger.debug("Clean shutdown notice from '%s': %s", server_name, exc)
+        except BaseException:
+            pass
+        logger.info("Disconnected from MCP server '%s'.", server_name)
         self._tool_cache.pop(server_name, None)
 
     async def close_all(self) -> None:

@@ -19,3 +19,4 @@ def process_checkout(cart_id: str, total: float, card: str) -> bool:
 def execute_recurring_billing(subscription_id: str, fee: float, card: str) -> bool:
     """Execute monthly subscription recurring charge."""
     return validate_payment(fee, card)
+
