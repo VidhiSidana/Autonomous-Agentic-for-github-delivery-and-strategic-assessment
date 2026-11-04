@@ -73,6 +73,33 @@ async def run_benchmarks(
                 passed = False
                 reasons.append("Expected clarification_needed=True, got False")
 
+            if task.get("expected_policy_result"):
+                pol_target = task.get("expected_policy_result")
+                # Must be reflected in response or evidence details
+                found_policy = any(pol_target in it.detail or pol_target in it.summary for it in orch_result.evidence_bundle.items) or pol_target in orch_result.response_text
+                if not found_policy:
+                    passed = False
+                    reasons.append(f"Expected policy result '{pol_target}' not found")
+
+            if task.get("sub_categories"):
+                for sub in task["sub_categories"]:
+                    if sub not in orch_result.plan.sub_categories:
+                        passed = False
+                        reasons.append(f"Expected sub-category '{sub}' not in plan")
+
+            if task.get("expected_tool"):
+                exp_tool = task["expected_tool"]
+                matching_terms = [exp_tool] if isinstance(exp_tool, str) else list(exp_tool)
+                if exp_tool in ("caller", "find_callers"):
+                    matching_terms.extend(["trace_path", "find_callers", "caller"])
+                tool_matched = any(
+                    any(term in it.source or (it.tool_name and term in it.tool_name) for term in matching_terms)
+                    for it in orch_result.evidence_bundle.items
+                )
+                if not tool_matched:
+                    passed = False
+                    reasons.append(f"Expected tool invocation matching '{exp_tool}' not found in evidence items")
+
             if task.get("expected_verification_status"):
                 status = orch_result.plan.memory_verification_status
                 if status != task["expected_verification_status"]:

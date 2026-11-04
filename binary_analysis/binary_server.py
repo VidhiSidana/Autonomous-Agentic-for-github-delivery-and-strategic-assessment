@@ -32,6 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from agent.policy import authorize_binary_path, write_audit_event
+from binary_analysis.rea_adapter import REAAdapter
 
 mcp = MCPServer("Binary Analysis Server")
 
@@ -106,6 +107,9 @@ def analyze_binary(binary_path: str) -> str:
                 "entropy": round(s.get_entropy(), 3),
             })
 
+        rea = REAAdapter()
+        rea_available, rea_msg = rea.is_rea_available()
+
         data = {
             "file_name": file_path.name,
             "file_path": str(file_path),
@@ -118,6 +122,11 @@ def analyze_binary(binary_path: str) -> str:
             "subsystem": getattr(pe.OPTIONAL_HEADER, "Subsystem", "Unknown"),
             "sections": sections,
             "evidence_type": "PE_METADATA",
+            "rea_integration": {
+                "status": "OPERATIONAL" if rea_available else "PENDING_EXTERNAL_DEPENDENCY",
+                "message": rea_msg,
+                "active_engine": "REA" if rea_available else "pefile/Capstone static fallback",
+            },
         }
 
         write_audit_event(

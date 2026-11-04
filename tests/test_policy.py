@@ -27,6 +27,31 @@ class TestPolicyAndAudit(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("traversal", msg.lower())
 
+    def test_reject_symlink_escaping_allowlist(self):
+        with tempfile.TemporaryDirectory() as allowed_dir, tempfile.TemporaryDirectory() as outside_dir:
+            allowed_path = Path(allowed_dir).resolve()
+            outside_path = Path(outside_dir).resolve()
+
+            # Create an outside file
+            secret_file = outside_path / "secret.exe"
+            secret_file.write_text("MZ...", encoding="utf-8")
+
+            # Create a symlink inside allowed pointing to outside file
+            symlink_file = allowed_path / "symlink.exe"
+            symlink_file.symlink_to(secret_file)
+
+            # Set allowed dirs to allowed_path
+            import config.settings
+            orig_allowed = config.settings.BINARY_ALLOWED_DIRS
+            config.settings.BINARY_ALLOWED_DIRS = [allowed_path]
+
+            try:
+                ok, msg = authorize_binary_path(str(symlink_file))
+                self.assertFalse(ok)
+                self.assertIn("Access denied", msg)
+            finally:
+                config.settings.BINARY_ALLOWED_DIRS = orig_allowed
+
     def test_audit_event_logging(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             log_path = Path(tmp_dir) / "test_audit.log"

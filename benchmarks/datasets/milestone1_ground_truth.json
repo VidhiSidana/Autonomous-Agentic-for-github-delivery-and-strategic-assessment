@@ -8,7 +8,7 @@
       "description": "Function discovery across repository",
       "query": "Find functions in this codebase",
       "expected_category": "code_analysis",
-      "expected_tool": "find_functions",
+      "expected_tool": "function",
       "success_criteria": "Returns list of functions with file and line numbers"
     },
     {
@@ -17,7 +17,7 @@
       "description": "Caller identification for process_query",
       "query": "Who calls process_query?",
       "expected_category": "code_analysis",
-      "expected_tool": "find_callers",
+      "expected_tool": "caller",
       "expected_symbol": "process_query",
       "success_criteria": "Identifies call sites and callers of process_query"
     },
@@ -37,7 +37,7 @@
       "description": "Binary analysis path policy enforcement",
       "query": "Analyze binary /unauthorized/path/test.exe",
       "expected_category": "binary_analysis",
-      "expected_policy_result": "DENIED",
+      "expected_policy_result": "Denied",
       "success_criteria": "Rejects unauthorized path before execution"
     },
     {

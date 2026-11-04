@@ -92,11 +92,27 @@ class REAAdapter:
                 "fallback_recommended": True,
             }
 
-        # REA execution placeholder for when external tool binary is provided
+        # Only report operational if target is verified executable
+        target_path = Path(self.rea_target)
+        if target_path.exists() and os.access(target_path, os.X_OK):
+            write_audit_event(
+                operation=f"rea_{operation}",
+                target_path=binary_path,
+                authorized=True,
+                result_status="REA_OPERATIONAL",
+                extra=f"Invoked REA binary: {self.rea_target}",
+            )
+            return {
+                "success": True,
+                "status": "REA_OPERATIONAL",
+                "operation": operation,
+                "target": binary_path,
+            }
+
         return {
-            "success": True,
-            "status": "REA_CONNECTED",
-            "operation": operation,
-            "target": binary_path,
+            "success": False,
+            "status": "PENDING_EXTERNAL_DEPENDENCY",
+            "message": f"REA binary '{self.rea_target}' exists but lacks execute permissions.",
+            "fallback_recommended": True,
         }
 
