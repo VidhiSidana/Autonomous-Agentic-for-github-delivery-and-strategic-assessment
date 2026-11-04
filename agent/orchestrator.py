@@ -238,7 +238,8 @@ class AgentOrchestrator:
 
         if project_name:
             try:
-                if plan.function_name:
+                available_tools = await self.mcp.list_tools("code_graph")
+                if plan.function_name and "search_graph" in available_tools:
                     # Search for symbol definition
                     sr = await self.mcp.call_tool("code_graph", "search_graph", {
                         "project": project_name,
@@ -248,32 +249,36 @@ class AgentOrchestrator:
                     if sr.success and "results: 0" not in sr.text:
                         item = normalise_code_result("search_graph", "code_graph", sr.text, sr.is_error)
                         item.function_name = plan.function_name
-                        bundle.add(item)
-                        graph_used = True
-
                         for line in sr.text.splitlines():
                             parts = line.strip().split()
                             if len(parts) >= 2 and parts[1] in ("Method", "Function", "Constructor"):
                                 first_qn = parts[0]
+                                if len(parts) >= 3 and ("/" in parts[2] or "." in parts[2]):
+                                    item.file_path = parts[2]
                                 break
-
-                    target_fn = first_qn or plan.function_name
-                    direction = "inbound" if any(kw in q for kw in ["caller", "callers", "who calls", "called by", "that call", "calling", "calls "]) else \
-                                "outbound" if any(kw in q for kw in ["callee", "callees", "calls made", "what does"]) else "both"
-
-                    tr = await self.mcp.call_tool("code_graph", "trace_path", {
-                        "project": project_name,
-                        "function_name": target_fn,
-                        "direction": direction,
-                        "include_tests": True,
-                    })
-                    if tr.success and "ambiguous" not in tr.text and "not found" not in tr.text:
-                        item = normalise_code_result(f"trace_path ({direction})", "code_graph", tr.text, tr.is_error)
-                        item.function_name = plan.function_name
+                        item.file_path = item.file_path or plan.file_path
                         bundle.add(item)
                         graph_used = True
 
-                elif any(kw in q for kw in ["architecture", "overview", "components"]):
+                    if "trace_path" in available_tools:
+                        target_fn = first_qn or plan.function_name
+                        direction = "inbound" if any(kw in q for kw in ["caller", "callers", "who calls", "called by", "that call", "calling", "calls "]) else \
+                                    "outbound" if any(kw in q for kw in ["callee", "callees", "calls made", "what does"]) else "both"
+
+                        tr = await self.mcp.call_tool("code_graph", "trace_path", {
+                            "project": project_name,
+                            "function_name": target_fn,
+                            "direction": direction,
+                            "include_tests": True,
+                        })
+                        if tr.success and "ambiguous" not in tr.text and "not found" not in tr.text:
+                            item = normalise_code_result(f"trace_path ({direction})", "code_graph", tr.text, tr.is_error)
+                            item.function_name = plan.function_name
+                            item.file_path = item.file_path or plan.file_path
+                            bundle.add(item)
+                            graph_used = True
+
+                elif any(kw in q for kw in ["architecture", "overview", "components"]) and "get_architecture" in available_tools:
                     res = await self.mcp.call_tool("code_graph", "get_architecture", {"project": project_name})
                     if res.success:
                         bundle.add(normalise_code_result("get_architecture", "code_graph", res.text, res.is_error))
@@ -306,8 +311,8 @@ class AgentOrchestrator:
 
             result = await self.mcp.call_tool(server_name, tool_name, args)
             item = normalise_code_result(tool_name, server_name, result.text, result.is_error)
-            item.file_path = plan.file_path
-            item.function_name = plan.function_name
+            item.file_path = item.file_path or plan.file_path
+            item.function_name = item.function_name or plan.function_name
             bundle.add(item)
 
     async def _handle_binary_analysis(

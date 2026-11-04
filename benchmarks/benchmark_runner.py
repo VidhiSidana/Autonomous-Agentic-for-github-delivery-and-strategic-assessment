@@ -56,10 +56,16 @@ async def run_benchmarks(
         query = task["query"]
         expected_cat = task.get("expected_category")
 
-        # If testing cross-session memory retrieval (M2), cycle session lifecycle
+        # If testing cross-session memory retrieval (M2), simulate genuine process restart
         if task_id == "M2":
-            orchestrator.session_mgr.end_session(summary="M1 benchmark session completed")
-            orchestrator.session_mgr.start_session()
+            new_mem = EngineeringMemory(db_path=bench_db)
+            new_sess = SessionManager(db_path=bench_db)
+            new_sess.start_session()
+            orchestrator = AgentOrchestrator(
+                memory=new_mem,
+                session_manager=new_sess,
+                default_repo_dir=PROJECT_ROOT,
+            )
 
         start_time = time.perf_counter()
         try:
@@ -73,6 +79,26 @@ async def run_benchmarks(
             if expected_cat and orch_result.category != expected_cat:
                 passed = False
                 reasons.append(f"Expected category {expected_cat}, got {orch_result.category}")
+
+            if task.get("expected_symbol"):
+                exp_sym = task["expected_symbol"]
+                found_sym = (
+                    orch_result.plan.function_name == exp_sym
+                    or any(exp_sym in (it.function_name or "") or exp_sym in (it.detail or "") for it in orch_result.evidence_bundle.items)
+                )
+                if not found_sym:
+                    passed = False
+                    reasons.append(f"Expected symbol '{exp_sym}' not found in plan or evidence")
+
+            if task.get("expected_file"):
+                exp_file = task["expected_file"]
+                found_file = (
+                    orch_result.plan.file_path == exp_file
+                    or any(exp_file in (it.file_path or "") or exp_file in (it.detail or "") for it in orch_result.evidence_bundle.items)
+                )
+                if not found_file:
+                    passed = False
+                    reasons.append(f"Expected file '{exp_file}' not found in plan or evidence")
 
             if task.get("expected_operation"):
                 exp_op = task["expected_operation"]
@@ -98,6 +124,20 @@ async def run_benchmarks(
                     if sub not in orch_result.plan.sub_categories:
                         passed = False
                         reasons.append(f"Expected sub-category '{sub}' not in plan")
+
+            # Explicitly verify both branches of the multi-tool task
+            if task_id == "MT1" or task.get("category") == "multi_tool":
+                has_code = any(
+                    "code" in it.source.lower() or "find_" in (it.tool_name or "") or "graph" in it.source.lower()
+                    for it in orch_result.evidence_bundle.items
+                )
+                has_binary = any(
+                    "binary" in it.source.lower() or "pe" in it.source.lower() or "capstone" in it.source.lower() or "policy" in it.source.lower()
+                    for it in orch_result.evidence_bundle.items
+                )
+                if not (has_code and has_binary):
+                    passed = False
+                    reasons.append(f"Multi-tool execution failed to cover both branches (code: {has_code}, binary: {has_binary})")
 
             if task.get("expected_tool"):
                 exp_tool = task["expected_tool"]
@@ -186,11 +226,14 @@ async def run_benchmarks(
     print(f" Report saved: {report_path}")
     print(f"==========================================\n")
 
+    os._exit(0)
     return summary
 
 
 if __name__ == "__main__":
+    import os
     dataset = PROJECT_ROOT / "benchmarks" / "datasets" / "milestone1_ground_truth.json"
     out_dir = PROJECT_ROOT / "benchmarks" / "results"
     asyncio.run(run_benchmarks(dataset, out_dir))
+    os._exit(0)
 

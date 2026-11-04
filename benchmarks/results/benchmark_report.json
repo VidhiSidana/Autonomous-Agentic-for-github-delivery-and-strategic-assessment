@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-11-04T08:15:18.803948+00:00",
+  "timestamp_utc": "2026-11-04T08:31:26.478626+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 8,
   "passed_tasks": 8,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.1601,
+  "average_elapsed_seconds": 0.2436,
   "results": [
     {
       "task_id": "C1",
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 0.8487,
+      "elapsed_seconds": 0.8512,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -21,7 +21,7 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.0404,
+      "elapsed_seconds": 0.0407,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -31,7 +31,7 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0069,
+      "elapsed_seconds": 0.0064,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -41,7 +41,7 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.35,
+      "elapsed_seconds": 0.3545,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -61,7 +61,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0015,
+      "elapsed_seconds": 0.0017,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -71,7 +71,7 @@
       "category": "memory",
       "description": "Cross-session retrieval of verified finding",
       "passed": true,
-      "elapsed_seconds": 0.0008,
+      "elapsed_seconds": 0.001,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -81,7 +81,7 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.0321,
+      "elapsed_seconds": 0.6927,
       "evidence_count": 3,
       "limitations_count": 0,
       "reasons": []

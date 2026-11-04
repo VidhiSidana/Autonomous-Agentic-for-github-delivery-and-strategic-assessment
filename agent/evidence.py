@@ -121,6 +121,7 @@ def normalise_code_result(
 ) -> EvidenceItem:
     """
     Convert a raw code-analysis tool result into an EvidenceItem.
+    Automatically parses structured JSON output to extract location references.
     """
     if is_error or not text.strip():
         return EvidenceItem(
@@ -131,7 +132,8 @@ def normalise_code_result(
             tool_name=tool_name,
             server_name=server_name,
         )
-    return EvidenceItem(
+
+    item = EvidenceItem(
         kind=EvidenceKind.VERIFIED,
         source=f"{server_name}.{tool_name}",
         summary=f"Code analysis via '{tool_name}' succeeded.",
@@ -139,6 +141,24 @@ def normalise_code_result(
         tool_name=tool_name,
         server_name=server_name,
     )
+
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict):
+            if "items" in data and isinstance(data["items"], list) and data["items"]:
+                first = data["items"][0]
+                if isinstance(first, dict):
+                    item.file_path = first.get("file") or first.get("call_site_file")
+                    item.line_number = first.get("line") or first.get("call_site_line")
+                    item.function_name = first.get("name") or first.get("caller")
+            elif "target_file" in data:
+                item.file_path = data.get("target_file")
+            elif "file" in data:
+                item.file_path = data.get("file")
+    except Exception:
+        pass
+
+    return item
 
 
 def normalise_binary_result(
