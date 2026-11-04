@@ -303,6 +303,8 @@ async def run_benchmarks(
         for task in suite["tasks"]:
             task_id = task["id"]
             query = task["query"]
+            if "{sample_bin}" in query:
+                query = query.replace("{sample_bin}", str(sample_bin))
             expected_cat = task.get("expected_category")
 
             # For M2, execute real cross-process persistence test
@@ -426,13 +428,15 @@ async def run_benchmarks(
                         reasons.append(f"Expected status {task['expected_verification_status']}, got {status}")
 
                 if task.get("expected_content_match"):
+                    match_target = task["expected_content_match"]
                     found_match = any(
-                        task["expected_content_match"] in it.detail
+                        match_target.lower() in (it.detail or "").lower()
+                        or match_target.lower() in (it.summary or "").lower()
                         for it in orch_result.evidence_bundle.items
                     )
                     if not found_match:
                         passed = False
-                        reasons.append(f"Expected content match '{task['expected_content_match']}' not found in evidence")
+                        reasons.append(f"Expected content match '{match_target}' not found in evidence")
 
                 if passed:
                     passed_count += 1

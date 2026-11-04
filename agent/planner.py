@@ -146,9 +146,9 @@ _CODE_KEYWORDS: list[str] = [
 ]
 
 _MULTI_TOOL_PATTERNS: list[str] = [
-    "and", "also", "compare", "both", "cross-reference",
-    "find.*and.*analyz", "code.*binary", "binary.*code",
-    "codebase.*executable", "source.*binary",
+    r"\band\b", r"\balso\b", r"\bcompare\b", r"\bboth\b", r"\bcross-reference\b",
+    r"find.*and.*analyz", r"code.*binary", r"binary.*code",
+    r"codebase.*executable", r"source.*binary",
 ]
 
 # Operation sub-keywords
@@ -312,9 +312,10 @@ def _is_multi_tool(query: str, has_code: bool, has_binary: bool) -> bool:
     """Return True if the query explicitly involves both code and binary analysis."""
     if not (has_code and has_binary):
         return False
-    q = query.lower()
+    # Strip quoted path strings to avoid accidental substring matches on directory names
+    clean_q = re.sub(r'[`\'"][^`\'"]+[`\'"]', '', query.lower())
     # Explicit cross-domain indicators
-    return any(re.search(pat, q) for pat in _MULTI_TOOL_PATTERNS)
+    return any(re.search(pat, clean_q) for pat in _MULTI_TOOL_PATTERNS)
 
 
 # ---------------------------------------------------------------------------
@@ -382,8 +383,9 @@ class AgentPlanner:
         # -----------------------------------------------------------------
         # Binary analysis
         # -----------------------------------------------------------------
-        if has_binary and not has_code:
-            binary_path = _extract_binary_path(q)
+        bin_path = _extract_binary_path(q)
+        if has_binary and (not has_code or (bin_path and not _extract_file_path(q))):
+            binary_path = bin_path
             return QueryPlan(
                 category=QueryCategory.BINARY_ANALYSIS,
                 raw_query=user_input,

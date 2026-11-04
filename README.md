@@ -205,7 +205,7 @@ Run the ground-truth benchmark suite:
 ```bash
 python3 benchmarks/benchmark_runner.py
 ```
-**Current Benchmark Status:** 8/8 tasks passing (100.0% success rate with genuine cross-process persistence across separate OS processes, multi-tool dual-branch execution validation, dynamic MCP schema validation, and payload detail checks). Execution metrics are recorded in `benchmarks/results/benchmark_report.json`.
+**Current Benchmark Status:** 14/14 tasks passing (100.0% success rate covering PE architecture, section headers, imports/exports, Capstone instruction disassembly, code architecture, genuine cross-process persistence across separate OS processes, multi-tool dual-branch execution validation, and dynamic MCP schema validation). Execution metrics are recorded in `benchmarks/results/benchmark_report.json`.
 
 ---
 

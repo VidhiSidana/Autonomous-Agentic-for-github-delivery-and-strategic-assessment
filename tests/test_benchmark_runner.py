@@ -54,8 +54,8 @@ class TestBenchmarkRunner(unittest.TestCase):
             self.assertIn("results", summary)
             self.assertIn("cross_process_persistence", summary)
 
-            self.assertEqual(summary["total_tasks"], 8)
-            self.assertEqual(summary["passed_tasks"], 8)
+            self.assertEqual(summary["total_tasks"], 14)
+            self.assertEqual(summary["passed_tasks"], 14)
             self.assertEqual(summary["success_rate"], "100.0%")
             self.assertTrue(summary["cross_process_persistence"]["success"])
 

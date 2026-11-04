@@ -1,7 +1,7 @@
 {
   "benchmark_suite": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
-  "version": "1.1",
-  "description": "Reproducible ground-truth dataset covering code comprehension, static binary investigation, persistent memory, and multi-tool cross-domain reasoning.",
+  "version": "2.0",
+  "description": "Comprehensive ground-truth evaluation covering code comprehension, static binary analysis, PE section inspection, Capstone disassembly, multi-session memory, and cross-domain multi-tool queries.",
   "tasks": [
     {
       "id": "C1",
@@ -42,6 +42,19 @@
       "success_criteria": "Extracts imported modules such as asyncio, sys, pathlib, etc."
     },
     {
+      "id": "C4",
+      "category": "code_analysis",
+      "description": "Code architecture and class outline understanding",
+      "query": "Find classes and method architecture across the codebase",
+      "fixture": "repository-root",
+      "expected_category": "code_analysis",
+      "expected_tool": "find_classes",
+      "expected_content_match": "AgentOrchestrator",
+      "expected_answer": "Outlines defined classes and methods across repository modules.",
+      "expected_evidence": "Class definitions including AgentOrchestrator and methods",
+      "success_criteria": "Identifies classes and methods across modules"
+    },
+    {
       "id": "B1",
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
@@ -64,6 +77,58 @@
       "expected_answer": "Prompts user for required target binary file path.",
       "expected_evidence": "Clarification question returned immediately without tool execution",
       "success_criteria": "Prompts user for binary path without crashing"
+    },
+    {
+      "id": "B3",
+      "category": "binary_analysis",
+      "description": "Binary metadata and PE architecture extraction",
+      "query": "Analyze architecture and metadata of binary \"{sample_bin}\"",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "analyze_binary",
+      "expected_content_match": "AMD64",
+      "expected_answer": "Extracts Windows PE machine architecture (AMD64) and headers.",
+      "expected_evidence": "Machine type 0x8664 and architecture AMD64",
+      "success_criteria": "Extracts machine type and architecture metadata without executing binary"
+    },
+    {
+      "id": "B4",
+      "category": "binary_analysis",
+      "description": "PE section header and memory boundary inspection",
+      "query": "Inspect sections in binary \"{sample_bin}\"",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "analyze_binary",
+      "expected_content_match": ".text",
+      "expected_answer": "Extracts section headers including .text virtual address and size.",
+      "expected_evidence": "Section name .text and virtual address 0x1000",
+      "success_criteria": "Identifies .text section and virtual address bounds"
+    },
+    {
+      "id": "B5",
+      "category": "binary_analysis",
+      "description": "Binary imports and external symbol dependency extraction",
+      "query": "Extract imports from binary \"{sample_bin}\"",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "find_binary_imports",
+      "expected_content_match": "import",
+      "expected_answer": "Parses PE import directory and reports imported libraries safely.",
+      "expected_evidence": "Import directory information or confirmed empty import table",
+      "success_criteria": "Extracts import table without executing binary"
+    },
+    {
+      "id": "B6",
+      "category": "binary_analysis",
+      "description": "Capstone machine code instruction disassembly",
+      "query": "Disassemble instructions from binary \"{sample_bin}\"",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "disassemble_binary",
+      "expected_content_match": "nop",
+      "expected_answer": "Disassembles machine instructions starting at entry point RVA.",
+      "expected_evidence": "Disassembled instruction mnemonics including nop and ret",
+      "success_criteria": "Disassembles machine code instructions using Capstone engine"
     },
     {
       "id": "M1",
@@ -90,6 +155,19 @@
       "expected_answer": "Retrieves finding matching 'authentication auth_service.py' across distinct process lifecycle.",
       "expected_evidence": "Record retrieved with matching ID, session_id, and VERIFIED status",
       "success_criteria": "Retrieves saved finding across session restart"
+    },
+    {
+      "id": "M3",
+      "category": "memory",
+      "description": "Multi-session persistence retrieval across engineering iterations",
+      "query": "Search memory for technical finding about auth_service",
+      "fixture": "memory/engineering_memory.db",
+      "expected_category": "memory",
+      "expected_operation": "search",
+      "expected_content_match": "auth_service",
+      "expected_answer": "Searches persistent SQLite store for engineering findings matching auth_service.",
+      "expected_evidence": "Stored finding matching auth_service retrieved",
+      "success_criteria": "Retrieves previously persisted findings across multiple query sessions"
     },
     {
       "id": "MT1",
