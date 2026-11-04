@@ -73,12 +73,20 @@ def create_sample_pe_binary(target_path: Path) -> Path:
 def run_cross_process_persistence_test(db_path: Path) -> dict[str, Any]:
     """
     Genuine cross-process persistence verification:
-    1. Subprocess A saves a verified finding into SQLite and terminates.
-    2. Subprocess B starts independently, searches the same database, and terminates.
-    3. Verifies that content and verification status match across separate OS processes.
+    1. Subprocess A starts, creates a session, saves a verified finding, outputs ID & session_id, and terminates.
+    2. Verifies Process A exited cleanly and actually saved the record.
+    3. Subprocess B starts independently, fetches that exact record ID from the same database, and outputs JSON.
+    4. Verifies Process B exited cleanly and that content, verification status, and session ID match.
+    5. Catches all subprocess and parsing exceptions without aborting the benchmark suite, returning detailed reasons.
     """
+    reasons: list[str] = []
+    saved_record_id: Optional[int] = None
+    expected_session_id: Optional[str] = None
+    expected_content = "authentication is handled in auth_service.py"
+    expected_status = "VERIFIED"
+
     code_a = f"""
-import sys
+import sys, json
 from pathlib import Path
 sys.path.insert(0, {repr(str(PROJECT_ROOT))})
 from memory.memory import EngineeringMemory
@@ -90,21 +98,61 @@ sm = SessionManager(db_path=db)
 sid = sm.start_session()
 res = mem.save_memory(
     title="Cross-Process Persistence Finding",
-    content="authentication is handled in auth_service.py",
+    content="{expected_content}",
     category="architecture",
-    verification_status="VERIFIED",
+    verification_status="{expected_status}",
     session_id=sid,
 )
-print("PROCESS_A_SAVED_ID:" + str(res.get("id")))
+print("PROCESS_A_RESULT:" + json.dumps({{"id": res.get("id"), "session_id": sid, "saved": res.get("saved")}}))
 """
-    proc_a = subprocess.run(
-        [sys.executable, "-c", code_a],
-        capture_output=True,
-        text=True,
-        check=True,
-        timeout=10,
-    )
+    try:
+        proc_a = subprocess.run(
+            [sys.executable, "-c", code_a],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception as exc:
+        return {
+            "success": False,
+            "error": f"Process A execution failed: {exc}",
+            "process_a_exit": -1,
+            "process_b_exit": -1,
+            "reasons": [f"Process A failed to launch or timed out: {exc}"],
+        }
 
+    if proc_a.returncode != 0:
+        reasons.append(f"Process A exited with non-zero code {proc_a.returncode}: {proc_a.stderr.strip()[:200]}")
+        return {
+            "success": False,
+            "process_a_exit": proc_a.returncode,
+            "process_b_exit": -1,
+            "reasons": reasons,
+        }
+
+    # Parse Process A output
+    process_a_saved = False
+    for line in proc_a.stdout.splitlines():
+        if line.startswith("PROCESS_A_RESULT:"):
+            try:
+                data_a = json.loads(line.replace("PROCESS_A_RESULT:", "", 1))
+                saved_record_id = data_a.get("id")
+                expected_session_id = data_a.get("session_id")
+                process_a_saved = bool(data_a.get("saved"))
+            except Exception as e:
+                reasons.append(f"Process A output json parsing failed: {e}")
+            break
+
+    if not process_a_saved or saved_record_id is None:
+        reasons.append(f"Process A did not confirm saving the record (saved_id={saved_record_id})")
+        return {
+            "success": False,
+            "process_a_exit": proc_a.returncode,
+            "process_b_exit": -1,
+            "reasons": reasons,
+        }
+
+    # Process B execution: retrieves the exact ID and searches by keyword
     code_b = f"""
 import sys, json
 from pathlib import Path
@@ -113,40 +161,94 @@ from memory.memory import EngineeringMemory
 
 db = Path({repr(str(db_path))})
 mem = EngineeringMemory(db_path=db)
+record = mem.get_memory_by_id({saved_record_id})
+res_dict = dict(record) if record else None
 rows = mem.search_memory("authentication auth_service.py")
-results = [dict(r) for r in rows]
-print("PROCESS_B_RETRIEVED:" + json.dumps(results))
+search_results = [dict(r) for r in rows]
+
+print("PROCESS_B_RECORD:" + json.dumps(res_dict))
+print("PROCESS_B_SEARCH_COUNT:" + str(len(search_results)))
 """
-    proc_b = subprocess.run(
-        [sys.executable, "-c", code_b],
-        capture_output=True,
-        text=True,
-        check=True,
-        timeout=10,
-    )
+    try:
+        proc_b = subprocess.run(
+            [sys.executable, "-c", code_b],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception as exc:
+        reasons.append(f"Process B failed to launch or timed out: {exc}")
+        return {
+            "success": False,
+            "process_a_exit": proc_a.returncode,
+            "process_b_exit": -1,
+            "record_id": saved_record_id,
+            "reasons": reasons,
+        }
 
-    retrieved_data = []
+    if proc_b.returncode != 0:
+        reasons.append(f"Process B exited with non-zero code {proc_b.returncode}: {proc_b.stderr.strip()[:200]}")
+        return {
+            "success": False,
+            "process_a_exit": proc_a.returncode,
+            "process_b_exit": proc_b.returncode,
+            "record_id": saved_record_id,
+            "reasons": reasons,
+        }
+
+    retrieved_record: Optional[dict[str, Any]] = None
+    search_count = 0
     for line in proc_b.stdout.splitlines():
-        if line.startswith("PROCESS_B_RETRIEVED:"):
-            retrieved_data = json.loads(line.replace("PROCESS_B_RETRIEVED:", "", 1))
-            break
+        if line.startswith("PROCESS_B_RECORD:"):
+            try:
+                retrieved_record = json.loads(line.replace("PROCESS_B_RECORD:", "", 1))
+            except Exception as e:
+                reasons.append(f"Process B record parsing failed: {e}")
+        elif line.startswith("PROCESS_B_SEARCH_COUNT:"):
+            try:
+                search_count = int(line.replace("PROCESS_B_SEARCH_COUNT:", "", 1).strip())
+            except Exception:
+                pass
 
-    content_verified = False
-    status_verified = False
-    for item in retrieved_data:
-        if "auth_service.py" in item.get("content", ""):
-            content_verified = True
-            if item.get("verification_status") == "VERIFIED":
-                status_verified = True
-                break
+    if not retrieved_record:
+        reasons.append(f"Process B failed to retrieve record with ID {saved_record_id}")
+        return {
+            "success": False,
+            "process_a_exit": proc_a.returncode,
+            "process_b_exit": proc_b.returncode,
+            "record_id": saved_record_id,
+            "reasons": reasons,
+        }
+
+    # Verify attributes
+    id_matched = (retrieved_record.get("id") == saved_record_id)
+    content_verified = (expected_content in retrieved_record.get("content", ""))
+    status_verified = (retrieved_record.get("verification_status") == expected_status)
+    session_verified = (retrieved_record.get("session_id") == expected_session_id)
+
+    if not id_matched:
+        reasons.append(f"Retrieved ID {retrieved_record.get('id')} did not match saved ID {saved_record_id}")
+    if not content_verified:
+        reasons.append(f"Content mismatch: expected '{expected_content}', got '{retrieved_record.get('content')}'")
+    if not status_verified:
+        reasons.append(f"Status mismatch: expected '{expected_status}', got '{retrieved_record.get('verification_status')}'")
+    if not session_verified:
+        reasons.append(f"Session ID mismatch: expected '{expected_session_id}', got '{retrieved_record.get('session_id')}'")
+
+    overall_success = (id_matched and content_verified and status_verified and session_verified and len(reasons) == 0)
 
     return {
-        "success": content_verified and status_verified,
+        "success": overall_success,
         "process_a_exit": proc_a.returncode,
         "process_b_exit": proc_b.returncode,
-        "items_retrieved": len(retrieved_data),
+        "record_id": saved_record_id,
+        "session_id": expected_session_id,
+        "id_matched": id_matched,
         "content_verified": content_verified,
         "status_verified": status_verified,
+        "session_verified": session_verified,
+        "search_count": search_count,
+        "reasons": reasons,
     }
 
 
@@ -292,9 +394,11 @@ async def run_benchmarks(
                             "binary_branch": {"tool": binary_ev[0].tool_name, "success": True, "source": binary_ev[0].source, "file": binary_ev[0].file_path},
                         }
 
-                if task_id == "M2" and cross_proc_report and not cross_proc_report.get("success"):
-                    passed = False
-                    reasons.append("Cross-process persistence verification failed between Subprocess A and B")
+                if task_id == "M2":
+                    if not cross_proc_report or not cross_proc_report.get("success"):
+                        passed = False
+                        fail_details = "; ".join(cross_proc_report.get("reasons", [])) if cross_proc_report else "No cross-process report generated"
+                        reasons.append(f"Cross-process persistence verification failed: {fail_details}")
 
                 if task.get("expected_tool"):
                     exp_tool = task["expected_tool"]
@@ -350,6 +454,8 @@ async def run_benchmarks(
                 }
                 if multi_tool_details:
                     task_record["multi_tool_execution"] = multi_tool_details
+                if task_id == "M2" and cross_proc_report:
+                    task_record["cross_process_persistence"] = cross_proc_report
                 results.append(task_record)
 
             except Exception as exc:
@@ -375,15 +481,19 @@ async def run_benchmarks(
         else:
             os.environ.pop("BINARY_ALLOWED_DIRS", None)
 
+    passed_count = sum(1 for r in results if r.get("passed", False))
+    total_count = len(suite["tasks"])
+    success_rate_str = f"{(passed_count / total_count) * 100:.1f}%" if total_count > 0 else "0.0%"
+
     summary = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "suite_name": suite["benchmark_suite"],
         "total_tasks": total_count,
         "passed_tasks": passed_count,
-        "success_rate": f"{(passed_count / total_count) * 100:.1f}%",
+        "success_rate": success_rate_str,
         "average_elapsed_seconds": round(
             sum(r["elapsed_seconds"] for r in results) / total_count, 4
-        ),
+        ) if total_count > 0 else 0.0,
         "cross_process_persistence": cross_proc_report,
         "results": results,
     }

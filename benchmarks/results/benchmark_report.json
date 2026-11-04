@@ -1,17 +1,22 @@
 {
-  "timestamp_utc": "2026-11-04T08:49:14.800710+00:00",
+  "timestamp_utc": "2026-11-04T09:06:12.741587+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 8,
   "passed_tasks": 8,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.1591,
+  "average_elapsed_seconds": 0.1594,
   "cross_process_persistence": {
     "success": true,
     "process_a_exit": 0,
     "process_b_exit": 0,
-    "items_retrieved": 2,
+    "record_id": 2,
+    "session_id": "session_bec1b791",
+    "id_matched": true,
     "content_verified": true,
-    "status_verified": true
+    "status_verified": true,
+    "session_verified": true,
+    "search_count": 2,
+    "reasons": []
   },
   "results": [
     {
@@ -19,7 +24,7 @@
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 0.8387,
+      "elapsed_seconds": 0.8333,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -29,7 +34,7 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.0427,
+      "elapsed_seconds": 0.0474,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -39,7 +44,7 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0068,
+      "elapsed_seconds": 0.0069,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -49,7 +54,7 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.3417,
+      "elapsed_seconds": 0.3432,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -59,7 +64,7 @@
       "category": "binary_analysis",
       "description": "Missing binary path triggers clarification",
       "passed": true,
-      "elapsed_seconds": 0.0008,
+      "elapsed_seconds": 0.0007,
       "evidence_count": 0,
       "limitations_count": 1,
       "reasons": []
@@ -69,7 +74,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0014,
+      "elapsed_seconds": 0.0012,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -82,14 +87,27 @@
       "elapsed_seconds": 0.0015,
       "evidence_count": 2,
       "limitations_count": 0,
-      "reasons": []
+      "reasons": [],
+      "cross_process_persistence": {
+        "success": true,
+        "process_a_exit": 0,
+        "process_b_exit": 0,
+        "record_id": 2,
+        "session_id": "session_bec1b791",
+        "id_matched": true,
+        "content_verified": true,
+        "status_verified": true,
+        "session_verified": true,
+        "search_count": 2,
+        "reasons": []
+      }
     },
     {
       "task_id": "MT1",
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.039,
+      "elapsed_seconds": 0.0407,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": [],

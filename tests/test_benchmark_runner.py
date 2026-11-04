@@ -24,8 +24,22 @@ class TestBenchmarkRunner(unittest.TestCase):
             self.assertTrue(result["success"])
             self.assertEqual(result["process_a_exit"], 0)
             self.assertEqual(result["process_b_exit"], 0)
+            self.assertIsNotNone(result.get("record_id"))
+            self.assertIsNotNone(result.get("session_id"))
+            self.assertTrue(result.get("id_matched"))
+            self.assertTrue(result.get("session_verified"))
             self.assertTrue(result["content_verified"])
             self.assertTrue(result["status_verified"])
+
+    def test_cross_process_persistence_handles_subprocess_failure_cleanly(self):
+        """Verify subprocess failure does not raise an unhandled exception."""
+        # Using a directory as db_path will cause SQLite / process to report failure cleanly
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            bad_db = Path(tmp_dir)  # is a directory, not a file
+            result = run_cross_process_persistence_test(bad_db)
+            self.assertIsInstance(result, dict)
+            self.assertFalse(result["success"])
+            self.assertTrue(len(result["reasons"]) > 0)
 
     def test_run_benchmarks_returns_summary(self):
         """Verify run_benchmarks() returns the structured summary dict."""

@@ -240,6 +240,12 @@ class EngineeringMemory:
             )
             return cursor.fetchall()
 
+    def get_memory_by_id(self, memory_id: int) -> Optional[sqlite3.Row]:
+        """Fetch a single memory finding by exact primary key."""
+        with self._connect() as conn:
+            cursor = conn.execute("SELECT * FROM findings WHERE id = ? LIMIT 1", (memory_id,))
+            return cursor.fetchone()
+
     # Backward-compatible alias
     def retrieve_findings(self) -> list[sqlite3.Row]:
         return self.retrieve_memory()

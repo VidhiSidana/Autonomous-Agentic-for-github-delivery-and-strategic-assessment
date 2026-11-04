@@ -195,7 +195,7 @@ Run the entire automated test suite:
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Current Test Status:** 43/43 passing (100% pass rate).
+**Current Test Status:** 51/51 passing (100% pass rate across policy security, planner, memory, code analysis, binary analysis, MCP client, orchestrator, and benchmark runner).
 
 ---
 
@@ -205,7 +205,7 @@ Run the ground-truth benchmark suite:
 ```bash
 python3 benchmarks/benchmark_runner.py
 ```
-**Current Benchmark Status:** 8/8 tasks passing (100.0% success rate with genuine cross-session retrieval, operation validation, and payload detail checks). Metrics are saved to `benchmarks/results/benchmark_report.json`.
+**Current Benchmark Status:** 8/8 tasks passing (100.0% success rate with genuine cross-process persistence across separate OS processes, multi-tool dual-branch execution validation, dynamic MCP schema validation, and payload detail checks). Execution metrics are recorded in `benchmarks/results/benchmark_report.json`.
 
 ---
 
@@ -216,15 +216,17 @@ python3 benchmarks/benchmark_runner.py
 | **Local LLM Gateway** | **IMPLEMENTED AND TESTED** | Configurable Ollama client with timeout, availability checks & graceful fallback |
 | **Structured Query Planner** | **IMPLEMENTED AND TESTED** | Pydantic `QueryPlan` with parameter extraction and clarification triggers |
 | **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
+| **Dynamic MCP Orchestrator**| **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
 | **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 470 nodes / 1695 edges, tested search, caller/callee tracing & architecture queries |
+| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 495 nodes / 1,797 edges, tested search, caller/callee tracing & architecture queries |
 | **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
 | **REA Integration Adapter** | **IMPLEMENTED / PENDING EXTERNAL TOOL** | Formal adapter with live subprocess/HTTP invocation and analysis result capture. Reports `PENDING_EXTERNAL_DEPENDENCY` and falls back to PE/Capstone when external REA credentials/binary are pending from Samsung PRISM |
-| **Policy & Path Authorization**| **IMPLEMENTED AND TESTED** | Strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, comprehensive failure path audit logging |
+| **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, comprehensive audit logging |
 | **Unified Engineering Memory** | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
+| **Cross-Process Persistence** | **IMPLEMENTED AND TESTED** | Verified cross-process persistence where Process A inserts finding and Process B retrieves exact ID, session ID, content, and verification status |
 | **Multi-Session Manager** | **IMPLEMENTED AND TESTED** | Session ID tracking, query metrics, cross-session lifecycle testing |
 | **Evidence Aggregation** | **IMPLEMENTED AND TESTED** | Grounded prompting, VERIFIED vs HYPOTHESIS vs LIMITATIONS separation |
-| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | Ground-truth dataset & automated runner with genuine cross-session evaluation (`benchmarks/benchmark_runner.py`) |
+| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | Ground-truth dataset & automated runner with genuine cross-process evaluation (`benchmarks/benchmark_runner.py`) |
 | **Model Shortlist** | **IMPLEMENTED AND TESTED** | Evaluated Qwen2.5-1.5B, Phi-3.5-Mini, Mistral-Nemo in `docs/model_comparison.md` |
 
 ---

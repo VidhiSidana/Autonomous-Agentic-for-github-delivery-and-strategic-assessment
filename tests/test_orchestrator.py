@@ -57,6 +57,66 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.clarification_needed)
         self.assertIn("path to the binary", result.clarification_question.lower())
 
+    def test_dynamic_tool_matching_and_schema_validation(self):
+        """Verify dynamic tool intent matching and argument validation."""
+        mock_tools = {
+            "search_graph": {
+                "description": "Find symbols via BM25 query, regex name/qn filters, or semantic_query",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "query": {"type": "string"},
+                    },
+                    "required": ["project"],
+                },
+            },
+            "trace_path": {
+                "description": "Trace callers/callees, data flow, or cross-service paths.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "function_name": {"type": "string"},
+                        "direction": {"type": "string"},
+                    },
+                    "required": ["project", "function_name"],
+                },
+            },
+        }
+
+        # 1. Test tool matching by intent
+        matched_search = self.orchestrator._find_compatible_tool(mock_tools, "symbol_search")
+        self.assertIsNotNone(matched_search)
+        self.assertEqual(matched_search[0], "search_graph")
+
+        matched_trace = self.orchestrator._find_compatible_tool(mock_tools, "trace_callers")
+        self.assertIsNotNone(matched_trace)
+        self.assertEqual(matched_trace[0], "trace_path")
+
+        # 2. Test argument construction and validation
+        valid, args, err = self.orchestrator._build_and_validate_tool_args(
+            tool_name="trace_path",
+            schema=mock_tools["trace_path"]["inputSchema"],
+            project_name="my_proj",
+            symbol_or_query="my_fn",
+            direction="inbound",
+        )
+        self.assertTrue(valid)
+        self.assertEqual(args["project"], "my_proj")
+        self.assertEqual(args["function_name"], "my_fn")
+        self.assertEqual(args["direction"], "inbound")
+
+        # 3. Test missing required argument detection
+        invalid, _, err_msg = self.orchestrator._build_and_validate_tool_args(
+            tool_name="trace_path",
+            schema=mock_tools["trace_path"]["inputSchema"],
+            project_name="my_proj",
+            symbol_or_query=None,  # missing required function_name
+        )
+        self.assertFalse(invalid)
+        self.assertIn("missing required", err_msg.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

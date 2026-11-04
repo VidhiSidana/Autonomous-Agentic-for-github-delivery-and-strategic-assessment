@@ -224,6 +224,91 @@ class AgentOrchestrator:
             logger.debug("code_graph project lookup failed: %s", e)
         return None
 
+    def _find_compatible_tool(
+        self,
+        tools_with_schemas: dict[str, Any],
+        intent: str,
+    ) -> Optional[tuple[str, dict[str, Any]]]:
+        """
+        Dynamically map an intended operation to an available MCP tool by analyzing
+        tool names, descriptions, and input schemas.
+        """
+        for name, info in tools_with_schemas.items():
+            desc = (info.get("description") or "").lower()
+            name_lower = name.lower()
+            schema = info.get("inputSchema") or {}
+
+            if intent == "symbol_search":
+                if any(k in name_lower for k in ["search", "find", "symbol", "query"]) and \
+                   any(k in desc for k in ["symbol", "graph", "bm25", "query", "code", "definition", "find"]):
+                    return name, schema
+
+            elif intent == "trace_callers":
+                if any(k in name_lower for k in ["trace", "call", "path", "caller"]) and \
+                   any(k in desc for k in ["caller", "inbound", "path", "call"]):
+                    return name, schema
+
+            elif intent == "trace_callees":
+                if any(k in name_lower for k in ["trace", "call", "path", "callee"]) and \
+                   any(k in desc for k in ["callee", "outbound", "path", "call"]):
+                    return name, schema
+
+            elif intent == "architecture":
+                if any(k in name_lower for k in ["architecture", "overview", "structure", "graph"]) and \
+                   any(k in desc for k in ["architecture", "component", "structure", "overview", "schema"]):
+                    return name, schema
+
+        return None
+
+    def _build_and_validate_tool_args(
+        self,
+        tool_name: str,
+        schema: dict[str, Any],
+        project_name: Optional[str] = None,
+        symbol_or_query: Optional[str] = None,
+        file_path: Optional[str] = None,
+        direction: Optional[str] = None,
+    ) -> tuple[bool, dict[str, Any], str]:
+        """
+        Dynamically map inputs to the schema's accepted properties and ensure
+        all required properties are satisfied.
+        """
+        props = schema.get("properties", {})
+        required = schema.get("required", [])
+        args: dict[str, Any] = {}
+
+        # Map project parameter
+        for p_key in ["project", "project_name", "repo", "repo_path"]:
+            if p_key in props and project_name:
+                args[p_key] = project_name
+                break
+
+        # Map query / symbol parameter
+        for q_key in ["query", "function_name", "pattern", "symbol", "name"]:
+            if q_key in props and symbol_or_query:
+                args[q_key] = symbol_or_query
+                break
+
+        # Map file path parameter
+        for f_key in ["file_path", "path", "filename", "file"]:
+            if f_key in props and file_path:
+                args[f_key] = file_path
+                break
+
+        # Map direction parameter
+        if "direction" in props and direction:
+            args["direction"] = direction
+
+        # Optional boolean flags (e.g. include_tests)
+        if "include_tests" in props:
+            args["include_tests"] = True
+
+        missing = [r for r in required if r not in args]
+        if missing:
+            return False, {}, f"Tool '{tool_name}' schema missing required argument(s): {missing}"
+
+        return True, args, ""
+
     async def _handle_code_analysis(
         self,
         plan: QueryPlan,
@@ -232,57 +317,95 @@ class AgentOrchestrator:
         target_dir = str(plan.repository_path or self.default_repo_dir)
         q = plan.raw_query.lower()
 
-        # Step 1: Try Tree-sitter Code Knowledge Graph (codebase-memory-mcp)
+        # Step 1: Try Tree-sitter Code Knowledge Graph (codebase-memory-mcp) dynamically
         graph_used = False
         project_name = await self._resolve_code_graph_project(target_dir)
 
         if project_name:
             try:
-                available_tools = await self.mcp.list_tools("code_graph")
-                if plan.function_name and "search_graph" in available_tools:
-                    # Search for symbol definition
-                    sr = await self.mcp.call_tool("code_graph", "search_graph", {
-                        "project": project_name,
-                        "query": plan.function_name,
-                    })
+                tools_with_schemas = await self.mcp.list_tools_with_schemas("code_graph")
+
+                if plan.function_name:
+                    # Dynamically discover and validate symbol search tool
+                    matched_search = self._find_compatible_tool(tools_with_schemas, "symbol_search")
                     first_qn = None
-                    if sr.success and "results: 0" not in sr.text:
-                        item = normalise_code_result("search_graph", "code_graph", sr.text, sr.is_error)
-                        item.function_name = plan.function_name
-                        for line in sr.text.splitlines():
-                            parts = line.strip().split()
-                            if len(parts) >= 2 and parts[1] in ("Method", "Function", "Constructor"):
-                                first_qn = parts[0]
-                                if len(parts) >= 3 and ("/" in parts[2] or "." in parts[2]):
-                                    item.file_path = parts[2]
-                                break
-                        item.file_path = item.file_path or plan.file_path
-                        bundle.add(item)
-                        graph_used = True
+                    if matched_search:
+                        tool_name, schema = matched_search
+                        valid, args, err = self._build_and_validate_tool_args(
+                            tool_name=tool_name,
+                            schema=schema,
+                            project_name=project_name,
+                            symbol_or_query=plan.function_name,
+                        )
+                        if valid:
+                            sr = await self.mcp.call_tool("code_graph", tool_name, args)
+                            if sr.success and "results: 0" not in sr.text:
+                                item = normalise_code_result(tool_name, "code_graph", sr.text, sr.is_error)
+                                item.function_name = plan.function_name
+                                for line in sr.text.splitlines():
+                                    parts = line.strip().split()
+                                    if len(parts) >= 2 and parts[1] in ("Method", "Function", "Constructor"):
+                                        first_qn = parts[0]
+                                        if len(parts) >= 3 and ("/" in parts[2] or "." in parts[2]):
+                                            item.file_path = parts[2]
+                                        break
+                                item.file_path = item.file_path or plan.file_path
+                                bundle.add(item)
+                                graph_used = True
+                        else:
+                            bundle.add_limitation(f"Dynamic schema validation failed for symbol search: {err}")
+                    else:
+                        bundle.add_limitation("No compatible symbol search tool discovered on codebase-memory-mcp server.")
 
-                    if "trace_path" in available_tools:
-                        target_fn = first_qn or plan.function_name
-                        direction = "inbound" if any(kw in q for kw in ["caller", "callers", "who calls", "called by", "that call", "calling", "calls "]) else \
-                                    "outbound" if any(kw in q for kw in ["callee", "callees", "calls made", "what does"]) else "both"
+                    # Dynamically discover and validate caller/callee tracing tool
+                    is_caller_query = any(kw in q for kw in ["caller", "callers", "who calls", "called by", "that call", "calling", "calls "])
+                    is_callee_query = any(kw in q for kw in ["callee", "callees", "calls made", "what does"])
+                    if is_caller_query or is_callee_query:
+                        intent = "trace_callers" if is_caller_query else "trace_callees"
+                        matched_trace = self._find_compatible_tool(tools_with_schemas, intent)
+                        if matched_trace:
+                            tool_name, schema = matched_trace
+                            target_fn = first_qn or plan.function_name
+                            direction = "inbound" if is_caller_query else "outbound"
+                            valid, args, err = self._build_and_validate_tool_args(
+                                tool_name=tool_name,
+                                schema=schema,
+                                project_name=project_name,
+                                symbol_or_query=target_fn,
+                                direction=direction,
+                            )
+                            if valid:
+                                tr = await self.mcp.call_tool("code_graph", tool_name, args)
+                                if tr.success and "ambiguous" not in tr.text and "not found" not in tr.text:
+                                    item = normalise_code_result(f"{tool_name} ({direction})", "code_graph", tr.text, tr.is_error)
+                                    item.function_name = plan.function_name
+                                    item.file_path = item.file_path or plan.file_path
+                                    bundle.add(item)
+                                    graph_used = True
+                            else:
+                                bundle.add_limitation(f"Dynamic schema validation failed for path tracing: {err}")
+                        else:
+                            bundle.add_limitation(f"No compatible caller/callee tracing tool discovered for intent '{intent}'.")
 
-                        tr = await self.mcp.call_tool("code_graph", "trace_path", {
-                            "project": project_name,
-                            "function_name": target_fn,
-                            "direction": direction,
-                            "include_tests": True,
-                        })
-                        if tr.success and "ambiguous" not in tr.text and "not found" not in tr.text:
-                            item = normalise_code_result(f"trace_path ({direction})", "code_graph", tr.text, tr.is_error)
-                            item.function_name = plan.function_name
-                            item.file_path = item.file_path or plan.file_path
-                            bundle.add(item)
-                            graph_used = True
+                elif any(kw in q for kw in ["architecture", "overview", "components"]):
+                    matched_arch = self._find_compatible_tool(tools_with_schemas, "architecture")
+                    if matched_arch:
+                        tool_name, schema = matched_arch
+                        valid, args, err = self._build_and_validate_tool_args(
+                            tool_name=tool_name,
+                            schema=schema,
+                            project_name=project_name,
+                        )
+                        if valid:
+                            res = await self.mcp.call_tool("code_graph", tool_name, args)
+                            if res.success:
+                                bundle.add(normalise_code_result(tool_name, "code_graph", res.text, res.is_error))
+                                graph_used = True
+                        else:
+                            bundle.add_limitation(f"Dynamic schema validation failed for architecture overview: {err}")
+                    else:
+                        bundle.add_limitation("No compatible architecture tool discovered on codebase-memory-mcp server.")
 
-                elif any(kw in q for kw in ["architecture", "overview", "components"]) and "get_architecture" in available_tools:
-                    res = await self.mcp.call_tool("code_graph", "get_architecture", {"project": project_name})
-                    if res.success:
-                        bundle.add(normalise_code_result("get_architecture", "code_graph", res.text, res.is_error))
-                        graph_used = True
             except Exception as exc:
                 logger.debug("Code graph query failed: %s", exc)
 

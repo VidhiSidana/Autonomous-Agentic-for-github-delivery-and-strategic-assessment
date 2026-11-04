@@ -99,25 +99,29 @@ def authorize_binary_path(binary_path: str) -> tuple[bool, str]:
 
     Returns (is_authorized: bool, message: str).
 
-    Checks:
+    Security Checks:
       1. Path must be non-empty.
-      2. Path must resolve to a real file (no symlink escapes).
-      3. Path must be within one of the configured allowed directories.
-      4. No path traversal sequences allowed in the raw string.
-
-    If BINARY_ALLOWED_DIRS is empty, the function denies all paths and
-    instructs the user to configure the allowlist.
+      2. Path traversal sequences ('..') are strictly rejected.
+      3. Resolved canonical paths are used to prevent symlink escapes.
+      4. Containment uses canonical hierarchy and filesystem-level inode checks
+         (os.path.samefile) rather than unsafe string-prefix operations.
+      5. Sibling directories with matching prefixes (e.g. /dir_sibling) are rejected.
     """
     if not binary_path or not binary_path.strip():
         return False, "Binary path is empty."
 
-    # Reject obvious traversal attempts early
     raw = binary_path.strip()
-    if ".." in raw:
-        return False, "Path traversal sequences ('..') are not permitted."
+
+    # Reject obvious traversal attempts early
+    try:
+        raw_parts = Path(raw).parts
+        if any(p == ".." for p in raw_parts) or ".." in raw:
+            return False, "Path traversal sequences ('..') are not permitted."
+    except Exception as exc:
+        return False, f"Invalid path structure: {exc}"
 
     try:
-        resolved = Path(raw).resolve(strict=False)
+        resolved = Path(raw).resolve()
     except (OSError, ValueError) as exc:
         return False, f"Invalid path: {exc}"
 
@@ -131,17 +135,26 @@ def authorize_binary_path(binary_path: str) -> tuple[bool, str]:
         )
 
     for allowed in allowed_dirs:
+        allowed_res = allowed.resolve()
+
+        # Check 1: Canonical pathlib containment
         try:
-            resolved.relative_to(allowed)
-            return True, f"Authorized: path is within '{allowed}'."
+            resolved.relative_to(allowed_res)
+            return True, f"Authorized: path is within '{allowed_res}'."
         except ValueError:
             pass
 
-        # Handle case-insensitive filesystems (such as macOS APFS / Windows NTFS)
-        res_str = str(resolved).lower()
-        all_str = str(allowed).lower().rstrip(os.sep) + os.sep
-        if res_str.startswith(all_str) or res_str == str(allowed).lower():
-            return True, f"Authorized: path is within '{allowed}'."
+        # Check 2: Filesystem-aware directory identity via os.path.samefile.
+        # Walks parent hierarchy to verify if any parent physically matches allowed_res.
+        # This handles case-preserving filesystems without unsafe prefix strings.
+        if allowed_res.exists():
+            for parent in (resolved, *resolved.parents):
+                if parent.exists():
+                    try:
+                        if os.path.samefile(parent, allowed_res):
+                            return True, f"Authorized: path is within '{allowed_res}'."
+                    except OSError:
+                        pass
 
     readable_dirs = ", ".join(str(d) for d in allowed_dirs)
     return False, (
