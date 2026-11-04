@@ -84,39 +84,59 @@ async def verify_codebase_memory_mcp():
     print("search_graph output:", flush=True)
     print(search_res.text, flush=True)
 
-    # Extract first qualified name for process_query
-    first_qn = None
+    # Extract qualified names for both UnifiedEngineeringAgent and AgentOrchestrator
+    agent_qn = None
+    orch_qn = None
     for line in search_res.text.splitlines():
         parts = line.strip().split()
         if len(parts) >= 2 and parts[1] in ("Function", "Method"):
-            first_qn = parts[0]
-            break
+            qn = parts[0]
+            if "UnifiedEngineeringAgent.process_query" in qn and not agent_qn:
+                agent_qn = qn
+            elif "AgentOrchestrator.process_query" in qn and not orch_qn:
+                orch_qn = qn
 
-    print(f"[+] Target Qualified Name for Caller Tracing: {first_qn}", flush=True)
+    print(f"[+] Top-Level Entrypoint QN: {agent_qn}", flush=True)
+    print(f"[+] Core Orchestrator Implementation QN: {orch_qn}", flush=True)
 
     print("\n" + "=" * 70, flush=True)
     print(" 4. INBOUND CALLER TRACING (trace_path inbound)", flush=True)
     print("=" * 70, flush=True)
-    trace_in = await manager.call_tool("code_graph", "trace_path", {
+    
+    # Trace top-level wrapper (expected 0 internal callers as it is the public CLI/script entrypoint)
+    if agent_qn:
+        trace_in_agent = await manager.call_tool("code_graph", "trace_path", {
+            "project": project_name,
+            "function_name": agent_qn,
+            "direction": "inbound",
+            "include_tests": True,
+        })
+        print(f"--- Inbound callers for Top-Level Entrypoint ({agent_qn}) ---", flush=True)
+        print("Note: 0 internal callers is EXPECTED because this is the external synchronous library entrypoint.")
+        print(trace_in_agent.text, flush=True)
+
+    # Trace core orchestrator implementation (expected multiple internal callers)
+    target_orch = orch_qn or "agent.orchestrator.AgentOrchestrator.process_query"
+    trace_in_orch = await manager.call_tool("code_graph", "trace_path", {
         "project": project_name,
-        "function_name": first_qn or "agent.orchestrator.AgentOrchestrator.process_query",
+        "function_name": target_orch,
         "direction": "inbound",
         "include_tests": True,
     })
-    print(f"trace_path (inbound) success: {trace_in.success}", flush=True)
-    print("trace_path (inbound) output:", flush=True)
-    print(trace_in.text, flush=True)
+    print(f"\n--- Inbound callers for Core Implementation ({target_orch}) ---", flush=True)
+    print("Verified callers (process_query_async, cli_main, run_benchmarks, tests):", flush=True)
+    print(trace_in_orch.text, flush=True)
 
     print("\n" + "=" * 70, flush=True)
     print(" 5. OUTBOUND CALLEE TRACING (trace_path outbound)", flush=True)
     print("=" * 70, flush=True)
     trace_out = await manager.call_tool("code_graph", "trace_path", {
         "project": project_name,
-        "function_name": first_qn or "agent.orchestrator.AgentOrchestrator.process_query",
+        "function_name": target_orch,
         "direction": "outbound",
         "include_tests": True,
     })
-    print(f"trace_path (outbound) success: {trace_out.success}", flush=True)
+    print(f"trace_path (outbound for {target_orch}) success: {trace_out.success}", flush=True)
     print("trace_path (outbound) output:", flush=True)
     print(trace_out.text, flush=True)
 

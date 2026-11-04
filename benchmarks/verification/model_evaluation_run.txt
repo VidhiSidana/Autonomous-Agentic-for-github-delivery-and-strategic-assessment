@@ -1,31 +1,31 @@
 ================================================================================
-VERIFICATION EVIDENCE: V15 Model Evaluation Suite Execution
-Timestamp (UTC): 2026-11-04T10:31:11Z
-Environment: macOS arm64, Python Python 3.14.2
-Command: python3 benchmarks/evaluate_models.py
+VERIFICATION EVIDENCE: V16 Model Evaluation Suite Execution
+Timestamp (UTC): 2026-11-04T10:46:06Z
+Original Execution Environment: macOS arm64 Darwin, Python 3.14 (Virtual Environment)
+Portable Command: python3 benchmarks/evaluate_models.py
 ================================================================================
-2026-11-04 16:01:12,096 [INFO] Starting V15 Model Evaluation Suite across 14 tasks...
-2026-11-04 16:01:12,096 [INFO] Assessing model candidate: qwen2.5:1.5b (Qwen 2.5)
-2026-11-04 16:01:12,105 [INFO] Model 'qwen2.5:1.5b' is available. Executing empirical evaluation...
-2026-11-04 16:01:15,751 [INFO] Evaluating evidence synthesis for 'qwen2.5:1.5b'...
-2026-11-04 16:01:18,370 [INFO] Assessing model candidate: phi3.5:latest (Phi-3.5 Mini)
-2026-11-04 16:01:18,373 [WARNING] Model 'phi3.5:latest' unavailable: Model 'phi3.5:latest' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull phi3.5:latest
-2026-11-04 16:01:18,373 [INFO] Assessing model candidate: mistral-nemo:12b (Mistral Nemo)
-2026-11-04 16:01:18,376 [WARNING] Model 'mistral-nemo:12b' unavailable: Model 'mistral-nemo:12b' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull mistral-nemo:12b
-2026-11-04 16:01:18,377 [INFO] Saved evaluation report to /Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/model_evaluation_report.json
+2026-11-04 16:16:06,562 [INFO] Starting V16 Model Evaluation Suite across 14 tasks and 3 synthesis cases...
+2026-11-04 16:16:06,562 [INFO] Assessing model candidate: qwen2.5:1.5b (Qwen 2.5)
+2026-11-04 16:16:06,571 [INFO] Model 'qwen2.5:1.5b' is available. Executing empirical evaluation...
+2026-11-04 16:16:10,202 [INFO] Evaluating multi-case evidence synthesis for 'qwen2.5:1.5b'...
+2026-11-04 16:16:13,500 [INFO] Assessing model candidate: phi3.5:latest (Phi-3.5 Mini)
+2026-11-04 16:16:13,504 [WARNING] Model 'phi3.5:latest' unavailable: Model 'phi3.5:latest' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull phi3.5:latest
+2026-11-04 16:16:13,504 [INFO] Assessing model candidate: mistral-nemo:12b (Mistral Nemo)
+2026-11-04 16:16:13,507 [WARNING] Model 'mistral-nemo:12b' unavailable: Model 'mistral-nemo:12b' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull mistral-nemo:12b
+2026-11-04 16:16:13,508 [INFO] Saved evaluation report to /Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/model_evaluation_report.json
 
 =================================================================
- V15 GENUINE MODEL EVALUATION SUMMARY
+ V16 GENUINE MODEL EVALUATION SUMMARY
 =================================================================
 Model: qwen2.5:1.5b (Qwen 2.5) -> TESTED
   - Valid JSON Rate:             100.0% (14/14)
-  - Tool Selection Accuracy:     92.9% (13/14)
-  - Required Arguments Present:  100.0% (14/14)
+  - Tool Selection Accuracy:     85.7% (12/14)
+  - Required Arguments Present:  92.9% (13/14)
   - Exact Argument Accuracy:     85.7% (12/14)
   - Overall Tool-Call Accuracy:  85.7% (12/14)
-  - Avg Tool-Call Latency:       0.2604s
-  - Evidence Synthesis Score:    100.0% (5/5 criteria)
-  - Synthesis Latency:           2.6187s
+  - Avg Tool-Call Latency:       0.2593s
+  - Synthesis Score (3 Cases):   33.3% (1/3 cases passed)
+  - Avg Synthesis Latency:       1.0993s
 Model: phi3.5:latest (Phi-3.5 Mini) -> NOT TESTED
   - Reason: Model not pulled in local Ollama daemon or host RAM constrained.
 Model: mistral-nemo:12b (Mistral Nemo) -> NOT TESTED

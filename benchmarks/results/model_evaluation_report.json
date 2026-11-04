@@ -1,12 +1,14 @@
 {
-  "timestamp_utc": "2026-11-04T10:31:12.096047+00:00",
+  "timestamp_utc": "2026-11-04T10:46:06.562665+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Genuine Model Evaluation",
-  "evaluator_version": "v15",
+  "evaluator_version": "v16",
   "host_environment": {
     "platform": "darwin",
-    "python_version": "3.14.2"
+    "python_version": "3.14.2",
+    "description": "macOS Apple Silicon (Local Development Workstation)"
   },
   "total_task_count": 14,
+  "total_synthesis_cases": 3,
   "models": [
     {
       "model_tag": "qwen2.5:1.5b",
@@ -22,19 +24,20 @@
         "total_tasks": 14,
         "valid_json_responses": 14,
         "valid_json_rate": "100.0%",
-        "correct_tool_selections": 13,
-        "tool_selection_accuracy": "92.9%",
-        "required_args_present": 14,
-        "required_args_rate": "100.0%",
+        "correct_tool_selections": 12,
+        "tool_selection_accuracy": "85.7%",
+        "required_args_present": 13,
+        "required_args_rate": "92.9%",
         "exact_arguments_correct": 12,
         "exact_argument_accuracy": "85.7%",
         "overall_specification_correct": 12,
         "overall_tool_call_accuracy": "85.7%",
-        "average_tool_selection_latency_seconds": 0.2604,
+        "average_tool_selection_latency_seconds": 0.2593,
         "task_breakdown": [
           {
             "task_id": "T01_FUNC_DISCOVERY",
             "domain": "code_analysis",
+            "task_type": "executable_tool_call",
             "query": "Find all function definitions across the entire codebase",
             "expected_tool": "find_functions",
             "selected_tool": "find_functions",
@@ -47,11 +50,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"find_functions\", \"arguments\": {}}",
-            "latency_seconds": 0.2112
+            "latency_seconds": 0.2472
           },
           {
             "task_id": "T02_CALLERS_PROCESS_QUERY",
             "domain": "code_analysis",
+            "task_type": "executable_tool_call",
             "query": "Who calls the function process_query in this repository?",
             "expected_tool": "find_callers",
             "selected_tool": "find_callers",
@@ -68,11 +72,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"process_query\"}}",
-            "latency_seconds": 0.2521
+            "latency_seconds": 0.2564
           },
           {
             "task_id": "T03_CALLERS_CALCULATE_HASH",
             "domain": "code_analysis",
+            "task_type": "executable_tool_call",
             "query": "Find all callers of the function calculate_checksum",
             "expected_tool": "find_callers",
             "selected_tool": "find_callers",
@@ -89,11 +94,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"calculate_checksum\"}}",
-            "latency_seconds": 0.2473
+            "latency_seconds": 0.254
           },
           {
             "task_id": "T04_CALLEES_DISPATCH",
             "domain": "code_analysis",
+            "task_type": "executable_tool_call",
             "query": "Which functions does dispatch_request call?",
             "expected_tool": "find_callees",
             "selected_tool": "find_callers",
@@ -112,11 +118,12 @@
               "Tool mismatch: expected 'find_callees', got 'find_callers'"
             ],
             "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"dispatch_request\"}}",
-            "latency_seconds": 0.2487
+            "latency_seconds": 0.2517
           },
           {
             "task_id": "T05_FILE_OUTLINE",
             "domain": "code_analysis",
+            "task_type": "executable_tool_call",
             "query": "Show me the class and method declarations in agent/orchestrator.py",
             "expected_tool": "get_file_outline",
             "selected_tool": "get_file_outline",
@@ -133,11 +140,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"get_file_outline\", \"arguments\": {\"file_path\": \"agent/orchestrator.py\"}}",
-            "latency_seconds": 0.3314
+            "latency_seconds": 0.3281
           },
           {
             "task_id": "T06_BIN_ANALYZE_SAMPLE",
             "domain": "binary_analysis",
+            "task_type": "executable_tool_call",
             "query": "Analyse binary sample_authorized.exe and report its PE architecture and headers",
             "expected_tool": "analyze_binary",
             "selected_tool": "analyze_binary",
@@ -154,11 +162,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
-            "latency_seconds": 0.2935
+            "latency_seconds": 0.2953
           },
           {
             "task_id": "T07_BIN_ANALYZE_APP",
             "domain": "binary_analysis",
+            "task_type": "executable_tool_call",
             "query": "Inspect the PE header and section count of release_build.exe",
             "expected_tool": "analyze_binary",
             "selected_tool": "analyze_binary",
@@ -175,11 +184,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"release_build.exe\"}}",
-            "latency_seconds": 0.2797
+            "latency_seconds": 0.2831
           },
           {
             "task_id": "T08_BIN_DISASM_ENTRY",
             "domain": "binary_analysis",
+            "task_type": "executable_tool_call",
             "query": "Disassemble the machine code instructions of binary sample_authorized.exe",
             "expected_tool": "disassemble_binary",
             "selected_tool": "disassemble_binary",
@@ -196,11 +206,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"disassemble_binary\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
-            "latency_seconds": 0.3039
+            "latency_seconds": 0.3199
           },
           {
             "task_id": "T09_BIN_IMPORTS",
             "domain": "binary_analysis",
+            "task_type": "executable_tool_call",
             "query": "List all imported DLLs and API functions for sample_authorized.exe",
             "expected_tool": "find_binary_imports",
             "selected_tool": "find_binary_imports",
@@ -217,11 +228,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"find_binary_imports\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
-            "latency_seconds": 0.312
+            "latency_seconds": 0.323
           },
           {
             "task_id": "T10_MEMORY_SAVE",
             "domain": "memory",
+            "task_type": "executable_tool_call",
             "query": "Remember this engineering finding: SQLite WAL mode improves concurrency",
             "expected_tool": "save_finding",
             "selected_tool": "save_finding",
@@ -238,11 +250,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"save_finding\", \"arguments\": {\"content\": \"SQLite WAL mode improves concurrency\"}}",
-            "latency_seconds": 0.2825
+            "latency_seconds": 0.2866
           },
           {
             "task_id": "T11_MEMORY_SEARCH",
             "domain": "memory",
+            "task_type": "executable_tool_call",
             "query": "Search persistent memory for findings related to WAL mode",
             "expected_tool": "search_memory",
             "selected_tool": "search_memory",
@@ -259,34 +272,34 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"search_memory\", \"arguments\": {\"query\": \"WAL mode\"}}",
-            "latency_seconds": 0.2533
+            "latency_seconds": 0.2492
           },
           {
             "task_id": "T12_MISSING_ARGS",
-            "domain": "binary_analysis",
+            "domain": "clarification",
+            "task_type": "clarification_required",
             "query": "Analyse binary and tell me if it is 64-bit",
-            "expected_tool": "analyze_binary",
+            "expected_tool": "request_clarification",
             "selected_tool": "analyze_binary",
             "expected_arguments": {
-              "file_path": ""
+              "missing_parameter": "file_path"
             },
-            "emitted_arguments": {
-              "file_path": "path_to_binary_file"
-            },
+            "emitted_arguments": {},
             "valid_json": true,
-            "correct_tool": true,
-            "required_args_present": true,
+            "correct_tool": false,
+            "required_args_present": false,
             "exact_args_correct": false,
             "overall_correct": false,
             "failure_reasons": [
-              "Expected empty/omitted arg for missing path, got 'path_to_binary_file'"
+              "Tool mismatch: expected 'request_clarification', got 'analyze_binary'"
             ],
-            "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"path_to_binary_file\"}}",
-            "latency_seconds": 0.2924
+            "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {}}",
+            "latency_seconds": 0.1975
           },
           {
             "task_id": "T13_INVALID_REQUEST",
             "domain": "unsupported",
+            "task_type": "unsupported_operation",
             "query": "Compile the C source code into a native executable",
             "expected_tool": "none",
             "selected_tool": "none",
@@ -299,11 +312,12 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"none()\", \"arguments\": {}}",
-            "latency_seconds": 0.1693
+            "latency_seconds": 0.169
           },
           {
             "task_id": "T14_AMBIGUOUS_REQUEST",
             "domain": "unsupported",
+            "task_type": "unsupported_operation",
             "query": "Please investigate the thing and tell me what it does",
             "expected_tool": "none",
             "selected_tool": "none",
@@ -316,23 +330,62 @@
             "overall_correct": true,
             "failure_reasons": [],
             "raw_response_snippet": "{\"tool\": \"none()\", \"arguments\": {}}",
-            "latency_seconds": 0.168
+            "latency_seconds": 0.1691
           }
         ]
       },
       "evidence_synthesis_evaluation": {
-        "evaluation_type": "Structured factual & keyword verification check",
-        "total_criteria": 5,
-        "passed_criteria": 5,
-        "factual_accuracy_score": "100.0%",
-        "architecture_verified": true,
-        "entry_point_verified": true,
-        "section_count_verified": true,
-        "section_size_verified": true,
-        "no_contradictions_verified": true,
-        "contradictions_found": [],
-        "raw_model_response": "Based on the static analysis provided, the sample_authorized.exe has the following characteristics:\n\n- **Architecture**: 0x8664, which corresponds to 64-bit x86 architecture (AMD64).\n- **Section Count**: 1, indicating that the executable contains only one section.\n- **Section .text**: The section is located at VirtualAddress 0x1000 and has a Size of 512 bytes. The Characteristics field indicates that the section is executable (0x60000020).\n- **Entry Point RVA**: The Entry Point RVA (Relative Virtual Address) is 0x1000, which translates to the ImageBase 0x140000000 -> Physical Address 0x140001000.\n- **Image Base**: The Image Base is 0x140000000, indicating the starting point of the executable in memory.\n\nThese details provide a comprehensive overview of the executable's structure and characteristics.",
-        "latency_seconds": 2.6187
+        "evaluation_type": "Multi-Case Factual and Contradiction Verification Check",
+        "disclaimer": "Measures adherence to provided evidence across 3 distinct test cases (complete evidence, missing evidence, and contradiction prompt). Serves as a bounded factual benchmark and does not claim universal hallucination prevention.",
+        "total_cases": 3,
+        "passed_cases": 1,
+        "synthesis_accuracy_rate": "33.3%",
+        "average_synthesis_latency_seconds": 1.0993,
+        "cases": [
+          {
+            "case_id": "SYNTH_01_COMPLETE_PE",
+            "description": "Factual extraction from complete empirical PE evidence",
+            "passed": true,
+            "has_required_facts": true,
+            "matched_facts": [
+              "0x8664",
+              "x64",
+              "0x1000",
+              "512"
+            ],
+            "no_contradictions": true,
+            "contradictions_found": [],
+            "raw_model_response": "Based on the static PE analysis provided, the sample_authorized.exe has the following characteristics:\n\n- **Architecture**: 0x8664 (IMAGE_FILE_MACHINE_AMD64 / x64 64-bit)\n- **Section Count**: 1 (.text)\n- **Section .text**: Virtual Address 0x1000, Size 512 bytes, Characteristics 0x60000020\n- **Entry Point RVA**: 0x1000 (Image Base 0x140000000 -> Physical Address 0x140001000)\n- **Image Base**: 0x140000000",
+            "latency_seconds": 1.8303
+          },
+          {
+            "case_id": "SYNTH_02_MISSING_EVIDENCE",
+            "description": "Handling missing facts (compiler version / language) without hallucination",
+            "passed": false,
+            "has_required_facts": false,
+            "matched_facts": [],
+            "no_contradictions": true,
+            "contradictions_found": [],
+            "raw_model_response": "Based on the provided information, the sample_authorized.exe was built using the Microsoft C++ compiler version 14.00.25310.29. The source programming language used was C++.",
+            "latency_seconds": 0.5403
+          },
+          {
+            "case_id": "SYNTH_03_CONTRADICTORY_EVIDENCE",
+            "description": "Rejecting false premise contradicted by empirical evidence",
+            "passed": false,
+            "has_required_facts": true,
+            "matched_facts": [
+              "x64",
+              "64-bit"
+            ],
+            "no_contradictions": false,
+            "contradictions_found": [
+              "is indeed a 32-bit arm"
+            ],
+            "raw_model_response": "Based on the static PE analysis provided, sample_authorized.exe is indeed a 32-bit ARM binary. The machine architecture is identified as 0x8664, which corresponds to the x64 architecture, indicating it is a 64-bit executable. This suggests the file is designed for a 64-bit system, likely running on an ARM-based processor.",
+            "latency_seconds": 0.9274
+          }
+        ]
       }
     },
     {

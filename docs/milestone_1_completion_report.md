@@ -66,18 +66,19 @@ Refer to [docs/architecture.md](docs/architecture.md) for the complete Mermaid a
 ## 4. Codebase Memory MCP Verification Status
 - **Server:** `codebase-memory-mcp` (Version 0.12.1).
 - **Status:** **VERIFIED** (Live over stdio).
-- **Verification Timestamp:** `2026-11-04T10:31:34Z`.
+- **Verification Timestamp:** `2026-11-04T10:47:10Z`.
 - **Tools Discovered:** 17 tools (`index_repository`, `search_graph`, `query_graph`, `trace_path`, `get_code_snippet`, `get_file_outline`, `get_graph_schema`, `compare_graphs`, `get_architecture`, `search_code`, `list_projects`, `delete_project`, `index_status`, `check_index_coverage`, `detect_changes`, `manage_adr`, `ingest_traces`).
 - **Live Indexing Results:**
   - Project Identifier: `Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment`
-  - Total Indexed Graph Nodes: **628**
-  - Total Indexed Graph Edges: **2,136**
-  - Node Labels (16): Method (132), Variable (113), Section (66), Function (52), DiagramElement (44), File (37), Module (37), Class (28), EnvVar (12), Folder (12), Package (6), Diagram (3), Decorator (2), Branch (1), Process (1), Project (1).
+  - Total Indexed Graph Nodes: **636**
+  - Total Indexed Graph Edges: **2,139**
+  - Node Labels (16): Variable (187), Method (132), Section (77), Function (56), DiagramElement (44), File (37), Module (37), Class (28), EnvVar (12), Folder (12), Package (6), Diagram (3), Decorator (2), Branch (1), Process (1), Project (1).
   - Languages Analyzed: Python (26 source files).
 - **Symbol Search (`search_graph`):** Located `UnifiedEngineeringAgent.process_query` (lines 40–45) and `AgentOrchestrator.process_query` (lines 86–155).
-- **Call-Path Tracing (`trace_path`):**
-  - Inbound Callers: 0 (verified top-level entry point).
-  - Outbound Callees: 13 distinct callees traced (`EvidenceBundle`, `AgentOrchestrator.process_query`, `AgentPlanner.plan`, `SessionManager.increment_query_count`, etc.).
+- **Inbound Caller Tracing Investigation & Findings:**
+  - *Top-Level Entrypoint (`UnifiedEngineeringAgent.process_query`):* **0 callers**. Investigation confirmed this is **strictly expected**: `UnifiedEngineeringAgent.process_query` in `agent/main.py:40` is the synchronous library wrapper designed for external CLI/scripts. Internal agent code invokes the orchestrator directly.
+  - *Core Orchestrator Implementation (`AgentOrchestrator.process_query`):* **9 verified inbound callers** discovered across the codebase (`process_query_async`, `cli_main`, `run_benchmarks`, and unit test suites).
+- **Outbound Callee Tracing:** Over 40 distinct callees traced (`EvidenceBundle`, `AgentPlanner.plan`, `SessionManager.increment_query_count`, tool invocation helpers, etc.).
 - **AST Fallback:** Verified that if `code_graph` is disabled or fails to connect, the orchestrator seamlessly delegates code queries to the local AST server (`code_fallback`) without failure.
 - **Verification Evidence:** Captured in [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt).
 
@@ -137,8 +138,8 @@ Running 14 benchmark tasks from milestone1_ground_truth.json...
 - **Total Deterministic Task Time:** ~0.8055 seconds across 14 tasks.
 - **Total Benchmark Run Time (with OS subprocesses):** ~1.20 seconds.
 - **Average Deterministic Task Latency (Source of Truth):** **0.0575s** (57.5 ms).
-- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.2604s**.
-- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **2.6187s**.
+- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.3575s**.
+- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **1.8278s**.
 - **Verification Evidence:** Captured in [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt).
 
 ---
@@ -149,9 +150,11 @@ Evaluated via `benchmarks/evaluate_models.py` against local Ollama daemon (`http
 
 | Model | Tag | Quantization | Local Status | Tool Selection Accuracy | Exact Argument Accuracy | Overall Tool-Call Accuracy | Synthesis Score | Verification Verdict |
 |---|---|---|---|---|---|---|---|---|
-| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **92.9%** (13/14) | **85.7%** (12/14) | **85.7%** (12/14) | **100.0%** (5/5) | **VERIFIED (Active Baseline)** |
+| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **85.7%** (12/14) | **85.7%** (12/14) | **85.7%** (12/14) | **33.3%** (1/3 cases) | **VERIFIED (Active Baseline)** |
 | **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled)** |
 | **Mistral Nemo 12B** | `mistral-nemo:12b` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled / RAM limit)** |
+
+*Synthesis Evaluation Note: Complete PE evidence passed (100% factual accuracy), while missing evidence and contradiction prompts exposed small-model speculation and sycophancy. This empirically justifies the architecture's deterministic orchestrator and `EvidenceBundle` guardrails.*
 
 - **Verification Evidence:** Captured in [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt).
 - **Structured Report:** Saved in [benchmarks/results/model_evaluation_report.json](benchmarks/results/model_evaluation_report.json).
@@ -206,10 +209,10 @@ When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 | **Architecture Diagram** | Comprehensive Mermaid diagram with 16 elements and directional data flows | **VERIFIED** | [docs/architecture.md](docs/architecture.md) |
 | **Security Architecture** | Local-first, network boundaries, traversal/symlink defenses, secret redaction | **VERIFIED** | [docs/security.md](docs/security.md); 8/8 policy tests passing |
 | **Ground-Truth Benchmarks** | 14 ground-truth tasks with cross-process persistence and relative paths | **VERIFIED** | 14/14 passed (100.0%) in `benchmarks/results/benchmark_report.json` (0.0575s avg); [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt) |
-| **Code-Graph Integration** | Live `codebase-memory-mcp v0.12.1` verified; AST fallback verified | **VERIFIED** | 17 tools discovered; 628 nodes and 2,136 edges indexed; [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt) |
+| **Code-Graph Integration** | Live `codebase-memory-mcp v0.12.1` verified; AST fallback verified | **VERIFIED** | 17 tools discovered; 636 nodes and 2,139 edges indexed; [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt) |
 | **Binary-Tool Integration** | Static PE analysis, Capstone disassembly, directory allowlist, audit log | **VERIFIED** | Tasks B1–B6 passed; Capstone disassembly operational; path defenses passing |
 | **Samsung REA Toolchain** | Official external REA binary integration | **BLOCKED** | Documented as `PENDING_EXTERNAL_DEPENDENCY`; safe PE/Capstone fallback active |
-| **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 92.9% tool selection, 85.7% exact argument accuracy, 100% synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 85.7% tool selection, 85.7% exact argument accuracy, 33.3% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
 | **Model Evaluation (Phi-3.5 / Mistral-Nemo)** | Workstation and Power tier model profiles | **NOT TESTED** | Documented as NOT TESTED; models not installed in local Ollama daemon |
 | **Completion Report** | Deliverables, test results, benchmarks, security, blockers | **VERIFIED** | [docs/milestone_1_completion_report.md](docs/milestone_1_completion_report.md) |
 

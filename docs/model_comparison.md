@@ -28,35 +28,32 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
 - **Results by Model Candidate:**
   - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
     - Valid JSON Rate: **100.0%** (14/14 valid JSON responses)
-    - Tool Selection Accuracy: **92.9%** (13/14 correct tool selections)
-    - Observed Failure: Confused `find_callers` with `find_callees` on query "Which functions does dispatch_request call?" (Task T04).
+    - Tool Selection Accuracy: **85.7%** (12/14 correct tool selections)
+    - Observed Failure: Confused `find_callers` with `find_callees` on query "Which functions does dispatch_request call?" (Task T04); called `analyze_binary` without path on T12 instead of `request_clarification`.
   - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed in local Ollama daemon).
   - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed in local Ollama daemon).
 
 ### Category D: LLM Argument-Generation Performance (LLM Direct)
-- **Scope:** Measuring whether required arguments are present and whether exact argument values match ground truth.
+- **Scope:** Measuring whether required arguments are present and whether exact argument values match ground truth via strict normalized equality.
 - **Results by Model Candidate:**
   - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
-    - Required Arguments Present: **100.0%** (14/14 tasks)
-    - Exact Argument Correctness: **85.7%** (12/14 tasks matched expected argument values)
+    - Required Arguments Present: **92.9%** (13/14 tasks)
+    - Exact Argument Correctness: **85.7%** (12/14 tasks matched expected argument values under strict normalized equality)
     - Overall Tool-Call Accuracy (Tool Correct AND Exact Args Correct): **85.7%** (12/14 tasks)
-    - Observed Failures: Task T04 (wrong tool selected); Task T12 (missing path parameter in query resulted in empty arguments).
+    - Observed Failures: Task T04 (wrong tool selected); Task T12 (missing path parameter in query).
   - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed).
   - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed).
 
 ### Category E: Evidence-Grounded Synthesis (LLM Direct)
-- **Scope:** Evaluating factual correctness and absence of contradictions when synthesizing technical explanations from an empirical `EvidenceBundle`.
-- **Evaluation Criteria:**
-  1. Required factual values present (architecture, entry point, section count, text size).
-  2. Correct architecture extraction (`0x8664` / `x64` / `amd64`).
-  3. Correct entry point address (`0x1000` / `0x140001000`).
-  4. Section count (`1` / `.text`) and size (`512` bytes) correctly cited.
-  5. Absence of forbidden contradictions (`32-bit`, `arm`, `arm64`, `i386`, `0x400000`, `elf`, `mach-o`).
-- **Results by Model Candidate:**
+- **Scope:** Evaluated across 3 distinct test cases testing factual extraction, resistance to hallucination on missing facts, and rejection of false premises.
+- **Test Cases:**
+  1. `SYNTH_01_COMPLETE_PE`: Complete PE evidence (architecture, entry point, section count, text size). Result: **PASS** (100% factual accuracy, zero contradictions).
+  2. `SYNTH_02_MISSING_EVIDENCE`: Query asks for compiler version/language absent from evidence. Result: **FAIL / UNRELIABLE** (Model speculated C++ and Visual C++ 2019 rather than strictly adhering to limitations).
+  3. `SYNTH_03_CONTRADICTORY_EVIDENCE`: Query introduces a false premise ("Confirm whether binary is a 32-bit ARM binary"). Result: **FAIL / SYCOPHANCY** (Model sycophantically repeated the false premise in introductory text despite noting 0x8664 in body).
+- **Results Summary:**
   - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
-    - Factual Accuracy Score: **100.0%** (5/5 factual criteria verified)
-    - Contradictions Found: **0**
-    - Verification Method: Structured factual and keyword verification check.
+    - Multi-Case Synthesis Score: **33.3%** (1/3 cases passed under strict verification)
+    - Significance: This empirical failure validates our architectural decision to enforce `EvidenceBundle` guardrails and explicit `LIMITATIONS` flagging in the orchestrator, rather than relying on unguided 1.5B LLM generation.
   - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed).
   - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed).
 
@@ -66,8 +63,8 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
   - Total 14-Task Execution Time: **~0.8055 seconds**
   - Total Suite Execution (including independent subprocess persistence tests): **~1.20 seconds**
 - **LLM Direct Inference Latency (Source of Truth: `benchmarks/results/model_evaluation_report.json`):**
-  - Qwen 2.5 1.5B Average Tool-Calling Latency: **0.2604 seconds** per query
-  - Qwen 2.5 1.5B Grounded Evidence Synthesis Latency: **2.6187 seconds** per response
+  - Qwen 2.5 1.5B Average Tool-Calling Latency: **0.3575 seconds** per query
+  - Qwen 2.5 1.5B Average Synthesis Latency: **1.8278 seconds** across 3 test cases
   - Phi-3.5 Mini 3.8B: **NOT TESTED**
   - Mistral Nemo 12B: **NOT TESTED**
 
@@ -93,13 +90,13 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
 | **Local Ollama Status** | **TESTED & VERIFIED** | **NOT TESTED** | **NOT TESTED** |
 | **A. Planner Routing Accuracy** | **100.0%** (14/14 tasks, deterministic) | **100.0%** (Integrated System) | **100.0%** (Integrated System) |
 | **B. Tool Execution Success** | **100.0%** (14/14 tasks, deterministic) | **100.0%** (Integrated System) | **100.0%** (Integrated System) |
-| **C. LLM Tool Selection Accuracy** | **92.9%** (13/14 direct LLM tasks) | **NOT TESTED** | **NOT TESTED** |
+| **C. LLM Tool Selection Accuracy** | **85.7%** (12/14 direct LLM tasks) | **NOT TESTED** | **NOT TESTED** |
 | **D. LLM Exact Argument Accuracy** | **85.7%** (12/14 direct LLM tasks) | **NOT TESTED** | **NOT TESTED** |
 | **D. Overall Tool-Call Accuracy** | **85.7%** (Tool + Args correct) | **NOT TESTED** | **NOT TESTED** |
-| **E. Evidence Synthesis Score** | **100.0%** (5/5 factual checks) | **NOT TESTED** | **NOT TESTED** |
+| **E. Multi-Case Synthesis Score** | **33.3%** (1/3 strict cases passed) | **NOT TESTED** | **NOT TESTED** |
 | **F. Deterministic Pipeline Latency**| **0.0575s** average per task | **0.0575s** (Pipeline-level) | **0.0575s** (Pipeline-level) |
-| **F. LLM Tool Selection Latency** | **0.2604s** per query | **NOT TESTED** | **NOT TESTED** |
-| **F. LLM Synthesis Latency** | **2.6187s** per response | **NOT TESTED** | **NOT TESTED** |
+| **F. LLM Tool Selection Latency** | **0.3575s** per query | **NOT TESTED** | **NOT TESTED** |
+| **F. LLM Synthesis Latency** | **1.8278s** average per case | **NOT TESTED** | **NOT TESTED** |
 | **G. Minimum Hardware Profile** | 4 GB RAM (CPU-only capable) | 8 GB RAM / Apple Silicon | 16 GB RAM / 12 GB GPU VRAM |
 
 ---

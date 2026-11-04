@@ -1,8 +1,8 @@
 ================================================================================
 VERIFICATION EVIDENCE: Codebase Memory MCP External Integration
-Timestamp (UTC): 2026-11-04T10:31:36Z
-Environment: macOS arm64, Python Python 3.14.2
-Command: python3 tests/verify_codebase_memory_mcp.py
+Timestamp (UTC): 2026-11-04T10:47:10Z
+Original Execution Environment: macOS arm64 Darwin, Python 3.14 (Virtual Environment)
+Portable Command: python3 tests/verify_codebase_memory_mcp.py
 ================================================================================
 ======================================================================
  1. CONNECTING TO REAL codebase-memory-mcp SERVER OVER STDIO
@@ -67,7 +67,7 @@ Command: python3 tests/verify_codebase_memory_mcp.py
 ======================================================================
 index_repository success: True
 index_repository raw output:
-{"project":"Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment","excluded":{"dirs":[".git","benchmarks/__pycache__","agent/__pycache__","tests/__pycache__","tests/fixtures/__pycache__"],"count":9,"truncated":true},"not_indexed_files_count":4,"not_indexed_files":{"files":[{"path":"benchmarks/results/sample_authorized.exe","reason":"ignored-suffix"},{"path":"benchmarks/results/benchmark_test_memory.db","reason":"ignored-suffix"},{"path":"memory/engineering_memory.db","reason":"ignored-suffix"},{"path":"memory/binary_audit.log","reason":"gitignore"}],"count":4,"truncated":false,"note":"Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."},"skipped_count":0,"parse_partial_count":0,"parse_unusable_count":0,"nodes":628,"edges":2136,"expected_nodes":628,"expected_edges":2136,"adr_present":false,"adr_hint":"Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.","artifact_present":false,"status":"indexed"}
+{"project":"Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment","excluded":{"dirs":[".git","benchmarks/__pycache__","agent/__pycache__","tests/__pycache__","tests/fixtures/__pycache__"],"count":9,"truncated":true},"not_indexed_files_count":4,"not_indexed_files":{"files":[{"path":"benchmarks/results/sample_authorized.exe","reason":"ignored-suffix"},{"path":"benchmarks/results/benchmark_test_memory.db","reason":"ignored-suffix"},{"path":"memory/engineering_memory.db","reason":"ignored-suffix"},{"path":"memory/binary_audit.log","reason":"gitignore"}],"count":4,"truncated":false,"note":"Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."},"skipped_count":0,"parse_partial_count":0,"parse_unusable_count":0,"nodes":636,"edges":2139,"adr_present":false,"adr_hint":"Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.","artifact_present":false,"status":"indexed"}
 
 [+] Active project identifier: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment
 
@@ -77,11 +77,11 @@ index_repository raw output:
 search_graph success: True
 search_graph output:
 results: 5  (cols: qn label file lines rank)
-  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query Method agent/main.py 40-45 -47.36
-  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query Method agent/orchestrator.py 86-155 -47.28
-  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query_async Method agent/main.py 47-52 -17.71
-  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.README.Code-Comprehension: Section README.md 164-165 -1.66
-  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.docs.milestone_1_completion_report.Complete-14-Task-Execution-Summary: Section docs/milestone_1_completion_report.md 106-107 -0.9306
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query Method agent/main.py 40-45 -47.16
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query Method agent/orchestrator.py 86-155 -47.09
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query_async Method agent/main.py 47-52 -17.47
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.README.Code-Comprehension: Section README.md 164-165 -1.709
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.docs.milestone_1_completion_report.Complete-14-Task-Execution-Summary: Section docs/milestone_1_completion_report.md 109-110 -0.9753
 total: 5
 total_relation: eq
 search_mode: bm25
@@ -89,13 +89,14 @@ returned: 5
 has_more: false
 truncated: false
 
-[+] Target Qualified Name for Caller Tracing: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+[+] Top-Level Entrypoint QN: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+[+] Core Orchestrator Implementation QN: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query
 
 ======================================================================
  4. INBOUND CALLER TRACING (trace_path inbound)
 ======================================================================
-trace_path (inbound) success: True
-trace_path (inbound) output:
+--- Inbound callers for Top-Level Entrypoint (Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query) ---
+Note: 0 internal callers is EXPECTED because this is the external synchronous library entrypoint.
 function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
 direction: inbound
 callers_total: 0
@@ -103,36 +104,116 @@ callers_total_relation: eq
 callers: 0  (cols: qn hop test)
 
 
+--- Inbound callers for Core Implementation (Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query) ---
+Verified callers (process_query_async, cli_main, run_benchmarks, tests):
+function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query
+direction: inbound
+callers_total: 10
+callers_total_relation: eq
+callers: 10  (rows: name hop test; qn = group prefix empty ? name : prefix + "." + name; "" marks empty prefix)
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent:
+  main 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent:
+  process_query 2 false
+  process_query_async 1 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main:
+  cli_main 1 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.benchmarks:
+  benchmark_runner 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.benchmarks.benchmark_runner:
+  run_benchmarks 1 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.tests.test_benchmark_runner.TestBenchmarkRunner:
+  test_run_benchmarks_returns_summary 2 true
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.tests.test_orchestrator.TestOrchestrator:
+  test_binary_analysis_clarification_on_missing_path 1 true
+  test_code_analysis_routing_and_evidence 1 true
+  test_memory_save_and_retrieve_flow 1 true
+
+
 ======================================================================
  5. OUTBOUND CALLEE TRACING (trace_path outbound)
 ======================================================================
-trace_path (outbound) success: True
+trace_path (outbound for Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query) success: True
 trace_path (outbound) output:
-function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query
 direction: outbound
-callees_total: 13
+callees_total: 54
 callees_total_relation: eq
-callees: 13  (rows: name hop test; qn = group prefix empty ? name : prefix + "." + name; "" marks empty prefix)
+callees: 54  (rows: name hop test; qn = group prefix empty ? name : prefix + "." + name; "" marks empty prefix)
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.evidence:
-  EvidenceBundle 3 false
+  EvidenceBundle 1 false
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.evidence.EvidenceBundle:
-  add_limitation 3 false
-Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent:
-  process_query_async 1 false
+  add 2 false
+  add_limitation 1 false
+  to_llm_context 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.evidence:
+  EvidenceItem 2 false
+  build_llm_prompt 2 false
+  normalise_binary_result 2 false
+  normalise_code_result 2 false
+  normalise_memory_result 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.llm.LocalLLM:
+  chat 2 false
+  check_availability 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.mcp_client.MCPClientManager:
+  _ensure_connected 3 false
+  available_servers 3 false
+  call_tool 2 false
+  list_tools_with_schemas 2 false
+  validate_tool_arguments 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.mcp_client:
+  ToolResult 3 false
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator:
-  _generate_response 3 false
-  _handle_binary_analysis 3 false
-  _handle_code_analysis 3 false
-  _handle_general 3 false
-  _handle_memory 3 false
-  _handle_multi_tool 3 false
-  process_query 2 false
+  _build_and_validate_tool_args 2 false
+  _find_compatible_tool 2 false
+  _generate_response 1 false
+  _handle_binary_analysis 1 false
+  _handle_code_analysis 1 false
+  _handle_general 1 false
+  _handle_memory 1 false
+  _handle_multi_tool 1 false
+  _resolve_code_graph_project 2 false
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator:
-  OrchestrationResult 3 false
+  OrchestrationResult 1 false
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.planner.AgentPlanner:
-  plan 3 false
+  plan 1 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.planner:
+  QueryPlan 2 false
+  _extract_binary_operation 2 false
+  _extract_binary_path 2 false
+  _extract_file_path 2 false
+  _extract_function_name 2 false
+  _extract_memory_keywords 2 false
+  _extract_memory_operation 2 false
+  _extract_verification_status 2 false
+  _is_multi_tool 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.policy:
+  redact_secrets 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.memory.memory.EngineeringMemory:
+  _connect 3 false
+  _find_duplicate 3 false
+  retrieve_memory 2 false
+  save_memory 2 false
+  search_memory 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.memory.memory:
+  _now_utc 3 false
 Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.memory.session_manager.SessionManager:
-  increment_query_count 3 false
+  _connect 2 false
+  increment_query_count 1 false
+builtins:
+  dict 3 false
+builtins.dict:
+  get 3 false
+builtins:
+  int 3 false
+  len 2 false
+  list 3 false
+builtins.list:
+  append 2 false
+builtins:
+  str 2 false
+builtins.str:
+  lower 2 false
 
 
 ======================================================================
@@ -142,12 +223,12 @@ get_architecture success: True
 get_architecture output:
  project: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment
 aspects_hint: "Summary view (default). More on request via aspects:[...] — structure, dependencies, routes, hotspots, boundaries, layers, clusters, file_tree — or [\"all\"] for everything."
-total_nodes: 628
-total_edges: 2136
+total_nodes: 636
+total_edges: 2139
 node_labels: 16  (cols: label count)
-  Variable 180
+  Variable 187
   Method 132
-  Section 76
+  Section 77
   Function 56
   DiagramElement 44
   File 37
@@ -162,23 +243,23 @@ node_labels: 16  (cols: label count)
   Process 1
   Project 1
 edge_types: 21  (cols: type count)
-  DEFINES 903
+  DEFINES 911
   CALLS 422
-  USAGE 128
   DEFINES_METHOD 127
+  USAGE 127
   TESTS 93
+  MENTIONS 72
   IMPORTS 70
-  MENTIONS 70
   WRITES 69
-  REFERENCES_FILE 59
+  REFERENCES_FILE 61
   DIAGRAM_ARROW 52
   CONTAINS_FILE 37
   SEMANTICALLY_RELATED 35
   DECORATES 22
   CONFIGURES 14
   CONTAINS_FOLDER 12
-  FILE_CHANGES_WITH 11
   DEPENDS_ON 6
+  FILE_CHANGES_WITH 3
   INHERITS 2
   SIMILAR_TO 2
   HAS_BRANCH 1

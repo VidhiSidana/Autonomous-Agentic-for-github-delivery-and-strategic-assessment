@@ -84,7 +84,7 @@ Autonomous-Agentic-for-github-delivery-and-strategic-assessment/
 ├── memory/
 │   ├── memory.py             # Persistent SQLite engineering memory CRUD
 │   ├── session_manager.py    # Multi-session lifecycle manager
-│   ├── binary_audit.log      # Immutable audit log of binary inspection requests
+│   ├── binary_audit.log      # Append-only audit log of binary inspection requests
 │   └── engineering_memory.db # SQLite database file
 ├── mcp_server/
 │   └── test_server.py        # Diagnostic smoke-test MCP server
@@ -235,7 +235,7 @@ Run the reproducible model evaluation suite against local Ollama:
 python3 benchmarks/evaluate_models.py
 ```
 - **Evaluated Models:** `qwen2.5:1.5b` (Tested active baseline), `phi3.5:latest` (Shortlisted profile / Not tested), `mistral-nemo:12b` (Shortlisted profile / Not tested).
-- **Qwen 2.5 1.5B Metrics:** 92.9% direct tool selection accuracy (0.2604s average latency), 85.7% exact argument accuracy, 85.7% overall tool-call correctness, and 100% evidence-grounded synthesis score (2.6187s latency).
+- **Qwen 2.5 1.5B Metrics:** 85.7% direct tool selection accuracy (0.3575s average latency), 85.7% exact argument accuracy under strict normalized equality, 85.7% overall tool-call correctness, and 33.3% multi-case synthesis score (1.8278s latency).
 - **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`. Raw execution log is preserved in `benchmarks/verification/model_evaluation_run.txt`.
 
 ---
@@ -249,7 +249,7 @@ python3 benchmarks/evaluate_models.py
 | **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
 | **Dynamic MCP Orchestrator**| **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
 | **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 628 nodes / 2,136 edges across 26 Python modules, verified search, caller/callee tracing & architecture queries |
+| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 636 nodes / 2,139 edges across 26 Python modules, verified search, caller/callee tracing & architecture queries |
 | **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
 | **REA Integration Adapter** | **IMPLEMENTED / PENDING EXTERNAL TOOL** | Formal adapter with live subprocess/HTTP invocation and analysis result capture. Reports `PENDING_EXTERNAL_DEPENDENCY` and falls back to PE/Capstone when external REA credentials/binary are pending from Samsung PRISM |
 | **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |
