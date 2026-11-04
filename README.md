@@ -102,9 +102,10 @@ Autonomous-Agentic-for-github-delivery-and-strategic-assessment/
 │   ├── test_mcp_client.py
 │   └── test_orchestrator.py
 ├── docs/
-│   ├── architecture.md       # Comprehensive system architecture document
-│   ├── model_comparison.md  # Shortlist of evaluated open-weight models
-│   └── security.md           # Security, authorization, and privacy guarantees
+│   ├── architecture.md       # Comprehensive system architecture document (15 components)
+│   ├── model_comparison.md   # Comparative evaluation across 8 dimensions (Qwen, Phi-3.5, Mistral)
+│   ├── security.md           # Security architecture, authorization policies, and threat model
+│   └── milestone_1_completion_report.md # Formal Milestone 1 verification & readiness report
 ├── .env.example              # Environment configuration template
 ├── requirements.txt          # Python dependencies
 └── README.md
@@ -193,9 +194,27 @@ You: Find the authentication function in the codebase and compare with related b
 
 Run the entire automated test suite:
 ```bash
+# Ensure dependencies are installed in your activated virtual environment:
+# pip install -r requirements.txt
+
 python3 -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Current Test Status:** 51/51 passing (100% pass rate across policy security, planner, memory, code analysis, binary analysis, MCP client, orchestrator, and benchmark runner).
+
+> [!IMPORTANT]
+> **Environment Dependency & Test Discovery:**
+> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 8 test modules load cleanly and **51/51 tests pass (100%)** in ~4.3 seconds.
+> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for `test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, and `test_benchmark_runner`, discovering only the 29 tests that rely exclusively on the Python standard library (`test_planner.py`, `test_policy.py`, `test_memory.py`).
+> Always run tests with the active virtual environment containing `requirements.txt`.
+
+**Discovered Test Breakdown (51 Total):**
+- `tests/test_planner.py`: **10 tests** (Routing, category detection, multi-tool detection, missing binary paths)
+- `tests/test_binary_analysis.py`: **10 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures)
+- `tests/test_memory.py`: **9 tests** (CRUD operations, session filtering, status updates, multi-threading)
+- `tests/test_policy.py`: **8 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, JSONL auditing)
+- `tests/test_code_analysis.py`: **4 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
+- `tests/test_mcp_client.py`: **4 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
+- `tests/test_orchestrator.py`: **3 tests** (Routing, dynamic schema validation, memory cycle)
+- `tests/test_benchmark_runner.py`: **3 tests** (14 ground-truth suite validation, cross-process isolation verification, error recovery)
 
 ---
 
