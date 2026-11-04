@@ -1,379 +1,124 @@
+"""
+Unified Engineering Agent - Main CLI Interface
+Samsung PRISM Project: Unified Local-LLM Agent for Code Comprehension,
+Binary Investigation and Persistent Engineering Memory.
+"""
 
-import sys
 import asyncio
-import re
+import sys
 from pathlib import Path
 
-# Add project root to Python path
+# Add project root to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from llm import LocalLLM
-from planner import AgentPlanner
+from agent.llm import LocalLLM
+from agent.orchestrator import AgentOrchestrator
+from agent.planner import AgentPlanner
 from memory.memory import EngineeringMemory
-from mcp_client import call_mcp_tool
+from memory.session_manager import SessionManager
 
 
 class UnifiedEngineeringAgent:
+    """
+    Unified Engineering Agent interface.
+    Delegates planning, tool execution, and LLM synthesis to AgentOrchestrator.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.llm = LocalLLM()
         self.planner = AgentPlanner()
         self.memory = EngineeringMemory()
+        self.session_mgr = SessionManager()
+        self.orchestrator = AgentOrchestrator(
+            llm=self.llm,
+            planner=self.planner,
+            memory=self.memory,
+            session_manager=self.session_mgr,
+        )
 
-    def process_query(self, user_input):
+    def process_query(self, user_input: str, overrides: dict = None) -> str:
+        """
+        Synchronous entry point for processing a query.
+        Safe for CLI, scripts, and unit tests.
+        """
+        return asyncio.run(self.process_query_async(user_input, overrides))
 
-        category = self.planner.plan(user_input)
+    async def process_query_async(self, user_input: str, overrides: dict = None) -> str:
+        """
+        Asynchronous processing pipeline.
+        """
+        result = await self.orchestrator.process_query(user_input, overrides=overrides)
+        return result.response_text
 
-        print(f"\n[Agent] Selected category: {category}")
+    async def close(self) -> None:
+        """Release MCP and background resources."""
+        await self.orchestrator.close()
 
-        query = user_input.lower()
 
-        # =====================================
-        # MCP TEST SERVER
-        # =====================================
+def print_banner(agent: UnifiedEngineeringAgent) -> None:
+    print("=" * 60)
+    print("  Samsung PRISM — Unified Local Engineering Agent")
+    print("  Code Comprehension | Binary Analysis | Persistent Memory")
+    print("=" * 60)
+    avail, reason = agent.llm.check_availability()
+    print(f"[*] Local LLM ({agent.llm.model}): {'ONLINE' if avail else 'OFFLINE (' + reason + ')'}")
+    print(f"[*] Session ID: {agent.session_mgr.current_session_id}")
+    print("[*] Type 'exit' to quit, 'summary' for session info.")
+    print("-" * 60)
 
-        if any(word in query for word in [
-            "mcp test",
-            "test server",
-            "project info"
-        ]):
 
-            result = asyncio.run(
-                call_mcp_tool(
-                    "get_project_info",
-                    {},
-                    server="test"
-                )
-            )
+async def cli_main() -> None:
+    agent = UnifiedEngineeringAgent()
+    print_banner(agent)
 
-            return f"MCP Server Result:\n{result}"
-
-        # =====================================
-        # MCP ADDITION TOOL
-        # =====================================
-
-        if "add numbers" in query:
-
+    try:
+        while True:
             try:
-                a = int(input("Enter first number: "))
-                b = int(input("Enter second number: "))
+                user_input = input("\nYou: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\nStopping agent...")
+                break
+
+            if not user_input:
+                continue
+
+            if user_input.lower() in ("exit", "quit", "q"):
+                print("Ending session and exiting...")
+                break
+
+            if user_input.lower() == "summary":
+                session_id = agent.session_mgr.current_session_id
+                print(f"\n[Session Info] Active ID: {session_id}")
+                recent = agent.memory.retrieve_memory(limit=5)
+                print(f"[Session Info] Stored findings: {len(recent)} recent items")
+                continue
+
+            # Process query
+            result = await agent.orchestrator.process_query(user_input)
+
+            # If parameter clarification is required, ask user at CLI layer
+            if result.clarification_needed:
+                print(f"\n[Agent]: {result.clarification_question}")
+                param_input = input("Your input: ").strip()
+                if param_input:
+                    # Retry with parameter override
+                    overrides = {}
+                    if "binary" in result.category:
+                        overrides["binary_path"] = param_input
+                    elif "code" in result.category:
+                        overrides["function_name"] = param_input
+                    result = await agent.orchestrator.process_query(user_input, overrides=overrides)
+
+            print(f"\n[Agent - {result.category.upper()}]:")
+            print(result.response_text)
+            print("-" * 60)
+
+    finally:
+        agent.session_mgr.end_session("Session closed by user.")
+        await agent.close()
+        print("Agent stopped cleanly.")
 
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "add_numbers",
-                        {"a": a, "b": b},
-                        server="test"
-                    )
-                )
-
-                return f"MCP Addition Result:\n{result}"
-
-            except ValueError:
-                return "Please enter valid integer numbers."
-
-        # =====================================
-        # ENGINEERING MEMORY
-        # =====================================
-
-        if category == "memory":
-
-            if any(word in query for word in [
-                "remember",
-                "save finding"
-            ]):
-
-                title = input("Enter finding title: ")
-                content = input("Enter finding details: ")
-
-                return self.memory.save_finding(
-                    title,
-                    content
-                )
-
-            elif "search" in query:
-
-                keyword = input("Enter keyword to search: ")
-
-                findings = self.memory.search_findings(
-                    keyword
-                )
-
-                if not findings:
-                    return f"No findings found for '{keyword}'."
-
-                response = f"\nSearch Results for '{keyword}':\n"
-
-                for finding in findings:
-                    response += (
-                        f"\nID: {finding[0]}"
-                        f"\nTitle: {finding[1]}"
-                        f"\nContent: {finding[2]}"
-                        f"\nCreated At: {finding[3]}\n"
-                    )
-
-                return response
-
-            elif any(word in query for word in [
-                "retrieve",
-                "recall",
-                "show memory",
-                "list memory"
-            ]):
-
-                findings = self.memory.retrieve_findings()
-
-                if not findings:
-                    return "No engineering findings stored yet."
-
-                response = "\nStored Engineering Findings:\n"
-
-                for finding in findings:
-                    response += (
-                        f"\nID: {finding[0]}"
-                        f"\nTitle: {finding[1]}"
-                        f"\nContent: {finding[2]}"
-                        f"\nCreated At: {finding[3]}\n"
-                    )
-
-                return response
-
-            else:
-                return "Memory command not recognized."
-
-        # =====================================
-        # CODE ANALYSIS MCP SERVER
-        # =====================================
-
-        if category == "code_analysis":
-
-            project_root = Path(__file__).resolve().parent.parent
-
-            # ---------------------------------
-            # C2: Caller Detection
-            # ---------------------------------
-
-            if any(word in query for word in [
-                "caller",
-                "calls",
-                "who calls"
-            ]):
-
-                function_name = input(
-                    "Enter function name to search: "
-                ).strip()
-
-                if not function_name:
-                    return "Function name cannot be empty."
-
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "find_callers",
-                        {
-                            "directory": str(project_root),
-                            "function_name": function_name
-                        },
-                        server="code"
-                    )
-                )
-
-                if result.is_error:
-                    return "Caller analysis failed."
-
-                return (
-                    "Caller Analysis Results:\n\n"
-                    + result.structured_content["result"]
-                )
-
-            # ---------------------------------
-            # C3: Module Relationship Analysis
-            # ---------------------------------
-
-            if any(word in query for word in [
-                "module",
-                "modules",
-                "import",
-                "imports",
-                "depend",
-                "dependency",
-                "dependencies"
-            ]):
-
-                filename = input(
-                    "Enter Python filename (e.g. agent/main.py): "
-                ).strip()
-
-                if not filename:
-                    return "Filename cannot be empty."
-
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "find_module_relationships",
-                        {
-                            "directory": str(project_root),
-                            "filename": filename
-                        },
-                        server="code"
-                    )
-                )
-
-                if result.is_error:
-                    return "Module analysis failed."
-
-                return (
-                    "Module Relationship Results:\n\n"
-                    + result.structured_content["result"]
-                )
-
-            # ---------------------------------
-            # C1: Function Detection
-            # ---------------------------------
-
-            result = asyncio.run(
-                call_mcp_tool(
-                    "find_functions",
-                    {
-                        "directory": str(project_root)
-                    },
-                    server="code"
-                )
-            )
-
-            if result.is_error:
-                return "Code analysis failed."
-
-            return (
-                "Code Analysis Results:\n\n"
-                + result.structured_content["result"]
-            )
-
-        # =====================================
-        # BINARY ANALYSIS MCP SERVER
-        # =====================================
-
-        if category == "binary_analysis":
-
-            binary_path = input(
-                "Enter binary file path: "
-            ).strip().strip('"')
-
-            if not binary_path:
-                return "Binary file path cannot be empty."
-
-            # ---------------------------------
-            # B2: Binary Disassembly
-            # ---------------------------------
-
-            if any(word in query for word in [
-                "disassemble",
-                "disassembly",
-                "assembly",
-                "instructions",
-                "instruction"
-            ]):
-
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "disassemble_binary",
-                        {
-                            "binary_path": binary_path,
-                            "max_instructions": 50
-                        },
-                        server="binary"
-                    )
-                )
-
-            # ---------------------------------
-            # B1: Binary Function Discovery
-            # ---------------------------------
-
-            elif any(word in query for word in [
-                "binary function",
-                "binary functions",
-                "exported function",
-                "exported functions",
-                "list functions"
-            ]):
-
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "find_binary_functions",
-                        {
-                            "binary_path": binary_path
-                        },
-                        server="binary"
-                    )
-                )
-
-            # ---------------------------------
-            # Binary Information
-            # ---------------------------------
-
-            else:
-
-                result = asyncio.run(
-                    call_mcp_tool(
-                        "analyze_binary",
-                        {
-                            "binary_path": binary_path
-                        },
-                        server="binary"
-                    )
-                )
-
-            if result.is_error:
-                return "Binary analysis failed."
-
-            return (
-                "Binary Analysis Results:\n\n"
-                + result.structured_content["result"]
-            )
-
-
-        # =====================================
-        # GENERAL LLM RESPONSE
-        # =====================================
-
-        prompt = f"""
-You are a Unified Engineering Agent.
-
-Your query category is: {category}
-
-User query: {user_input}
-
-Answer clearly and accurately.
-
-Do not claim to have analyzed code or binaries
-unless actual analysis tools have been used.
-"""
-
-        return self.llm.generate_response(prompt)
-
-
-# =====================================
-# MAIN PROGRAM
-# =====================================
 
 if __name__ == "__main__":
-
-    agent = UnifiedEngineeringAgent()
-
-    print("====================================")
-    print(" Unified Engineering Agent")
-    print("====================================")
-
-    print("Type 'exit' to stop.\n")
-
-    while True:
-
-        user_input = input("You: ")
-
-        if user_input.lower() == "exit":
-            print("Agent stopped.")
-            break
-
-        response = agent.process_query(user_input)
-
-        print("\nAgent:", response)
-
-        print("-" * 50)
+    asyncio.run(cli_main())

@@ -1,0 +1,83 @@
+{
+  "benchmark_suite": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
+  "version": "1.0",
+  "tasks": [
+    {
+      "id": "C1",
+      "category": "code_analysis",
+      "description": "Function discovery across repository",
+      "query": "Find functions in this codebase",
+      "expected_category": "code_analysis",
+      "expected_tool": "find_functions",
+      "success_criteria": "Returns list of functions with file and line numbers"
+    },
+    {
+      "id": "C2",
+      "category": "code_analysis",
+      "description": "Caller identification for process_query",
+      "query": "Who calls process_query?",
+      "expected_category": "code_analysis",
+      "expected_tool": "find_callers",
+      "expected_symbol": "process_query",
+      "success_criteria": "Identifies call sites and callers of process_query"
+    },
+    {
+      "id": "C3",
+      "category": "code_analysis",
+      "description": "Module dependency extraction",
+      "query": "Which modules does agent/main.py depend on?",
+      "expected_category": "code_analysis",
+      "expected_tool": "find_module_relationships",
+      "expected_file": "agent/main.py",
+      "success_criteria": "Extracts imported modules such as asyncio, sys, pathlib, etc."
+    },
+    {
+      "id": "B1",
+      "category": "binary_analysis",
+      "description": "Binary analysis path policy enforcement",
+      "query": "Analyze binary /unauthorized/path/test.exe",
+      "expected_category": "binary_analysis",
+      "expected_policy_result": "DENIED",
+      "success_criteria": "Rejects unauthorized path before execution"
+    },
+    {
+      "id": "B2",
+      "category": "binary_analysis",
+      "description": "Missing binary path triggers clarification",
+      "query": "Disassemble this binary executable.",
+      "expected_category": "binary_analysis",
+      "clarification_needed": true,
+      "success_criteria": "Prompts user for binary path without crashing"
+    },
+    {
+      "id": "M1",
+      "category": "memory",
+      "description": "Persist engineering finding",
+      "query": "Remember this finding: authentication is handled in auth_service.py. This is verified.",
+      "expected_category": "memory",
+      "expected_operation": "save",
+      "expected_verification_status": "VERIFIED",
+      "success_criteria": "Persists finding with VERIFIED status in SQLite"
+    },
+    {
+      "id": "M2",
+      "category": "memory",
+      "description": "Cross-session retrieval of verified finding",
+      "query": "What did we discover about authentication in previous session?",
+      "expected_category": "memory",
+      "expected_operation": "search",
+      "expected_content_match": "auth_service.py",
+      "success_criteria": "Retrieves saved finding across session restart"
+    },
+    {
+      "id": "MT1",
+      "category": "multi_tool",
+      "description": "Multi-tool cross-domain query",
+      "query": "Find the authentication function in the codebase and compare with related binary functionality in app.exe",
+      "expected_category": "multi_tool",
+      "sub_categories": ["code_analysis", "binary_analysis"],
+      "success_criteria": "Executes both code analysis and binary analysis workflows"
+    }
+  ]
+}
+

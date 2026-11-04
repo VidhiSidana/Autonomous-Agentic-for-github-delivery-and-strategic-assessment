@@ -1,0 +1,90 @@
+{
+  "timestamp_utc": "2026-11-04T06:11:40.605350+00:00",
+  "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
+  "total_tasks": 8,
+  "passed_tasks": 8,
+  "success_rate": "100.0%",
+  "average_elapsed_seconds": 0.1478,
+  "results": [
+    {
+      "task_id": "C1",
+      "category": "code_analysis",
+      "description": "Function discovery across repository",
+      "passed": true,
+      "elapsed_seconds": 0.7899,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "C2",
+      "category": "code_analysis",
+      "description": "Caller identification for process_query",
+      "passed": true,
+      "elapsed_seconds": 0.0295,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "C3",
+      "category": "code_analysis",
+      "description": "Module dependency extraction",
+      "passed": true,
+      "elapsed_seconds": 0.0042,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B1",
+      "category": "binary_analysis",
+      "description": "Binary analysis path policy enforcement",
+      "passed": true,
+      "elapsed_seconds": 0.3329,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B2",
+      "category": "binary_analysis",
+      "description": "Missing binary path triggers clarification",
+      "passed": true,
+      "elapsed_seconds": 0.0008,
+      "evidence_count": 0,
+      "limitations_count": 1,
+      "reasons": []
+    },
+    {
+      "task_id": "M1",
+      "category": "memory",
+      "description": "Persist engineering finding",
+      "passed": true,
+      "elapsed_seconds": 0.0018,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "M2",
+      "category": "memory",
+      "description": "Cross-session retrieval of verified finding",
+      "passed": true,
+      "elapsed_seconds": 0.0013,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "MT1",
+      "category": "multi_tool",
+      "description": "Multi-tool cross-domain query",
+      "passed": true,
+      "elapsed_seconds": 0.0223,
+      "evidence_count": 3,
+      "limitations_count": 0,
+      "reasons": []
+    }
+  ]
+}
