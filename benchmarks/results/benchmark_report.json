@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-11-04T10:04:54.416061+00:00",
+  "timestamp_utc": "2026-11-04T10:18:39.461634+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 14,
   "passed_tasks": 14,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.0572,
+  "average_elapsed_seconds": 0.0575,
   "cross_process_persistence": {
     "success": true,
     "process_a_exit": 0,
     "process_b_exit": 0,
     "record_id": 2,
-    "session_id": "session_a7d92b11",
+    "session_id": "session_c8afa6eb",
     "id_matched": true,
     "content_verified": true,
     "status_verified": true,
@@ -24,7 +24,7 @@
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 0.3402,
+      "elapsed_seconds": 0.3424,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -34,7 +34,7 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.045,
+      "elapsed_seconds": 0.0413,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -44,7 +44,7 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0067,
+      "elapsed_seconds": 0.0068,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -54,7 +54,7 @@
       "category": "code_analysis",
       "description": "Code architecture and class outline understanding",
       "passed": true,
-      "elapsed_seconds": 0.0377,
+      "elapsed_seconds": 0.0409,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -64,7 +64,7 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.2988,
+      "elapsed_seconds": 0.2999,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -74,7 +74,7 @@
       "category": "binary_analysis",
       "description": "Missing binary path triggers clarification",
       "passed": true,
-      "elapsed_seconds": 0.0007,
+      "elapsed_seconds": 0.0005,
       "evidence_count": 0,
       "limitations_count": 1,
       "reasons": []
@@ -84,7 +84,7 @@
       "category": "binary_analysis",
       "description": "Binary metadata and PE architecture extraction",
       "passed": true,
-      "elapsed_seconds": 0.0075,
+      "elapsed_seconds": 0.0087,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -94,7 +94,7 @@
       "category": "binary_analysis",
       "description": "PE section header and memory boundary inspection",
       "passed": true,
-      "elapsed_seconds": 0.0066,
+      "elapsed_seconds": 0.0055,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -104,7 +104,7 @@
       "category": "binary_analysis",
       "description": "Binary imports and external symbol dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0058,
+      "elapsed_seconds": 0.0077,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -114,7 +114,7 @@
       "category": "binary_analysis",
       "description": "Capstone machine code instruction disassembly",
       "passed": true,
-      "elapsed_seconds": 0.0056,
+      "elapsed_seconds": 0.0055,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -124,7 +124,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0012,
+      "elapsed_seconds": 0.001,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -143,7 +143,7 @@
         "process_a_exit": 0,
         "process_b_exit": 0,
         "record_id": 2,
-        "session_id": "session_a7d92b11",
+        "session_id": "session_c8afa6eb",
         "id_matched": true,
         "content_verified": true,
         "status_verified": true,
@@ -167,7 +167,7 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.043,
+      "elapsed_seconds": 0.0429,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": [],

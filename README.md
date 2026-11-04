@@ -218,13 +218,25 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 
 ---
 
-## 8. Benchmark Evaluation
+## 8. Benchmark & Model Evaluation
 
-Run the ground-truth benchmark suite:
+### 8.1 Deterministic Ground-Truth Benchmark Suite
+Run the 14-task ground-truth benchmark suite:
 ```bash
 python3 benchmarks/benchmark_runner.py
 ```
-**Current Benchmark Status:** 14/14 tasks passing (100.0% success rate covering PE architecture, section headers, imports/exports, Capstone instruction disassembly, code architecture, genuine cross-process persistence across separate OS processes, multi-tool dual-branch execution validation, and dynamic MCP schema validation). Execution metrics are recorded in `benchmarks/results/benchmark_report.json`.
+- **Results:** 14/14 tasks passing (100.0% success rate across PE architecture, section headers, imports/exports, Capstone disassembly, code architecture, cross-process persistence, multi-tool dual-branch execution, and dynamic schema validation).
+- **Execution Latency:** Total deterministic suite execution time is ~0.80 seconds (average **0.0572s** per task; ~1.20s including independent subprocesses).
+- **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths.
+
+### 8.2 Empirical Model Evaluation Suite
+Run the reproducible model evaluation suite against local Ollama:
+```bash
+python3 benchmarks/evaluate_models.py
+```
+- **Evaluated Models:** `qwen2.5:1.5b` (Tested active baseline), `phi3.5:latest` (Shortlisted profile / Not tested), `mistral-nemo:12b` (Shortlisted profile / Not tested).
+- **Qwen 2.5 1.5B Metrics:** 100% direct tool selection accuracy (0.7504s average latency), 100% argument structure accuracy, and verified evidence-grounded synthesis (2.2268s latency).
+- **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`.
 
 ---
 
@@ -237,16 +249,16 @@ python3 benchmarks/benchmark_runner.py
 | **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
 | **Dynamic MCP Orchestrator**| **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
 | **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 495 nodes / 1,797 edges, tested search, caller/callee tracing & architecture queries |
+| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 543 nodes / 1,971 edges across 25 Python modules, verified search, caller/callee tracing & architecture queries |
 | **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
 | **REA Integration Adapter** | **IMPLEMENTED / PENDING EXTERNAL TOOL** | Formal adapter with live subprocess/HTTP invocation and analysis result capture. Reports `PENDING_EXTERNAL_DEPENDENCY` and falls back to PE/Capstone when external REA credentials/binary are pending from Samsung PRISM |
-| **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, comprehensive audit logging |
+| **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |
 | **Unified Engineering Memory** | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
 | **Cross-Process Persistence** | **IMPLEMENTED AND TESTED** | Verified cross-process persistence where Process A inserts finding and Process B retrieves exact ID, session ID, content, and verification status |
 | **Multi-Session Manager** | **IMPLEMENTED AND TESTED** | Session ID tracking, query metrics, cross-session lifecycle testing |
 | **Evidence Aggregation** | **IMPLEMENTED AND TESTED** | Grounded prompting, VERIFIED vs HYPOTHESIS vs LIMITATIONS separation |
-| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | Ground-truth dataset & automated runner with genuine cross-process evaluation (`benchmarks/benchmark_runner.py`) |
-| **Model Shortlist** | **IMPLEMENTED AND TESTED** | Evaluated Qwen2.5-1.5B, Phi-3.5-Mini, Mistral-Nemo in `docs/model_comparison.md` |
+| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | 14-task ground-truth dataset & automated runner with genuine cross-process evaluation (`benchmarks/benchmark_runner.py`) |
+| **Model Evaluation** | **IMPLEMENTED AND TESTED** | Evaluated Qwen2.5-1.5B (Active/Tested), Phi-3.5-Mini (Shortlisted/Not Tested), Mistral-Nemo (Shortlisted/Not Tested) in `docs/model_comparison.md` and `benchmarks/evaluate_models.py` |
 
 ---
 

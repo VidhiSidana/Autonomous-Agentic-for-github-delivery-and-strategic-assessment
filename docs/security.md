@@ -1,21 +1,21 @@
-# Samsung PRISM: Privacy, Safety & Security Architecture
+# Samsung PRISM: Privacy, Safety & Security Specification
 
 ## 1. Local-First Architecture & Network Boundaries
-The **Samsung PRISM Unified Engineering Agent** is architected strictly for on-premise, air-gapped development:
-* **LLM Calls:** Directed exclusively to the local Ollama or vLLM daemon running at `http://localhost:11434`. No user queries, source code, or binary artifacts are transmitted to external cloud providers.
+The **Samsung PRISM Unified Engineering Agent** is architected for on-premise local development:
+* **LLM Calls:** Directed exclusively to the local Ollama daemon running at `http://localhost:11434` over the local loopback interface. The agent does not initiate outbound cloud API requests to external LLM providers during query processing or benchmark evaluation.
 * **Internal MCP Servers:** Core tool servers (`code_analysis/code_server.py`, `binary_analysis/binary_server.py`, `mcp_server/test_server.py`) run as child processes communicating over local POSIX `stdio` pipes.
-* **Persistent Memory:** Stored in a local SQLite file (`memory/engineering_memory.db`). No outbound telemetry or remote analytics are gathered.
-* **Network Boundary:** The test runner and agent components do not make outbound internet connections during query processing or benchmarking.
+* **Persistent Memory:** Stored in a local SQLite database file (`memory/engineering_memory.db`). No telemetry or telemetry pings are sent.
+* **Network Boundary Clarification:** While the agent application makes no outbound HTTP/HTTPS requests beyond the local Ollama loopback, complete host-level network isolation or air-gapping must be enforced by the host operating system sandbox or firewall policies.
 
 ---
 
 ## 2. Binary Analysis Safety Guardrails
 
 ### 2.1 Non-Execution Guarantee
-* **The agent NEVER executes target binaries under analysis.**
+* **The agent does not execute target binaries under analysis.**
 * Analysis is strictly static, read-only, and bounded:
-  * Static file parsing via `pefile`
-  * Static machine code disassembly via `capstone`
+  * Static PE file parsing via `pefile`
+  * Static machine code instruction disassembly via `capstone`
   * Static string extraction via regular expressions
 * No process is spawned from the target binary, attached via debugger, or injected into memory.
 
@@ -33,8 +33,9 @@ The **Samsung PRISM Unified Engineering Agent** is architected strictly for on-p
   - Avoids naive lowercase-prefix string checks that could leak access on case-sensitive filesystems.
   - Sibling directory attacks (e.g. `/path/allowed_sibling` matching a prefix of `/path/allowed`) are strictly rejected.
 
-### 2.4 Immutable Audit Logging (`BINARY_AUDIT_LOG`)
-* Every binary analysis inspection attempt records an immutable audit entry in CSV format to `memory/binary_audit.log`.
+### 2.4 Append-Only Audit Logging (`BINARY_AUDIT_LOG`)
+* Every binary analysis inspection attempt records an append-only audit entry in CSV format to `memory/binary_audit.log`.
+* Note: The log file is maintained via standard sequential file append (`open(..., 'a')`). It provides an audit trail of requested operations and outcomes, but is not cryptographically signed or tamper-proof at the OS kernel level.
 * Audit record fields:
   * `timestamp_utc`: ISO 8601 UTC timestamp
   * `session_id`: Unique identifier for the active work session

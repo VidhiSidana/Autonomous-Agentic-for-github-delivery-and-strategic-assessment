@@ -1,0 +1,120 @@
+{
+  "timestamp_utc": "2026-11-04T10:15:46.476428+00:00",
+  "evaluation_suite": "Samsung PRISM Milestone 1 Genuine Model Evaluation",
+  "evaluator_version": "v14",
+  "host_environment": {
+    "platform": "darwin",
+    "python_version": "3.14.2"
+  },
+  "models": [
+    {
+      "model_tag": "qwen2.5:1.5b",
+      "family": "Qwen 2.5",
+      "parameters": "1.54B",
+      "quantization": "Q4_K_M",
+      "target_tier": "Tier 1 (Fast / Edge Baseline)",
+      "min_ram_gb": 4,
+      "available_in_ollama": true,
+      "status_message": "Model 'qwen2.5:1.5b' is available.",
+      "evaluation_status": "TESTED",
+      "direct_tool_selection": {
+        "total_tests": 4,
+        "correct_tool_selections": 4,
+        "tool_selection_accuracy": "100.0%",
+        "valid_argument_structures": 4,
+        "argument_accuracy": "100.0%",
+        "average_tool_selection_latency": 0.7504,
+        "details": [
+          {
+            "task_id": "TS1",
+            "query": "Find all functions defined across the codebase",
+            "expected_tool": "find_functions",
+            "selected_tool": "find_functions",
+            "tool_correct": true,
+            "arguments_emitted": {},
+            "args_valid": true,
+            "latency_seconds": 1.6933
+          },
+          {
+            "task_id": "TS2",
+            "query": "Who calls process_query in this repository?",
+            "expected_tool": "find_callers",
+            "selected_tool": "find_callers",
+            "tool_correct": true,
+            "arguments_emitted": {
+              "target": "process_query"
+            },
+            "args_valid": true,
+            "latency_seconds": 0.536
+          },
+          {
+            "task_id": "TS3",
+            "query": "Analyse binary sample_authorized.exe and report its architecture and headers",
+            "expected_tool": "analyze_binary",
+            "selected_tool": "analyze_binary",
+            "tool_correct": true,
+            "arguments_emitted": {
+              "file_path": "sample_authorized.exe"
+            },
+            "args_valid": true,
+            "latency_seconds": 0.3822
+          },
+          {
+            "task_id": "TS4",
+            "query": "Disassemble the machine code instructions of binary sample_authorized.exe",
+            "expected_tool": "disassemble_binary",
+            "selected_tool": "disassemble_binary",
+            "tool_correct": true,
+            "arguments_emitted": {
+              "file_path": "sample_authorized.exe"
+            },
+            "args_valid": true,
+            "latency_seconds": 0.39
+          }
+        ]
+      },
+      "evidence_grounded_synthesis": {
+        "success": true,
+        "latency_seconds": 2.2268,
+        "response_snippet": "The sample_authorized.exe file is a 64-bit executable with the following characteristics:\n\n- Architecture: 0x8664, which corresponds to the x64 architecture.\n- Section Count: 1, indicating that the fi...",
+        "matched_evidence_keywords": [
+          "0x8664",
+          "x64",
+          "0x1000"
+        ],
+        "grounded_in_evidence": true
+      },
+      "summary_metrics": {
+        "tool_selection_accuracy": "100.0%",
+        "argument_accuracy": "100.0%",
+        "avg_tool_selection_latency": "0.7504s",
+        "synthesis_latency": "2.2268s",
+        "grounded_synthesis_verified": true
+      }
+    },
+    {
+      "model_tag": "phi3.5:latest",
+      "family": "Phi-3.5 Mini",
+      "parameters": "3.82B",
+      "quantization": "Q4_K_M",
+      "target_tier": "Tier 2 (Balanced / Daily Engineer)",
+      "min_ram_gb": 8,
+      "available_in_ollama": false,
+      "status_message": "Model 'phi3.5:latest' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull phi3.5:latest",
+      "evaluation_status": "NOT TESTED",
+      "reason": "Model not pulled in local Ollama daemon or memory constrained."
+    },
+    {
+      "model_tag": "mistral-nemo:12b",
+      "family": "Mistral Nemo",
+      "parameters": "12.2B",
+      "quantization": "Q4_K_M",
+      "target_tier": "Tier 3 (Power / Reverse Engineering)",
+      "min_ram_gb": 16,
+      "available_in_ollama": false,
+      "status_message": "Model 'mistral-nemo:12b' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull mistral-nemo:12b",
+      "evaluation_status": "NOT TESTED",
+      "reason": "Model not pulled in local Ollama daemon or memory constrained."
+    }
+  ]
+}
