@@ -51,12 +51,14 @@ class LocalLLM:
         timeout: Optional[int] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        format: Optional[str] = None,
     ) -> None:
         self.model = model or OLLAMA_MODEL
         self.base_url = (base_url or OLLAMA_BASE_URL).rstrip("/")
         self.timeout = timeout if timeout is not None else OLLAMA_TIMEOUT
         self.temperature = temperature if temperature is not None else OLLAMA_TEMPERATURE
         self.max_tokens = max_tokens if max_tokens is not None else OLLAMA_MAX_TOKENS
+        self.format = format
         self._chat_url = f"{self.base_url}/api/chat"
         self._tags_url = f"{self.base_url}/api/tags"
 
@@ -109,6 +111,7 @@ class LocalLLM:
         self,
         messages: list[Message],
         system_prompt: Optional[str] = None,
+        format: Optional[str] = None,
     ) -> str:
         """
         Send a conversation (list of messages) to the LLM and return the reply.
@@ -122,19 +125,22 @@ class LocalLLM:
             Convenience parameter. If provided, prepended as a system message
             before *messages*. Ignored if messages already starts with a system
             message.
+        format:
+            Optional format parameter (e.g. "json") for structured output.
 
         Returns
         -------
         str
             The assistant's reply, or an error string if the call fails.
         """
-        content, _ = self.chat_with_metadata(messages, system_prompt=system_prompt)
+        content, _ = self.chat_with_metadata(messages, system_prompt=system_prompt, format=format)
         return content
 
     def chat_with_metadata(
         self,
         messages: list[Message],
         system_prompt: Optional[str] = None,
+        format: Optional[str] = None,
     ) -> tuple[str, dict]:
         """
         Send conversation to LLM and return both reply content and generation metadata
@@ -158,6 +164,9 @@ class LocalLLM:
                 "temperature": self.temperature,
             },
         }
+        fmt = format if format is not None else self.format
+        if fmt:
+            payload["format"] = fmt
         if self.max_tokens > 0:
             payload["options"]["num_predict"] = self.max_tokens
 

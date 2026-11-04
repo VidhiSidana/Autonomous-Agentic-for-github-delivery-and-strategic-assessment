@@ -208,12 +208,12 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 
 **Discovered Test Breakdown (54 Total):**
 - `tests/test_planner.py`: **13 tests** (Routing, category detection, multi-tool detection, missing binary paths, case-preservation)
-- `tests/test_binary_analysis.py`: **10 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures)
-- `tests/test_memory.py`: **9 tests** (CRUD operations, session filtering, status updates, multi-threading)
 - `tests/test_policy.py`: **8 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, JSONL auditing)
-- `tests/test_code_analysis.py`: **4 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
-- `tests/test_mcp_client.py`: **4 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
-- `tests/test_orchestrator.py`: **3 tests** (Routing, dynamic schema validation, memory cycle)
+- `tests/test_binary_analysis.py`: **7 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures)
+- `tests/test_mcp_client.py`: **7 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
+- `tests/test_code_analysis.py`: **6 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
+- `tests/test_memory.py`: **6 tests** (CRUD operations, session filtering, status updates, multi-threading)
+- `tests/test_orchestrator.py`: **4 tests** (Routing, dynamic schema validation, memory cycle)
 - `tests/test_benchmark_runner.py`: **3 tests** (14 ground-truth suite validation, cross-process isolation verification, error recovery)
 
 ---
@@ -235,9 +235,9 @@ Run the reproducible model evaluation suite against local Ollama:
 python3 benchmarks/evaluate_models.py
 ```
 - **Evaluated Models:**
-  - `qwen2.5:1.5b`: **78.6%** tool-call accuracy (0.5922s average latency), 100% valid JSON, 33.3% synthesis score (2.5317s latency).
-  - `phi3.5:latest`: **0.0%** tool-call accuracy (verbose non-JSON wrapper, 4.7689s latency), 66.7% synthesis score (6.5975s latency).
-  - `llama3.1:8b`: **78.6%** tool-call accuracy (3.0293s average latency), 100% valid JSON, 66.7% synthesis score (9.3838s latency).
+  - `qwen2.5:1.5b`: **78.6%** tool-call accuracy (0.4307s average latency), 100% valid JSON, 33.3% synthesis score (1.3758s latency).
+  - `phi3.5:latest`: **64.3%** tool-call accuracy (1.1188s average latency), 100% valid JSON, 66.7% synthesis score (5.3672s latency).
+  - `llama3.1:8b`: **78.6%** tool-call accuracy (1.6977s average latency), 100% valid JSON, 66.7% synthesis score (4.4946s latency).
   - `mistral-nemo:12b`: **NOT TESTED** (Model not installed in local Ollama daemon / RAM boundary).
 - **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`. Raw execution log is preserved in `benchmarks/verification/model_evaluation_run.txt`.
 

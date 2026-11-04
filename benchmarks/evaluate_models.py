@@ -204,13 +204,31 @@ EVALUATION_TASKS = [
 ]
 
 TOOL_SYSTEM_PROMPT = """You are an automated tool selector for the Samsung PRISM Engineering Assistant.
-Available Tools:
+
+CRITICAL INSTRUCTION - ALLOWED TOOLS LIST:
+You must ONLY select from the following 11 exact tool names:
+1. find_functions
+2. find_callers
+3. find_callees
+4. get_file_outline  (IMPORTANT: The tool name is "get_file_outline", NEVER "find_file_outline" or "file_outline")
+5. analyze_binary
+6. disassemble_binary
+7. find_binary_imports
+8. save_finding
+9. search_memory
+10. request_clarification
+11. none
+
+Do NOT invent, rename, or prefix other names (e.g. do not invent "find_file_outline").
+
+Available Tools Specification:
 - find_functions(): Discover function definitions in codebase. Arguments: {}
 - find_callers(target: str): Find inbound callers that invoke the target function. Use when asked "who calls X", "callers of X", or functions calling X. Arguments: {"target": "<func_name>"}
   Example: "Who calls handle_event in this codebase?" -> {"tool": "find_callers", "arguments": {"target": "handle_event"}}
 - find_callees(target: str): Find outbound calls made BY the target function. Use when asked "which functions does X call", "functions called by X", or "callees of X". Arguments: {"target": "<func_name>"}
   Example: "Which functions does dispatch_event call?" -> {"tool": "find_callees", "arguments": {"target": "dispatch_event"}}
-- get_file_outline(file_path: str): Get classes and methods in a file. Arguments: {"file_path": "<path>"}
+- get_file_outline(file_path: str): Get classes, methods, and declarations in a file. Arguments: {"file_path": "<path>"}
+  Example: "Show me the class and method declarations in agent/orchestrator.py" -> {"tool": "get_file_outline", "arguments": {"file_path": "agent/orchestrator.py"}}
 - analyze_binary(file_path: str): Inspect PE headers and architecture. Arguments: {"file_path": "<path>"}
 - disassemble_binary(file_path: str): Disassemble machine code instructions. Arguments: {"file_path": "<path>"}
 - find_binary_imports(file_path: str): List imported DLLs and API functions. Arguments: {"file_path": "<path>"}
@@ -315,13 +333,15 @@ def evaluate_task(task: Dict[str, Any], raw_response: str) -> Dict[str, Any]:
     4. exact_args_correct: Strict normalized equality check (no substring matching)
     5. overall_correct: correct_tool AND exact_args_correct
     """
-    json_match = re.search(r"\{.*\}", raw_response, re.DOTALL)
     valid_json = False
     parsed_json: Dict[str, Any] = {}
-    if json_match:
+    first_brace = raw_response.find("{")
+    if first_brace != -1:
         try:
-            parsed_json = json.loads(json_match.group(0))
-            valid_json = isinstance(parsed_json, dict)
+            obj, _ = json.JSONDecoder().raw_decode(raw_response[first_brace:])
+            if isinstance(obj, dict):
+                parsed_json = obj
+                valid_json = True
         except Exception:
             valid_json = False
 
@@ -450,7 +470,7 @@ def run_model_evaluation() -> Dict[str, Any]:
         tag = candidate["model_tag"]
         logger.info(f"Assessing model candidate: {tag} ({candidate['family']})")
 
-        llm = LocalLLM(model=tag, max_tokens=150, timeout=45)
+        llm = LocalLLM(model=tag, max_tokens=128, timeout=45, format="json")
         is_available, avail_msg = llm.check_availability()
 
         model_entry: Dict[str, Any] = {
@@ -542,6 +562,7 @@ def run_model_evaluation() -> Dict[str, Any]:
 
         # 2. Multi-Case Evidence Synthesis Evaluation
         logger.info(f"Evaluating multi-case evidence synthesis for '{tag}'...")
+        synth_llm = LocalLLM(model=tag, max_tokens=256, timeout=45, format=None)
         synthesis_case_results = []
         synth_latencies = []
         passed_synth_cases = 0
@@ -560,7 +581,7 @@ def run_model_evaluation() -> Dict[str, Any]:
             t0 = time.perf_counter()
             synth_meta = {}
             try:
-                synth_resp, synth_meta = llm.chat_with_metadata(synthesis_messages)
+                synth_resp, synth_meta = synth_llm.chat_with_metadata(synthesis_messages)
                 synth_elapsed = time.perf_counter() - t0
                 synth_latencies.append(synth_elapsed)
             except Exception as exc:

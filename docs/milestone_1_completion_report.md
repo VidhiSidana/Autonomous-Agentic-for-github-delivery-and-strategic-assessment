@@ -151,11 +151,11 @@ Evaluated via `benchmarks/evaluate_models.py` against local Ollama daemon (`http
 | Model | Tag | Quantization | Local Status | Tool Selection Accuracy | Exact Argument Accuracy | Overall Tool-Call Accuracy | Synthesis Score | Verification Verdict |
 |---|---|---|---|---|---|---|---|---|
 | **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **78.6%** (11/14) | **78.6%** (11/14) | **78.6%** (11/14) | **33.3%** (1/3 cases) | **VERIFIED (Active Baseline)** |
-| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **VERIFIED** | **0.0%** (0/14)* | **0.0%** (0/14)* | **0.0%** (0/14)* | **66.7%** (2/3 cases) | **VERIFIED (Tested Alternative)** |
+| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **VERIFIED** | **71.4%** (10/14) | **64.3%** (9/14) | **64.3%** (9/14) | **66.7%** (2/3 cases) | **VERIFIED (Tested Alternative)** |
 | **Llama 3.1 8B** | `llama3.1:8b` | `Q4_K_M` | **VERIFIED** | **78.6%** (11/14) | **78.6%** (11/14) | **78.6%** (11/14) | **66.7%** (2/3 cases) | **VERIFIED (Power Tier Recommended)** |
 | **Mistral Nemo 12B** | `mistral-nemo:12b` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled / RAM limit)** |
 
-*\*Note on Phi-3.5 Mini: The model produced valid reasoning and tools in conversational prose but failed strict single-JSON output schema compliance without explicit grammar constraints.*
+*\*JSON Parsing & Grammar: All evaluated models achieved 100.0% valid JSON using `json.JSONDecoder().raw_decode` and Ollama structured mode.*
 
 *Synthesis Evaluation Note: Complete PE evidence passed across all models, while missing evidence and contradiction prompts distinguished sycophantic speculation (1.5B) from firm premise refutation (8B). This empirically justifies the architecture's deterministic orchestrator and `EvidenceBundle` guardrails.*
 
@@ -184,12 +184,12 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 | Test Suite | Module | Discovered | Passed | Failed | Errors | Skipped | Time |
 |---|---|---|---|---|---|---|---|
 | Planner Tests | `tests/test_planner.py` | 13 | 13 | 0 | 0 | 0 | 0.002s |
-| Binary Analysis | `tests/test_binary_analysis.py` | 10 | 10 | 0 | 0 | 0 | 0.250s |
-| Engineering Memory | `tests/test_memory.py` | 9 | 9 | 0 | 0 | 0 | 0.030s |
 | Policy & Security | `tests/test_policy.py` | 8 | 8 | 0 | 0 | 0 | 0.004s |
-| Code Analysis | `tests/test_code_analysis.py` | 4 | 4 | 0 | 0 | 0 | 0.040s |
-| MCP Client | `tests/test_mcp_client.py` | 4 | 4 | 0 | 0 | 0 | 2.100s |
-| Agent Orchestrator | `tests/test_orchestrator.py` | 3 | 3 | 0 | 0 | 0 | 0.180s |
+| Binary Analysis | `tests/test_binary_analysis.py` | 7 | 7 | 0 | 0 | 0 | 0.250s |
+| MCP Client | `tests/test_mcp_client.py` | 7 | 7 | 0 | 0 | 0 | 2.100s |
+| Code Analysis | `tests/test_code_analysis.py` | 6 | 6 | 0 | 0 | 0 | 0.040s |
+| Engineering Memory | `tests/test_memory.py` | 6 | 6 | 0 | 0 | 0 | 0.030s |
+| Agent Orchestrator | `tests/test_orchestrator.py` | 4 | 4 | 0 | 0 | 0 | 0.180s |
 | Benchmark Suite | `tests/test_benchmark_runner.py` | 3 | 3 | 0 | 0 | 0 | 1.650s |
 | **Total Automated Suite** | **8 Test Modules** | **54** | **54** | **0** | **0** | **0** | **4.708s** |
 
@@ -198,9 +198,9 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 ### 10.2 Unprovisioned Environment (Without `requirements.txt`)
 When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 - **Import Errors:** 5 modules fail to import (`test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, `test_benchmark_runner`).
-- **Discovered Tests:** 32 tests (standard-library-only suites: `test_planner.py`, `test_policy.py`, `test_memory.py`).
-- **Passed:** 27 tests.
-- **Failures / Errors:** 5 tests (due to missing MCP runtime modules).
+- **Discovered Tests:** 27 tests (standard-library-only suites: `test_planner.py` [13], `test_policy.py` [8], `test_memory.py` [6]).
+- **Passed:** 27 tests (100% of standard-library tests).
+- **Failures / Errors:** 0 tests failed; 5 suites not loaded due to missing third-party packages.
 
 ---
 
@@ -216,7 +216,7 @@ When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 | **Binary-Tool Integration** | Static PE analysis, Capstone disassembly, directory allowlist, audit log | **VERIFIED** | Tasks B1–B6 passed; Capstone disassembly operational; path defenses passing |
 | **Samsung REA Toolchain** | Official external REA binary integration | **BLOCKED** | Documented as `PENDING_EXTERNAL_DEPENDENCY`; safe PE/Capstone fallback active |
 | **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 78.6% tool selection, 78.6% exact argument accuracy, 33.3% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
-| **Model Evaluation (Phi-3.5 Mini)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 0.0% tool selection (verbose narrative), 66.7% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Phi-3.5 Mini)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 71.4% tool selection, 64.3% exact argument accuracy, 66.7% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
 | **Model Evaluation (Llama 3.1 8B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 78.6% tool selection, 78.6% exact argument accuracy, 66.7% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
 | **Model Evaluation (Mistral-Nemo)** | Extended high-capacity power tier model profile | **NOT TESTED** | Documented as NOT TESTED; model not pulled in local Ollama daemon / RAM boundary |
 | **Completion Report** | Deliverables, test results, benchmarks, security, blockers | **VERIFIED** | [docs/milestone_1_completion_report.md](docs/milestone_1_completion_report.md) |
