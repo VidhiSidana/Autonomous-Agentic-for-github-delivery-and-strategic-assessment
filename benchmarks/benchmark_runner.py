@@ -391,9 +391,14 @@ async def run_benchmarks(
                         passed = False
                         reasons.append(f"Multi-tool execution failed: code_verified={bool(code_ev)}, binary_verified={bool(binary_ev)}")
                     else:
+                        bin_file_str = binary_ev[0].file_path or "sample_authorized.exe"
+                        try:
+                            bin_file_str = str(Path(bin_file_str).resolve().relative_to(PROJECT_ROOT.resolve()))
+                        except Exception:
+                            bin_file_str = Path(bin_file_str).name
                         multi_tool_details = {
                             "code_branch": {"tool": code_ev[0].tool_name, "success": True, "source": code_ev[0].source},
-                            "binary_branch": {"tool": binary_ev[0].tool_name, "success": True, "source": binary_ev[0].source, "file": binary_ev[0].file_path},
+                            "binary_branch": {"tool": binary_ev[0].tool_name, "success": True, "source": binary_ev[0].source, "file": bin_file_str},
                         }
 
                 if task_id == "M2":

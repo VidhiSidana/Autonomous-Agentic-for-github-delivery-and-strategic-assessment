@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-11-04T09:38:08.139544+00:00",
+  "timestamp_utc": "2026-11-04T09:55:35.670697+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 14,
   "passed_tasks": 14,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.0976,
+  "average_elapsed_seconds": 0.0952,
   "cross_process_persistence": {
     "success": true,
     "process_a_exit": 0,
     "process_b_exit": 0,
     "record_id": 2,
-    "session_id": "session_5d7b6026",
+    "session_id": "session_156fe885",
     "id_matched": true,
     "content_verified": true,
     "status_verified": true,
@@ -24,7 +24,7 @@
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 0.8456,
+      "elapsed_seconds": 0.8311,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -34,7 +34,7 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.047,
+      "elapsed_seconds": 0.0448,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -44,7 +44,7 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0075,
+      "elapsed_seconds": 0.0064,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -54,7 +54,7 @@
       "category": "code_analysis",
       "description": "Code architecture and class outline understanding",
       "passed": true,
-      "elapsed_seconds": 0.0397,
+      "elapsed_seconds": 0.0379,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -64,7 +64,7 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.3463,
+      "elapsed_seconds": 0.3325,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -74,7 +74,7 @@
       "category": "binary_analysis",
       "description": "Missing binary path triggers clarification",
       "passed": true,
-      "elapsed_seconds": 0.0006,
+      "elapsed_seconds": 0.0005,
       "evidence_count": 0,
       "limitations_count": 1,
       "reasons": []
@@ -84,7 +84,7 @@
       "category": "binary_analysis",
       "description": "Binary metadata and PE architecture extraction",
       "passed": true,
-      "elapsed_seconds": 0.0061,
+      "elapsed_seconds": 0.0065,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -94,7 +94,7 @@
       "category": "binary_analysis",
       "description": "PE section header and memory boundary inspection",
       "passed": true,
-      "elapsed_seconds": 0.0055,
+      "elapsed_seconds": 0.0066,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -104,7 +104,7 @@
       "category": "binary_analysis",
       "description": "Binary imports and external symbol dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0075,
+      "elapsed_seconds": 0.005,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -114,7 +114,7 @@
       "category": "binary_analysis",
       "description": "Capstone machine code instruction disassembly",
       "passed": true,
-      "elapsed_seconds": 0.0164,
+      "elapsed_seconds": 0.0128,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -124,7 +124,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0012,
+      "elapsed_seconds": 0.0011,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -134,7 +134,7 @@
       "category": "memory",
       "description": "Cross-session retrieval of verified finding",
       "passed": true,
-      "elapsed_seconds": 0.0015,
+      "elapsed_seconds": 0.0014,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": [],
@@ -143,7 +143,7 @@
         "process_a_exit": 0,
         "process_b_exit": 0,
         "record_id": 2,
-        "session_id": "session_5d7b6026",
+        "session_id": "session_156fe885",
         "id_matched": true,
         "content_verified": true,
         "status_verified": true,
@@ -157,7 +157,7 @@
       "category": "memory",
       "description": "Multi-session persistence retrieval across engineering iterations",
       "passed": true,
-      "elapsed_seconds": 0.001,
+      "elapsed_seconds": 0.0009,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": []
@@ -167,7 +167,7 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.0407,
+      "elapsed_seconds": 0.0449,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": [],
@@ -181,7 +181,7 @@
           "tool": "find_binary_functions",
           "success": true,
           "source": "binary.find_binary_functions",
-          "file": "/users/chintansood7/samsung prism/autonomous-agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/sample_authorized.exe"
+          "file": "sample_authorized.exe"
         }
       }
     }
