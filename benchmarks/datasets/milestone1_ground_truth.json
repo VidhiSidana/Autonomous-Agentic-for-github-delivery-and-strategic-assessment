@@ -1,14 +1,18 @@
 {
   "benchmark_suite": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
-  "version": "1.0",
+  "version": "1.1",
+  "description": "Reproducible ground-truth dataset covering code comprehension, static binary investigation, persistent memory, and multi-tool cross-domain reasoning.",
   "tasks": [
     {
       "id": "C1",
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "query": "Find functions in this codebase",
+      "fixture": "repository-root",
       "expected_category": "code_analysis",
       "expected_tool": "function",
+      "expected_answer": "Discovers repository functions with relative file paths and line ranges via AST or code graph.",
+      "expected_evidence": "function definitions with line numbers (e.g. agent/main.py, agent/orchestrator.py)",
       "success_criteria": "Returns list of functions with file and line numbers"
     },
     {
@@ -16,9 +20,12 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "query": "Who calls process_query?",
+      "fixture": "repository-root",
       "expected_category": "code_analysis",
       "expected_tool": "caller",
       "expected_symbol": "process_query",
+      "expected_answer": "Identifies call sites and caller functions invoking process_query across the agent architecture.",
+      "expected_evidence": "Symbol 'process_query' identified in caller trace",
       "success_criteria": "Identifies call sites and callers of process_query"
     },
     {
@@ -26,9 +33,12 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "query": "Which modules does agent/main.py depend on?",
+      "fixture": "agent/main.py",
       "expected_category": "code_analysis",
       "expected_tool": "find_module_relationships",
       "expected_file": "agent/main.py",
+      "expected_answer": "Extracts imported standard library and internal modules from agent/main.py.",
+      "expected_evidence": "List of imported module dependencies for agent/main.py",
       "success_criteria": "Extracts imported modules such as asyncio, sys, pathlib, etc."
     },
     {
@@ -36,8 +46,11 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "query": "Analyze binary /unauthorized/path/test.exe",
+      "fixture": "unauthorized-path-fixture",
       "expected_category": "binary_analysis",
       "expected_policy_result": "Denied",
+      "expected_answer": "Rejects binary inspection request with access denied error because path is outside BINARY_ALLOWED_DIRS.",
+      "expected_evidence": "Policy rejection message logged to memory/binary_audit.log",
       "success_criteria": "Rejects unauthorized path before execution"
     },
     {
@@ -45,8 +58,11 @@
       "category": "binary_analysis",
       "description": "Missing binary path triggers clarification",
       "query": "Disassemble this binary executable.",
+      "fixture": "none-query-only",
       "expected_category": "binary_analysis",
       "clarification_needed": true,
+      "expected_answer": "Prompts user for required target binary file path.",
+      "expected_evidence": "Clarification question returned immediately without tool execution",
       "success_criteria": "Prompts user for binary path without crashing"
     },
     {
@@ -54,9 +70,12 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "query": "Remember this finding: authentication is handled in auth_service.py. This is verified.",
+      "fixture": "memory/engineering_memory.db",
       "expected_category": "memory",
       "expected_operation": "save",
       "expected_verification_status": "VERIFIED",
+      "expected_answer": "Saves finding with title, content, and verification status 'VERIFIED' into SQLite findings table.",
+      "expected_evidence": "Primary key record ID returned with saved=True",
       "success_criteria": "Persists finding with VERIFIED status in SQLite"
     },
     {
@@ -64,9 +83,12 @@
       "category": "memory",
       "description": "Cross-session retrieval of verified finding",
       "query": "What did we discover about authentication in previous session?",
+      "fixture": "memory/engineering_memory.db",
       "expected_category": "memory",
       "expected_operation": "search",
       "expected_content_match": "auth_service.py",
+      "expected_answer": "Retrieves finding matching 'authentication auth_service.py' across distinct process lifecycle.",
+      "expected_evidence": "Record retrieved with matching ID, session_id, and VERIFIED status",
       "success_criteria": "Retrieves saved finding across session restart"
     },
     {
@@ -74,10 +96,15 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "query": "Find the authentication function in the codebase and compare with related binary functionality in app.exe",
+      "fixture": "benchmarks/results/sample_authorized.exe",
       "expected_category": "multi_tool",
-      "sub_categories": ["code_analysis", "binary_analysis"],
+      "sub_categories": [
+        "code_analysis",
+        "binary_analysis"
+      ],
+      "expected_answer": "Executes both code comprehension (function discovery) and static binary analysis (PE section / function discovery) without policy denial.",
+      "expected_evidence": "Code branch verified item + Binary branch verified item",
       "success_criteria": "Executes both code analysis and binary analysis workflows"
     }
   ]
 }
-
