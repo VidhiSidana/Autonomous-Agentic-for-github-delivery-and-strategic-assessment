@@ -1,11 +1,12 @@
 {
-  "timestamp_utc": "2026-11-04T10:15:46.476428+00:00",
-  "evaluation_suite": "Samsung PRISM Milestone 1 Genuine Model Evaluation",
-  "evaluator_version": "v14",
+  "timestamp_utc": "2026-11-04T10:31:12.096047+00:00",
+  "suite_name": "Samsung PRISM Milestone 1 Genuine Model Evaluation",
+  "evaluator_version": "v15",
   "host_environment": {
     "platform": "darwin",
     "python_version": "3.14.2"
   },
+  "total_task_count": 14,
   "models": [
     {
       "model_tag": "qwen2.5:1.5b",
@@ -17,79 +18,321 @@
       "available_in_ollama": true,
       "status_message": "Model 'qwen2.5:1.5b' is available.",
       "evaluation_status": "TESTED",
-      "direct_tool_selection": {
-        "total_tests": 4,
-        "correct_tool_selections": 4,
-        "tool_selection_accuracy": "100.0%",
-        "valid_argument_structures": 4,
-        "argument_accuracy": "100.0%",
-        "average_tool_selection_latency": 0.7504,
-        "details": [
+      "tool_calling_evaluation": {
+        "total_tasks": 14,
+        "valid_json_responses": 14,
+        "valid_json_rate": "100.0%",
+        "correct_tool_selections": 13,
+        "tool_selection_accuracy": "92.9%",
+        "required_args_present": 14,
+        "required_args_rate": "100.0%",
+        "exact_arguments_correct": 12,
+        "exact_argument_accuracy": "85.7%",
+        "overall_specification_correct": 12,
+        "overall_tool_call_accuracy": "85.7%",
+        "average_tool_selection_latency_seconds": 0.2604,
+        "task_breakdown": [
           {
-            "task_id": "TS1",
-            "query": "Find all functions defined across the codebase",
+            "task_id": "T01_FUNC_DISCOVERY",
+            "domain": "code_analysis",
+            "query": "Find all function definitions across the entire codebase",
             "expected_tool": "find_functions",
             "selected_tool": "find_functions",
-            "tool_correct": true,
-            "arguments_emitted": {},
-            "args_valid": true,
-            "latency_seconds": 1.6933
+            "expected_arguments": {},
+            "emitted_arguments": {},
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"find_functions\", \"arguments\": {}}",
+            "latency_seconds": 0.2112
           },
           {
-            "task_id": "TS2",
-            "query": "Who calls process_query in this repository?",
+            "task_id": "T02_CALLERS_PROCESS_QUERY",
+            "domain": "code_analysis",
+            "query": "Who calls the function process_query in this repository?",
             "expected_tool": "find_callers",
             "selected_tool": "find_callers",
-            "tool_correct": true,
-            "arguments_emitted": {
+            "expected_arguments": {
               "target": "process_query"
             },
-            "args_valid": true,
-            "latency_seconds": 0.536
+            "emitted_arguments": {
+              "target": "process_query"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"process_query\"}}",
+            "latency_seconds": 0.2521
           },
           {
-            "task_id": "TS3",
-            "query": "Analyse binary sample_authorized.exe and report its architecture and headers",
+            "task_id": "T03_CALLERS_CALCULATE_HASH",
+            "domain": "code_analysis",
+            "query": "Find all callers of the function calculate_checksum",
+            "expected_tool": "find_callers",
+            "selected_tool": "find_callers",
+            "expected_arguments": {
+              "target": "calculate_checksum"
+            },
+            "emitted_arguments": {
+              "target": "calculate_checksum"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"calculate_checksum\"}}",
+            "latency_seconds": 0.2473
+          },
+          {
+            "task_id": "T04_CALLEES_DISPATCH",
+            "domain": "code_analysis",
+            "query": "Which functions does dispatch_request call?",
+            "expected_tool": "find_callees",
+            "selected_tool": "find_callers",
+            "expected_arguments": {
+              "target": "dispatch_request"
+            },
+            "emitted_arguments": {
+              "target": "dispatch_request"
+            },
+            "valid_json": true,
+            "correct_tool": false,
+            "required_args_present": true,
+            "exact_args_correct": false,
+            "overall_correct": false,
+            "failure_reasons": [
+              "Tool mismatch: expected 'find_callees', got 'find_callers'"
+            ],
+            "raw_response_snippet": "{\"tool\": \"find_callers\", \"arguments\": {\"target\": \"dispatch_request\"}}",
+            "latency_seconds": 0.2487
+          },
+          {
+            "task_id": "T05_FILE_OUTLINE",
+            "domain": "code_analysis",
+            "query": "Show me the class and method declarations in agent/orchestrator.py",
+            "expected_tool": "get_file_outline",
+            "selected_tool": "get_file_outline",
+            "expected_arguments": {
+              "file_path": "agent/orchestrator.py"
+            },
+            "emitted_arguments": {
+              "file_path": "agent/orchestrator.py"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"get_file_outline\", \"arguments\": {\"file_path\": \"agent/orchestrator.py\"}}",
+            "latency_seconds": 0.3314
+          },
+          {
+            "task_id": "T06_BIN_ANALYZE_SAMPLE",
+            "domain": "binary_analysis",
+            "query": "Analyse binary sample_authorized.exe and report its PE architecture and headers",
             "expected_tool": "analyze_binary",
             "selected_tool": "analyze_binary",
-            "tool_correct": true,
-            "arguments_emitted": {
+            "expected_arguments": {
               "file_path": "sample_authorized.exe"
             },
-            "args_valid": true,
-            "latency_seconds": 0.3822
+            "emitted_arguments": {
+              "file_path": "sample_authorized.exe"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
+            "latency_seconds": 0.2935
           },
           {
-            "task_id": "TS4",
+            "task_id": "T07_BIN_ANALYZE_APP",
+            "domain": "binary_analysis",
+            "query": "Inspect the PE header and section count of release_build.exe",
+            "expected_tool": "analyze_binary",
+            "selected_tool": "analyze_binary",
+            "expected_arguments": {
+              "file_path": "release_build.exe"
+            },
+            "emitted_arguments": {
+              "file_path": "release_build.exe"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"release_build.exe\"}}",
+            "latency_seconds": 0.2797
+          },
+          {
+            "task_id": "T08_BIN_DISASM_ENTRY",
+            "domain": "binary_analysis",
             "query": "Disassemble the machine code instructions of binary sample_authorized.exe",
             "expected_tool": "disassemble_binary",
             "selected_tool": "disassemble_binary",
-            "tool_correct": true,
-            "arguments_emitted": {
+            "expected_arguments": {
               "file_path": "sample_authorized.exe"
             },
-            "args_valid": true,
-            "latency_seconds": 0.39
+            "emitted_arguments": {
+              "file_path": "sample_authorized.exe"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"disassemble_binary\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
+            "latency_seconds": 0.3039
+          },
+          {
+            "task_id": "T09_BIN_IMPORTS",
+            "domain": "binary_analysis",
+            "query": "List all imported DLLs and API functions for sample_authorized.exe",
+            "expected_tool": "find_binary_imports",
+            "selected_tool": "find_binary_imports",
+            "expected_arguments": {
+              "file_path": "sample_authorized.exe"
+            },
+            "emitted_arguments": {
+              "file_path": "sample_authorized.exe"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"find_binary_imports\", \"arguments\": {\"file_path\": \"sample_authorized.exe\"}}",
+            "latency_seconds": 0.312
+          },
+          {
+            "task_id": "T10_MEMORY_SAVE",
+            "domain": "memory",
+            "query": "Remember this engineering finding: SQLite WAL mode improves concurrency",
+            "expected_tool": "save_finding",
+            "selected_tool": "save_finding",
+            "expected_arguments": {
+              "content": "SQLite WAL mode improves concurrency"
+            },
+            "emitted_arguments": {
+              "content": "SQLite WAL mode improves concurrency"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"save_finding\", \"arguments\": {\"content\": \"SQLite WAL mode improves concurrency\"}}",
+            "latency_seconds": 0.2825
+          },
+          {
+            "task_id": "T11_MEMORY_SEARCH",
+            "domain": "memory",
+            "query": "Search persistent memory for findings related to WAL mode",
+            "expected_tool": "search_memory",
+            "selected_tool": "search_memory",
+            "expected_arguments": {
+              "query": "WAL mode"
+            },
+            "emitted_arguments": {
+              "query": "WAL mode"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"search_memory\", \"arguments\": {\"query\": \"WAL mode\"}}",
+            "latency_seconds": 0.2533
+          },
+          {
+            "task_id": "T12_MISSING_ARGS",
+            "domain": "binary_analysis",
+            "query": "Analyse binary and tell me if it is 64-bit",
+            "expected_tool": "analyze_binary",
+            "selected_tool": "analyze_binary",
+            "expected_arguments": {
+              "file_path": ""
+            },
+            "emitted_arguments": {
+              "file_path": "path_to_binary_file"
+            },
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": false,
+            "overall_correct": false,
+            "failure_reasons": [
+              "Expected empty/omitted arg for missing path, got 'path_to_binary_file'"
+            ],
+            "raw_response_snippet": "{\"tool\": \"analyze_binary\", \"arguments\": {\"file_path\": \"path_to_binary_file\"}}",
+            "latency_seconds": 0.2924
+          },
+          {
+            "task_id": "T13_INVALID_REQUEST",
+            "domain": "unsupported",
+            "query": "Compile the C source code into a native executable",
+            "expected_tool": "none",
+            "selected_tool": "none",
+            "expected_arguments": {},
+            "emitted_arguments": {},
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"none()\", \"arguments\": {}}",
+            "latency_seconds": 0.1693
+          },
+          {
+            "task_id": "T14_AMBIGUOUS_REQUEST",
+            "domain": "unsupported",
+            "query": "Please investigate the thing and tell me what it does",
+            "expected_tool": "none",
+            "selected_tool": "none",
+            "expected_arguments": {},
+            "emitted_arguments": {},
+            "valid_json": true,
+            "correct_tool": true,
+            "required_args_present": true,
+            "exact_args_correct": true,
+            "overall_correct": true,
+            "failure_reasons": [],
+            "raw_response_snippet": "{\"tool\": \"none()\", \"arguments\": {}}",
+            "latency_seconds": 0.168
           }
         ]
       },
-      "evidence_grounded_synthesis": {
-        "success": true,
-        "latency_seconds": 2.2268,
-        "response_snippet": "The sample_authorized.exe file is a 64-bit executable with the following characteristics:\n\n- Architecture: 0x8664, which corresponds to the x64 architecture.\n- Section Count: 1, indicating that the fi...",
-        "matched_evidence_keywords": [
-          "0x8664",
-          "x64",
-          "0x1000"
-        ],
-        "grounded_in_evidence": true
-      },
-      "summary_metrics": {
-        "tool_selection_accuracy": "100.0%",
-        "argument_accuracy": "100.0%",
-        "avg_tool_selection_latency": "0.7504s",
-        "synthesis_latency": "2.2268s",
-        "grounded_synthesis_verified": true
+      "evidence_synthesis_evaluation": {
+        "evaluation_type": "Structured factual & keyword verification check",
+        "total_criteria": 5,
+        "passed_criteria": 5,
+        "factual_accuracy_score": "100.0%",
+        "architecture_verified": true,
+        "entry_point_verified": true,
+        "section_count_verified": true,
+        "section_size_verified": true,
+        "no_contradictions_verified": true,
+        "contradictions_found": [],
+        "raw_model_response": "Based on the static analysis provided, the sample_authorized.exe has the following characteristics:\n\n- **Architecture**: 0x8664, which corresponds to 64-bit x86 architecture (AMD64).\n- **Section Count**: 1, indicating that the executable contains only one section.\n- **Section .text**: The section is located at VirtualAddress 0x1000 and has a Size of 512 bytes. The Characteristics field indicates that the section is executable (0x60000020).\n- **Entry Point RVA**: The Entry Point RVA (Relative Virtual Address) is 0x1000, which translates to the ImageBase 0x140000000 -> Physical Address 0x140001000.\n- **Image Base**: The Image Base is 0x140000000, indicating the starting point of the executable in memory.\n\nThese details provide a comprehensive overview of the executable's structure and characteristics.",
+        "latency_seconds": 2.6187
       }
     },
     {
@@ -102,7 +345,7 @@
       "available_in_ollama": false,
       "status_message": "Model 'phi3.5:latest' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull phi3.5:latest",
       "evaluation_status": "NOT TESTED",
-      "reason": "Model not pulled in local Ollama daemon or memory constrained."
+      "reason": "Model not pulled in local Ollama daemon or host RAM constrained."
     },
     {
       "model_tag": "mistral-nemo:12b",
@@ -114,7 +357,7 @@
       "available_in_ollama": false,
       "status_message": "Model 'mistral-nemo:12b' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull mistral-nemo:12b",
       "evaluation_status": "NOT TESTED",
-      "reason": "Model not pulled in local Ollama daemon or memory constrained."
+      "reason": "Model not pulled in local Ollama daemon or host RAM constrained."
     }
   ]
 }

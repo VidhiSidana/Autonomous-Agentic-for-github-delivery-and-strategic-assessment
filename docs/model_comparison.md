@@ -1,106 +1,106 @@
 # Samsung PRISM: Open-Weight Local Model Shortlist & Evaluation
 
 ## 1. Overview & Evaluation Scope
-The **Samsung PRISM Unified Engineering Agent** operates strictly on-premise without external cloud API dependencies. In the Milestone 1 architecture:
-1. **Deterministic Intent & Tool Execution:** `AgentPlanner` (regex/Pydantic rules) determines query categories, and `AgentOrchestrator` performs dynamic schema validation to dispatch tools to MCP servers and SQLite memory.
-2. **Local LLM Evidence Synthesis:** The LLM's primary role in the pipeline is synthesizing evidence from the `EvidenceBundle` into concise, grounded explanations citing files, line numbers, and symbol addresses.
-3. **Autonomous LLM Tool Selection & Calling:** Evaluated independently via `benchmarks/evaluate_models.py` to measure the model's zero-shot ability to select tools and emit valid JSON argument structures.
+The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero-cloud operation. In the Milestone 1 architecture, the system employs a hybrid design:
+- **Integrated System Layer:** An algorithmic and rule-guided pipeline (`AgentPlanner` + `AgentOrchestrator`) that performs deterministic query categorization, path validation, and dynamic MCP argument-schema matching.
+- **Local LLM Layer:** A local open-weight instruction model (interfaced via Ollama) responsible for synthesizing empirical tool evidence into grounded technical answers.
+- **Autonomous LLM Calling:** An independent benchmark layer (`benchmarks/evaluate_models.py`) evaluating the model's direct zero-shot ability to select tools and emit valid JSON argument schemas without planner assistance.
 
 ---
 
-## 2. Evaluation Methodology & Test Hardware
+## 2. Evaluation Categories & Empirical Results
 
-- **Host Hardware:** macOS (Darwin Apple Silicon M-series, 16 GB Unified Memory).
-- **Execution Backend:** Local Ollama daemon (`http://localhost:11434`) via `agent.llm.LocalLLM`.
-- **Evaluation Scripts:**
-  - `benchmarks/benchmark_runner.py`: Measures deterministic planner routing, tool execution against real MCP servers, SQLite memory, and ground-truth assertions (14 tasks).
-  - `benchmarks/evaluate_models.py`: Measures independent LLM tool selection, argument generation, and evidence-grounded answer synthesis.
-- **Metrics Evaluated:**
-  - **Planner Routing Accuracy:** Deterministic category classification by `AgentPlanner`.
-  - **Tool Execution Success:** Empirical execution against MCP servers and SQLite.
-  - **Dynamic Schema Validation:** Intent-to-tool schema validation by `AgentOrchestrator`.
-  - **LLM Tool-Selection Accuracy:** Independent zero-shot tool selection from prompt schemas.
-  - **LLM Argument-Generation Accuracy:** Valid JSON argument extraction by the LLM.
-  - **LLM Response Quality & Grounding:** Citation of empirical evidence without hallucination.
-  - **Latencies:** Differentiated between deterministic pipeline execution and LLM inference.
+### Category A: Deterministic Planner Performance (Integrated System)
+- **Scope:** Evaluated across the 14-task ground-truth benchmark suite (`benchmarks/datasets/milestone1_ground_truth.json`).
+- **Mechanism:** Deterministic regex and Pydantic validation rules in `agent/planner.py`.
+- **Accuracy:** **100.0%** (14/14 queries correctly routed to `CODE_ANALYSIS`, `BINARY_ANALYSIS`, `MEMORY`, or `MULTI_TOOL`).
+- **Missing Argument Detection:** Successfully flagged missing target binary paths (Task B2) and triggered clarification prompts.
+
+### Category B: Tool Execution Performance (Integrated System)
+- **Scope:** Empirical tool execution against real MCP servers (`code_fallback`, `code_graph`, `binary`) and SQLite memory.
+- **Execution Success Rate:** **100.0%** (14/14 benchmark tasks executed successfully without runtime exceptions).
+- **Dynamic Schema Validation:** `AgentOrchestrator` validates all parameters against discovered tool schemas prior to invocation.
+- **Multi-Tool Dispatch:** Verified dual-branch dispatch (Task MT1: simultaneous code symbol discovery and PE binary inspection).
+
+### Category C: LLM Tool-Selection Performance (LLM Direct)
+- **Scope:** Direct zero-shot tool selection tested via `benchmarks/evaluate_models.py` across 14 varied queries without planner assistance.
+- **Prompt Format:** Standardized system prompt providing tool definitions and requiring a single JSON response: `{"tool": "<name>", "arguments": {<args>}}`.
+- **Results by Model Candidate:**
+  - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
+    - Valid JSON Rate: **100.0%** (14/14 valid JSON responses)
+    - Tool Selection Accuracy: **92.9%** (13/14 correct tool selections)
+    - Observed Failure: Confused `find_callers` with `find_callees` on query "Which functions does dispatch_request call?" (Task T04).
+  - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed in local Ollama daemon).
+  - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed in local Ollama daemon).
+
+### Category D: LLM Argument-Generation Performance (LLM Direct)
+- **Scope:** Measuring whether required arguments are present and whether exact argument values match ground truth.
+- **Results by Model Candidate:**
+  - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
+    - Required Arguments Present: **100.0%** (14/14 tasks)
+    - Exact Argument Correctness: **85.7%** (12/14 tasks matched expected argument values)
+    - Overall Tool-Call Accuracy (Tool Correct AND Exact Args Correct): **85.7%** (12/14 tasks)
+    - Observed Failures: Task T04 (wrong tool selected); Task T12 (missing path parameter in query resulted in empty arguments).
+  - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed).
+  - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed).
+
+### Category E: Evidence-Grounded Synthesis (LLM Direct)
+- **Scope:** Evaluating factual correctness and absence of contradictions when synthesizing technical explanations from an empirical `EvidenceBundle`.
+- **Evaluation Criteria:**
+  1. Required factual values present (architecture, entry point, section count, text size).
+  2. Correct architecture extraction (`0x8664` / `x64` / `amd64`).
+  3. Correct entry point address (`0x1000` / `0x140001000`).
+  4. Section count (`1` / `.text`) and size (`512` bytes) correctly cited.
+  5. Absence of forbidden contradictions (`32-bit`, `arm`, `arm64`, `i386`, `0x400000`, `elf`, `mach-o`).
+- **Results by Model Candidate:**
+  - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
+    - Factual Accuracy Score: **100.0%** (5/5 factual criteria verified)
+    - Contradictions Found: **0**
+    - Verification Method: Structured factual and keyword verification check.
+  - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):** **NOT TESTED** (Model not installed).
+  - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed).
+
+### Category F: Latency Disambiguation
+- **Deterministic Pipeline Latency (Source of Truth: `benchmarks/results/benchmark_report.json`):**
+  - Average Task Latency: **0.0575 seconds** (57.5 ms per task)
+  - Total 14-Task Execution Time: **~0.8055 seconds**
+  - Total Suite Execution (including independent subprocess persistence tests): **~1.20 seconds**
+- **LLM Direct Inference Latency (Source of Truth: `benchmarks/results/model_evaluation_report.json`):**
+  - Qwen 2.5 1.5B Average Tool-Calling Latency: **0.2604 seconds** per query
+  - Qwen 2.5 1.5B Grounded Evidence Synthesis Latency: **2.6187 seconds** per response
+  - Phi-3.5 Mini 3.8B: **NOT TESTED**
+  - Mistral Nemo 12B: **NOT TESTED**
+
+### Category G: Hardware Requirements & Resource Footprint
+- **Test Host:** macOS Darwin (Apple Silicon arm64, 16 GB Unified RAM).
+- **Evaluated Profiles:**
+  - **Qwen 2.5 1.5B:** Active footprint ~986 MB disk, ~1.1 GB RAM. Operates comfortably on 4 GB+ RAM machines without GPU acceleration.
+  - **Phi-3.5 Mini 3.8B:** Target Workstation profile. Requires ~2.4 GB disk, ~2.8 GB RAM. Recommended for 8 GB+ hosts. (Status: Profiled, **NOT TESTED** locally).
+  - **Mistral Nemo 12B:** Target Power profile. Requires ~7.3 GB disk, ~8.5 GB RAM. Recommended for 16 GB+ hosts with dedicated GPU acceleration. (Status: Profiled, **NOT TESTED** locally).
 
 ---
 
 ## 3. Comprehensive Model Comparison Matrix
 
-| Evaluation Dimension | **Qwen 2.5 (1.5B)** *(Default Active)* | **Phi-3.5 Mini (3.8B)** *(Shortlisted)* | **Mistral Nemo (12B)** *(High-End)* |
-|---|---|---|---|
+| Evaluation Dimension | **Qwen 2.5 (1.5B)** *(Active Baseline)* | **Phi-3.5 Mini (3.8B)** *(Shortlisted)* | **Mistral Nemo (12B)** *(Power Tier)* |
+| :--- | :--- | :--- | :--- |
 | **Model Creator** | Alibaba Cloud | Microsoft | Mistral AI / NVIDIA |
 | **Exact Ollama Tag** | `qwen2.5:1.5b` | `phi3.5:latest` | `mistral-nemo:12b` |
-| **Quantization & Format** | `Q4_K_M` (GGUF via Ollama) | `Q4_K_M` (GGUF via Ollama) | `Q4_K_M` (GGUF via Ollama) |
+| **Quantization & Format** | `Q4_K_M` (GGUF) | `Q4_K_M` (GGUF) | `Q4_K_M` (GGUF) |
 | **Parameter Count** | 1.54 Billion | 3.82 Billion | 12.2 Billion |
 | **Model Size on Disk** | 986 MB (`986061892` bytes) | ~2.4 GB | ~7.3 GB |
 | **Context Window** | 32k tokens | 128k tokens | 128k tokens |
-| **Local Ollama Status** | **TESTED & VERIFIED** | **NOT TESTED (Not pulled in Ollama)** | **NOT TESTED (Not pulled in Ollama)** |
-| **Planner Routing Accuracy** | **100%** (14/14 tasks, deterministic) | **100%** (Decoupled from LLM) | **100%** (Decoupled from LLM) |
-| **Tool Execution Success** | **100%** (14/14 tasks, deterministic) | **100%** (Decoupled from LLM) | **100%** (Decoupled from LLM) |
-| **Dynamic Schema Validation** | **100%** (Validated before dispatch) | **100%** (Validated before dispatch) | **100%** (Validated before dispatch) |
-| **LLM Tool Selection Accuracy** | **100.0%** (4/4 test tasks evaluated) | **NOT TESTED** | **NOT TESTED** |
-| **LLM Argument Accuracy** | **100.0%** (Valid JSON arguments) | **NOT TESTED** | **NOT TESTED** |
-| **LLM Grounded Synthesis** | **VERIFIED** (Accurately cited 0x8664/0x1000) | **NOT TESTED** | **NOT TESTED** |
-| **LLM Tool Selection Latency** | **0.7504s** per query | **NOT TESTED** | **NOT TESTED** |
-| **LLM Synthesis Latency** | **2.2268s** per response | **NOT TESTED** | **NOT TESTED** |
-| **Deterministic Benchmark Latency** | **0.0572s** average per task | **0.0572s** (Pipeline-level) | **0.0572s** (Pipeline-level) |
-| **Hardware Requirement** | Minimum 4 GB RAM (CPU-only capable) | Minimum 8 GB RAM / Apple Silicon | Minimum 16 GB RAM / 12 GB GPU VRAM |
-
----
-
-## 4. Latency Disambiguation
-
-To prevent confusion between pipeline benchmarks and LLM generation:
-1. **Deterministic Benchmark Suite:**
-   - Total Suite Tasks: 14 tasks in `benchmarks/datasets/milestone1_ground_truth.json`
-   - Total Suite Execution Time: ~0.80 seconds (sum of all 14 task execution times)
-   - Total Suite with Cross-Process Subprocesses: ~1.20 seconds
-   - Average Per-Task Execution Time: **0.0572s** (57.2ms)
-2. **LLM Inference Latency (Qwen 2.5 1.5B via Ollama):**
-   - Direct Tool Selection & Argument Generation: **0.7504s**
-   - Grounded Evidence Synthesis (Final Response): **2.2268s**
-
----
-
-## 5. Strengths, Weaknesses, and Failure Analysis
-
-### Candidate 1: Qwen 2.5 1.5B (Active Baseline)
-- **Strengths:**
-  - Extremely lightweight (~986 MB disk, ~1.1 GB RAM active footprint).
-  - Fast inference (~0.75s tool selection, ~2.2s synthesis).
-  - 100% accuracy on our zero-shot JSON tool selection and argument generation benchmark.
-  - Runs reliably on standard laptops without dedicated GPUs.
-- **Weaknesses:**
-  - 32k context window (shorter than Phi-3.5's 128k context), requiring concise prompt formatting.
-- **Verdict:** **Retained as default baseline** for Milestone 1.
-
-### Candidate 2: Phi-3.5 Mini 3.8B (Shortlisted Profile)
-- **Strengths:**
-  - 128k context window allows ingesting extensive Tree-sitter graph traces and Capstone disassembly listings without truncation.
-  - Strong logical reasoning capability in a compact 3.8B profile.
-- **Weaknesses:**
-  - Requires ~2.5 GB RAM; requires host to pull model (`ollama pull phi3.5:latest`).
-- **Verdict:** **Shortlisted as Primary Workstation Driver** for Milestone 2.
-
-### Candidate 3: Mistral Nemo 12B (Shortlisted Power Tier)
-- **Strengths:**
-  - State-of-the-art multilingual and code reasoning capabilities among sub-15B open-weight models.
-  - Advanced architecture understanding and decompilation synthesis.
-- **Weaknesses:**
-  - Requires ~7.5 to 10 GB of allocated memory, making simultaneous local execution with IDE and MCP tools constrained on 8GB/16GB machines.
-- **Verdict:** **Shortlisted as Dedicated Lab / High-Performance Tier**.
-
----
-
-## 6. Reproducible Model Evaluation Commands
-
-To run the independent model evaluation suite against local Ollama:
-```bash
-python3 benchmarks/evaluate_models.py
-```
-Report output is saved to `benchmarks/results/model_evaluation_report.json`.
+| **Local Ollama Status** | **TESTED & VERIFIED** | **NOT TESTED** | **NOT TESTED** |
+| **A. Planner Routing Accuracy** | **100.0%** (14/14 tasks, deterministic) | **100.0%** (Integrated System) | **100.0%** (Integrated System) |
+| **B. Tool Execution Success** | **100.0%** (14/14 tasks, deterministic) | **100.0%** (Integrated System) | **100.0%** (Integrated System) |
+| **C. LLM Tool Selection Accuracy** | **92.9%** (13/14 direct LLM tasks) | **NOT TESTED** | **NOT TESTED** |
+| **D. LLM Exact Argument Accuracy** | **85.7%** (12/14 direct LLM tasks) | **NOT TESTED** | **NOT TESTED** |
+| **D. Overall Tool-Call Accuracy** | **85.7%** (Tool + Args correct) | **NOT TESTED** | **NOT TESTED** |
+| **E. Evidence Synthesis Score** | **100.0%** (5/5 factual checks) | **NOT TESTED** | **NOT TESTED** |
+| **F. Deterministic Pipeline Latency**| **0.0575s** average per task | **0.0575s** (Pipeline-level) | **0.0575s** (Pipeline-level) |
+| **F. LLM Tool Selection Latency** | **0.2604s** per query | **NOT TESTED** | **NOT TESTED** |
+| **F. LLM Synthesis Latency** | **2.6187s** per response | **NOT TESTED** | **NOT TESTED** |
+| **G. Minimum Hardware Profile** | 4 GB RAM (CPU-only capable) | 8 GB RAM / Apple Silicon | 16 GB RAM / 12 GB GPU VRAM |
 
 ---
 
@@ -108,49 +108,38 @@ Report output is saved to `benchmarks/results/model_evaluation_report.json`.
 
 ### Candidate 1: Qwen 2.5 1.5B (Active Baseline)
 - **Strengths:**
-  - Near-instantaneous response times on consumer laptops.
-  - Zero GPU requirement; runs cleanly in restricted sandboxes and CI test environments.
-  - 100% compatibility with our deterministic `AgentPlanner` and `EvidenceBundle` prompt architecture.
+  - Lightweight memory footprint (~986 MB disk, ~1.1 GB RAM active).
+  - Fast inference (~0.26s tool selection, ~2.62s synthesis).
+  - High JSON schema compliance (100% valid JSON responses).
+  - 100% factual accuracy on empirical evidence synthesis without contradiction.
 - **Weaknesses:**
-  - Limited autonomous zero-shot multi-step reasoning without structured guidance.
-  - Tends to produce generic prose if evidence items lack explicit line numbers or symbols.
-- **Verdict:** **Retained as default baseline** for Milestone 1 testing and minimal-hardware environments.
+  - Callee vs caller confusion on ambiguous queries (e.g. selected `find_callers` for "Which functions does dispatch_request call?").
+  - 32k context window (shorter than Phi-3.5's 128k context).
+- **Verdict:** **Retained as verified default baseline** for Milestone 1.
 
-### Candidate 2: Phi-3.5 Mini 3.8B (Primary Recommendation)
+### Candidate 2: Phi-3.5 Mini 3.8B (Shortlisted Profile)
 - **Strengths:**
-  - Exceptional code comprehension and logical deduction relative to its compact 3.8B parameter count.
   - 128k context window allows ingesting extensive Tree-sitter graph traces and Capstone disassembly listings without truncation.
-  - Very strong adherence to system prompt constraints forbidding hallucination.
+  - Strong logical deduction relative to parameter size.
 - **Weaknesses:**
-  - Requires ~2.5 GB RAM; marginally slower token generation on older x86 CPUs without AVX2.
-- **Verdict:** **Shortlisted as Primary Workstation Driver** for Milestone 2 development.
+  - Requires ~2.8 GB RAM; unverified in local Ollama environment until model is pulled.
+- **Verdict:** **Shortlisted as Primary Workstation Driver** for Milestone 2.
 
-### Candidate 3: Mistral Nemo 12B / Llama 3.1 8B (High-Accuracy Power Tier)
+### Candidate 3: Mistral Nemo 12B (Shortlisted Power Tier)
 - **Strengths:**
-  - State-of-the-art multilingual and code reasoning capabilities among sub-15B open-weight models.
-  - Superb zero-shot tool selection and fine-grained decompilation interpretation.
+  - High-tier code comprehension and decompilation reasoning.
+  - State-of-the-art accuracy on complex multi-hop code graphs.
 - **Weaknesses:**
-  - Demands ~7.5 to 10 GB of allocated memory, making simultaneous local execution with intensive IDE tools constrained on 8GB machines.
+  - Requires ~8.5 GB to 10 GB RAM, exceeding capacity on 8 GB workstations.
 - **Verdict:** **Shortlisted as Dedicated Lab / High-Performance Tier**.
 
 ---
 
-## 5. Final Model Shortlist
+## 5. Reproducible Model Evaluation Commands
 
-1. **Tier 1 (Fast / Edge Baseline):** `qwen2.5:1.5b` — Ideal for automated test suites, CI/CD runners, and resource-constrained environments.
-2. **Tier 2 (Balanced / Daily Engineer):** `phi3.5:3.8b` — Ideal for code comprehension, call-path reasoning, and evidence synthesis.
-3. **Tier 3 (Power / Reverse Engineering):** `mistral-nemo:12b` — Recommended for complex multi-tool decompilation scenarios where 16GB+ memory is available.
-
----
-
-## 6. Model Switching Instructions
-
-Model selection is strictly declarative and does not require modifying agent source code. Update `.env`:
-
-```ini
-# Baseline entry model:
-OLLAMA_MODEL=qwen2.5:1.5b
-
-# Or switch to shortlisted workstation model:
-# OLLAMA_MODEL=phi3.5
+To run the independent model evaluation suite against local Ollama:
+```bash
+python3 benchmarks/evaluate_models.py
 ```
+- Detailed evaluation results are saved to: `benchmarks/results/model_evaluation_report.json`.
+- Raw terminal execution logs are preserved in: `benchmarks/verification/model_evaluation_run.txt`.

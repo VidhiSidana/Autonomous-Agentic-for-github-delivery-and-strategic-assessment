@@ -226,8 +226,8 @@ Run the 14-task ground-truth benchmark suite:
 python3 benchmarks/benchmark_runner.py
 ```
 - **Results:** 14/14 tasks passing (100.0% success rate across PE architecture, section headers, imports/exports, Capstone disassembly, code architecture, cross-process persistence, multi-tool dual-branch execution, and dynamic schema validation).
-- **Execution Latency:** Total deterministic suite execution time is ~0.80 seconds (average **0.0572s** per task; ~1.20s including independent subprocesses).
-- **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths.
+- **Execution Latency:** Total deterministic suite execution time is ~0.80 seconds (average **0.0575s** per task; ~1.20s including independent subprocesses).
+- **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths. Raw execution log is preserved in `benchmarks/verification/benchmark_run.txt`.
 
 ### 8.2 Empirical Model Evaluation Suite
 Run the reproducible model evaluation suite against local Ollama:
@@ -235,8 +235,8 @@ Run the reproducible model evaluation suite against local Ollama:
 python3 benchmarks/evaluate_models.py
 ```
 - **Evaluated Models:** `qwen2.5:1.5b` (Tested active baseline), `phi3.5:latest` (Shortlisted profile / Not tested), `mistral-nemo:12b` (Shortlisted profile / Not tested).
-- **Qwen 2.5 1.5B Metrics:** 100% direct tool selection accuracy (0.7504s average latency), 100% argument structure accuracy, and verified evidence-grounded synthesis (2.2268s latency).
-- **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`.
+- **Qwen 2.5 1.5B Metrics:** 92.9% direct tool selection accuracy (0.2604s average latency), 85.7% exact argument accuracy, 85.7% overall tool-call correctness, and 100% evidence-grounded synthesis score (2.6187s latency).
+- **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`. Raw execution log is preserved in `benchmarks/verification/model_evaluation_run.txt`.
 
 ---
 
@@ -249,7 +249,7 @@ python3 benchmarks/evaluate_models.py
 | **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
 | **Dynamic MCP Orchestrator**| **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
 | **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 543 nodes / 1,971 edges across 25 Python modules, verified search, caller/callee tracing & architecture queries |
+| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 628 nodes / 2,136 edges across 26 Python modules, verified search, caller/callee tracing & architecture queries |
 | **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
 | **REA Integration Adapter** | **IMPLEMENTED / PENDING EXTERNAL TOOL** | Formal adapter with live subprocess/HTTP invocation and analysis result capture. Reports `PENDING_EXTERNAL_DEPENDENCY` and falls back to PE/Capstone when external REA credentials/binary are pending from Samsung PRISM |
 | **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |

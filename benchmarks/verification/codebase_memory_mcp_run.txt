@@ -1,0 +1,202 @@
+================================================================================
+VERIFICATION EVIDENCE: Codebase Memory MCP External Integration
+Timestamp (UTC): 2026-11-04T10:31:36Z
+Environment: macOS arm64, Python Python 3.14.2
+Command: python3 tests/verify_codebase_memory_mcp.py
+================================================================================
+======================================================================
+ 1. CONNECTING TO REAL codebase-memory-mcp SERVER OVER STDIO
+======================================================================
+[+] Successfully connected to codebase-memory-mcp session.
+
+[+] Discovered 17 tools on live server:
+  * index_repository
+    - Description: Index a repository. full/moderate add semantics; fast omits them; cros...
+    - Required args: ['repo_path']
+  * search_graph
+    - Description: Find symbols via BM25 query, regex name/qn filters, or semantic_query....
+    - Required args: ['project']
+  * query_graph
+    - Description: Read-only Cypher for multi-hop, aggregation, complexity, or cross-serv...
+    - Required args: ['query', 'project']
+  * trace_path
+    - Description: Trace callers/callees, data flow, or cross-service paths. Defaults exc...
+    - Required args: ['function_name', 'project']
+  * get_code_snippet
+    - Description: Read a search_graph symbol. auto bounds source and outlines large cont...
+    - Required args: ['qualified_name', 'project']
+  * get_file_outline
+    - Description: Declaration outline of one exact repository-relative file: optional ex...
+    - Required args: ['project', 'file_path']
+  * get_graph_schema
+    - Description: Get node-label and edge-type counts. diagnostics=full also lists query...
+    - Required args: ['project']
+  * compare_graphs
+    - Description: Compare two indexed snapshots: deterministic target-only additions and...
+    - Required args: ['base_project', 'target_project']
+  * get_architecture
+    - Description: Bounded static architecture; poll pending jobs. include_behavior_evide...
+    - Required args: ['project']
+  * search_code
+    - Description: Graph-ranked text search: compact symbols, full bounded source, or fil...
+    - Required args: ['pattern', 'project']
+  * list_projects
+    - Description: List projects with stable paging. Identity is lean; stats adds graph s...
+    - Required args: []
+  * delete_project
+    - Description: Delete a project from the index...
+    - Required args: ['project']
+  * index_status
+    - Description: Project readiness, counts, root, watch state, coverage gaps, and doc_l...
+    - Required args: ['project']
+  * check_index_coverage
+    - Description: Best-effort exact-path/scope coverage and freshness, paged separately....
+    - Required args: ['project']
+  * detect_changes
+    - Description: Map a Git diff to files and impact. Page with snapshot cursors....
+    - Required args: ['project']
+  * manage_adr
+    - Description: Outline an ADR by default; get reads it; update replaces it...
+    - Required args: ['project']
+  * ingest_traces
+    - Description: Record observed runtime calls so the graph can distinguish observed fr...
+    - Required args: ['traces', 'project']
+
+======================================================================
+ 2. REPOSITORY INDEXING (index_repository)
+======================================================================
+index_repository success: True
+index_repository raw output:
+{"project":"Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment","excluded":{"dirs":[".git","benchmarks/__pycache__","agent/__pycache__","tests/__pycache__","tests/fixtures/__pycache__"],"count":9,"truncated":true},"not_indexed_files_count":4,"not_indexed_files":{"files":[{"path":"benchmarks/results/sample_authorized.exe","reason":"ignored-suffix"},{"path":"benchmarks/results/benchmark_test_memory.db","reason":"ignored-suffix"},{"path":"memory/engineering_memory.db","reason":"ignored-suffix"},{"path":"memory/binary_audit.log","reason":"gitignore"}],"count":4,"truncated":false,"note":"Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."},"skipped_count":0,"parse_partial_count":0,"parse_unusable_count":0,"nodes":628,"edges":2136,"expected_nodes":628,"expected_edges":2136,"adr_present":false,"adr_hint":"Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.","artifact_present":false,"status":"indexed"}
+
+[+] Active project identifier: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment
+
+======================================================================
+ 3. SYMBOL SEARCH (search_graph)
+======================================================================
+search_graph success: True
+search_graph output:
+results: 5  (cols: qn label file lines rank)
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query Method agent/main.py 40-45 -47.36
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator.process_query Method agent/orchestrator.py 86-155 -47.28
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query_async Method agent/main.py 47-52 -17.71
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.README.Code-Comprehension: Section README.md 164-165 -1.66
+  Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.docs.milestone_1_completion_report.Complete-14-Task-Execution-Summary: Section docs/milestone_1_completion_report.md 106-107 -0.9306
+total: 5
+total_relation: eq
+search_mode: bm25
+returned: 5
+has_more: false
+truncated: false
+
+[+] Target Qualified Name for Caller Tracing: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+
+======================================================================
+ 4. INBOUND CALLER TRACING (trace_path inbound)
+======================================================================
+trace_path (inbound) success: True
+trace_path (inbound) output:
+function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+direction: inbound
+callers_total: 0
+callers_total_relation: eq
+callers: 0  (cols: qn hop test)
+
+
+======================================================================
+ 5. OUTBOUND CALLEE TRACING (trace_path outbound)
+======================================================================
+trace_path (outbound) success: True
+trace_path (outbound) output:
+function: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent.process_query
+direction: outbound
+callees_total: 13
+callees_total_relation: eq
+callees: 13  (rows: name hop test; qn = group prefix empty ? name : prefix + "." + name; "" marks empty prefix)
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.evidence:
+  EvidenceBundle 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.evidence.EvidenceBundle:
+  add_limitation 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.main.UnifiedEngineeringAgent:
+  process_query_async 1 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator.AgentOrchestrator:
+  _generate_response 3 false
+  _handle_binary_analysis 3 false
+  _handle_code_analysis 3 false
+  _handle_general 3 false
+  _handle_memory 3 false
+  _handle_multi_tool 3 false
+  process_query 2 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.orchestrator:
+  OrchestrationResult 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.agent.planner.AgentPlanner:
+  plan 3 false
+Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment.memory.session_manager.SessionManager:
+  increment_query_count 3 false
+
+
+======================================================================
+ 6. REPOSITORY ARCHITECTURE & DEPENDENCIES (get_architecture)
+======================================================================
+get_architecture success: True
+get_architecture output:
+ project: Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment
+aspects_hint: "Summary view (default). More on request via aspects:[...] — structure, dependencies, routes, hotspots, boundaries, layers, clusters, file_tree — or [\"all\"] for everything."
+total_nodes: 628
+total_edges: 2136
+node_labels: 16  (cols: label count)
+  Variable 180
+  Method 132
+  Section 76
+  Function 56
+  DiagramElement 44
+  File 37
+  Module 37
+  Class 28
+  EnvVar 12
+  Folder 12
+  Package 6
+  Diagram 3
+  Decorator 2
+  Branch 1
+  Process 1
+  Project 1
+edge_types: 21  (cols: type count)
+  DEFINES 903
+  CALLS 422
+  USAGE 128
+  DEFINES_METHOD 127
+  TESTS 93
+  IMPORTS 70
+  MENTIONS 70
+  WRITES 69
+  REFERENCES_FILE 59
+  DIAGRAM_ARROW 52
+  CONTAINS_FILE 37
+  SEMANTICALLY_RELATED 35
+  DECORATES 22
+  CONFIGURES 14
+  CONTAINS_FOLDER 12
+  FILE_CHANGES_WITH 11
+  DEPENDS_ON 6
+  INHERITS 2
+  SIMILAR_TO 2
+  HAS_BRANCH 1
+  SPAWNS 1
+languages: 1  (cols: language files)
+  Python 26
+packages: 6  (cols: name nodes fan_in fan_out)
+  capstone 1 0 0
+  mcp 1 0 0
+  pefile 1 0 0
+  pydantic 1 0 0
+  python-dotenv 1 0 0
+  requests 1 0 0
+
+
+======================================================================
+ 7. DYNAMIC ARGUMENT VALIDATION TEST
+======================================================================
+Missing parameter validation caught: True | Error: Dynamic schema validation failed: Missing required parameter 'project' for tool 'search_graph'.
+
+[+] Verification completed cleanly.

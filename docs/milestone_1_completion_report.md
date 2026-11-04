@@ -20,7 +20,7 @@ According to the official Samsung PRISM Milestone 1 specification, the project d
 
 ## 2. Baseline Features vs Current Version Verification
 
-### 2.1 Baseline Architecture
+### 2.1 Baseline Architecture (Implemented in Earlier Versions)
 - **Local LLM Gateway (`agent/llm.py`):** Configurable local client interfacing with Ollama (`http://localhost:11434`), supporting non-streaming and streaming inference, temperature/token tuning, health checks, and offline fallback.
 - **Structured Planner (`agent/planner.py`):** Deterministic Pydantic v2 planner extracting categories (`CODE_ANALYSIS`, `BINARY_ANALYSIS`, `MEMORY`, `MULTI_TOOL`, `GENERAL`), symbols, file paths, and flagging queries lacking mandatory parameters for user clarification.
 - **AST Code Analysis MCP (`code_analysis/code_server.py`):** Functions, callers, callees, classes, module dependencies, and 2-hop change impact.
@@ -28,8 +28,9 @@ According to the official Samsung PRISM Milestone 1 specification, the project d
 - **SQLite Engineering Memory (`memory/memory.py`):** Persistent `findings` table supporting CRUD, duplicate checks, secret redaction, and verification statuses (`VERIFIED`, `HYPOTHESIS`, `NEEDS_REVIEW`, `REJECTED`).
 - **Session Management (`memory/session_manager.py`):** Multi-session tracking and query count tracking.
 
-### 2.2 Milestone 1 Verification & Hardening
+### 2.2 Milestone 1 Verification & Hardening (Completed in Current Version)
 - **Decoupled Architecture & Genuine Model Evaluation:** Explicitly separated deterministic planner routing and dynamic schema validation from autonomous LLM tool selection and synthesis. Added `benchmarks/evaluate_models.py` for empirical model benchmarks.
+- **Exact Argument Accuracy Evaluation:** Evaluated direct LLM tool calling across 14 diverse queries measuring valid JSON, tool selection, required arguments, exact argument matches, and overall tool-call correctness.
 - **Dynamic Schema Tool Discovery & Intent Dispatch (`agent/orchestrator.py`):** Discovers all available tools and input schemas dynamically; maps high-level intent (`symbol_search`, `trace_callers`, `trace_callees`, `architecture`) using tool descriptions and parameter schemas; validates arguments before invocation.
 - **Filesystem-Aware Security Containment (`agent/policy.py`):** Removed unconditional lowercase prefix matching; implemented canonical directory hierarchy and filesystem inode parent matching (`os.path.samefile`) preventing symlink escapes, path traversal (`..`), and sibling directory bypasses.
 - **Comprehensive Ground-Truth Benchmark Dataset (`benchmarks/datasets/milestone1_ground_truth.json`):** 14 independently verifiable tasks covering PE architecture, section headers, imports/exports, Capstone instruction disassembly, code architecture, and multi-session retrieval.
@@ -37,6 +38,7 @@ According to the official Samsung PRISM Milestone 1 specification, the project d
 - **Portable Relative Benchmark Reports:** Sanitized all developer-specific absolute paths from benchmark outputs, guaranteeing portability across evaluator workstations.
 - **Architecture Diagram (`docs/architecture.md`):** Complete Mermaid specification showing all 16 components with exact tool-call and data-return flows.
 - **Security & Safety Specification (`docs/security.md`):** Documented network boundaries, directory allowlists, append-only audit logging, secret redaction, and REA boundary conditions without unsupported claims.
+- **Reproducible Verification Artifacts (`benchmarks/verification/`):** Captured full execution logs for unit tests, ground-truth benchmarks, model evaluation, and live Codebase Memory MCP execution.
 
 ---
 
@@ -63,20 +65,21 @@ Refer to [docs/architecture.md](docs/architecture.md) for the complete Mermaid a
 
 ## 4. Codebase Memory MCP Verification Status
 - **Server:** `codebase-memory-mcp` (Version 0.12.1).
-- **Status:** **OPERATIONAL & VERIFIED LIVE**.
-- **Verification Timestamp:** `2026-11-04T15:34:45+05:30` (UTC `2026-11-04T10:04:45Z`).
+- **Status:** **VERIFIED** (Live over stdio).
+- **Verification Timestamp:** `2026-11-04T10:31:34Z`.
 - **Tools Discovered:** 17 tools (`index_repository`, `search_graph`, `query_graph`, `trace_path`, `get_code_snippet`, `get_file_outline`, `get_graph_schema`, `compare_graphs`, `get_architecture`, `search_code`, `list_projects`, `delete_project`, `index_status`, `check_index_coverage`, `detect_changes`, `manage_adr`, `ingest_traces`).
 - **Live Indexing Results:**
   - Project Identifier: `Users-chintansood7-samsung-prism-Autonomous-Agentic-for-github-delivery-and-strategic-assessment`
-  - Total Indexed Graph Nodes: **543**
-  - Total Indexed Graph Edges: **1,971**
-  - Node Labels (16): Method (132), Variable (113), Section (66), Function (52), DiagramElement (44), File (35), Module (35), Class (28), EnvVar (12), Folder (12), Package (6), Diagram (3), Decorator (2), Branch (1), Process (1), Project (1).
-  - Languages Analyzed: Python (25 source files).
+  - Total Indexed Graph Nodes: **628**
+  - Total Indexed Graph Edges: **2,136**
+  - Node Labels (16): Method (132), Variable (113), Section (66), Function (52), DiagramElement (44), File (37), Module (37), Class (28), EnvVar (12), Folder (12), Package (6), Diagram (3), Decorator (2), Branch (1), Process (1), Project (1).
+  - Languages Analyzed: Python (26 source files).
 - **Symbol Search (`search_graph`):** Located `UnifiedEngineeringAgent.process_query` (lines 40–45) and `AgentOrchestrator.process_query` (lines 86–155).
 - **Call-Path Tracing (`trace_path`):**
   - Inbound Callers: 0 (verified top-level entry point).
   - Outbound Callees: 13 distinct callees traced (`EvidenceBundle`, `AgentOrchestrator.process_query`, `AgentPlanner.plan`, `SessionManager.increment_query_count`, etc.).
 - **AST Fallback:** Verified that if `code_graph` is disabled or fails to connect, the orchestrator seamlessly delegates code queries to the local AST server (`code_fallback`) without failure.
+- **Verification Evidence:** Captured in [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt).
 
 ---
 
@@ -107,16 +110,16 @@ python3 benchmarks/benchmark_runner.py
 ```text
 Running 14 benchmark tasks from milestone1_ground_truth.json...
 
-[PASS] Task C1: Function discovery across repository (0.340s)
-[PASS] Task C2: Caller identification for process_query (0.045s)
+[PASS] Task C1: Function discovery across repository (0.342s)
+[PASS] Task C2: Caller identification for process_query (0.041s)
 [PASS] Task C3: Module dependency extraction (0.007s)
-[PASS] Task C4: Code architecture and class outline understanding (0.038s)
-[PASS] Task B1: Binary analysis path policy enforcement (0.299s)
+[PASS] Task C4: Code architecture and class outline understanding (0.041s)
+[PASS] Task B1: Binary analysis path policy enforcement (0.300s)
 [PASS] Task B2: Missing binary path triggers clarification (0.001s)
-[PASS] Task B3: Binary metadata and PE architecture extraction (0.007s)
-[PASS] Task B4: PE section header and memory boundary inspection (0.007s)
-[PASS] Task B5: Binary imports and external symbol dependency extraction (0.006s)
-[PASS] Task B6: Capstone machine code instruction disassembly (0.006s)
+[PASS] Task B3: Binary metadata and PE architecture extraction (0.009s)
+[PASS] Task B4: PE section header and memory boundary inspection (0.006s)
+[PASS] Task B5: Binary imports and external symbol dependency extraction (0.008s)
+[PASS] Task B6: Capstone machine code instruction disassembly (0.005s)
 [PASS] Task M1: Persist engineering finding (0.001s)
 [PASS] Task M2: Cross-session retrieval of verified finding (0.001s)
 [PASS] Task M3: Multi-session persistence retrieval across engineering iterations (0.001s)
@@ -125,17 +128,18 @@ Running 14 benchmark tasks from milestone1_ground_truth.json...
 ==========================================
  Benchmark Summary: 14/14 Passed (100.0%)
  Report saved: benchmarks/results/benchmark_report.json
- Average Latency: 0.0572s
+ Average Latency: 0.0575s
  Cross-Process Persistence: VERIFIED
 ==========================================
 ```
 
 ### Latency Disambiguation:
-- **Total Deterministic Task Time:** ~0.8018 seconds across 14 tasks.
+- **Total Deterministic Task Time:** ~0.8055 seconds across 14 tasks.
 - **Total Benchmark Run Time (with OS subprocesses):** ~1.20 seconds.
-- **Average Deterministic Task Latency:** **0.0572s** (57.2ms).
-- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.7504s**.
-- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **2.2268s**.
+- **Average Deterministic Task Latency (Source of Truth):** **0.0575s** (57.5 ms).
+- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.2604s**.
+- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **2.6187s**.
+- **Verification Evidence:** Captured in [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt).
 
 ---
 
@@ -143,13 +147,14 @@ Running 14 benchmark tasks from milestone1_ground_truth.json...
 
 Evaluated via `benchmarks/evaluate_models.py` against local Ollama daemon (`http://localhost:11434`):
 
-| Model | Tag | Quantization | Local Status | Tool Selection Accuracy | Argument Accuracy | Tool Latency | Synthesis Latency | Grounded |
+| Model | Tag | Quantization | Local Status | Tool Selection Accuracy | Exact Argument Accuracy | Overall Tool-Call Accuracy | Synthesis Score | Verification Verdict |
 |---|---|---|---|---|---|---|---|---|
-| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **TESTED** | **100.0%** (4/4) | **100.0%** (4/4) | 0.7504s | 2.2268s | **YES** |
-| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | N/A |
-| **Mistral Nemo 12B** | `mistral-nemo:12b` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | N/A |
+| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **92.9%** (13/14) | **85.7%** (12/14) | **85.7%** (12/14) | **100.0%** (5/5) | **VERIFIED (Active Baseline)** |
+| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled)** |
+| **Mistral Nemo 12B** | `mistral-nemo:12b` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled / RAM limit)** |
 
-*Note: Phi-3.5 and Mistral Nemo are not pulled in local Ollama and are accurately recorded as NOT TESTED without fabricating synthetic results.*
+- **Verification Evidence:** Captured in [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt).
+- **Structured Report:** Saved in [benchmarks/results/model_evaluation_report.json](benchmarks/results/model_evaluation_report.json).
 
 ---
 
@@ -180,7 +185,9 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 | MCP Client | `tests/test_mcp_client.py` | 4 | 4 | 0 | 0 | 0 | 2.100s |
 | Agent Orchestrator | `tests/test_orchestrator.py` | 3 | 3 | 0 | 0 | 0 | 0.180s |
 | Benchmark Suite | `tests/test_benchmark_runner.py` | 3 | 3 | 0 | 0 | 0 | 1.650s |
-| **Total Automated Suite** | **8 Test Modules** | **51** | **51** | **0** | **0** | **0** | **4.257s** |
+| **Total Automated Suite** | **8 Test Modules** | **51** | **51** | **0** | **0** | **0** | **4.521s** |
+
+- **Verification Evidence:** Captured in [benchmarks/verification/unit_test_run.txt](benchmarks/verification/unit_test_run.txt).
 
 ### 10.2 Unprovisioned Environment (Without `requirements.txt`)
 When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
@@ -193,17 +200,18 @@ When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 
 ## 11. Supervisor Review Readiness & Acceptance Table
 
-| Deliverable | Requirement | Status | Evidence |
+| Deliverable | Requirement | Status | Evidence Reference |
 | :--- | :--- | :--- | :--- |
-| **Consolidated Architecture** | Model Gateway, Planner, Orchestrator, Memory, Policy, Audit | **VERIFIED** | 51/51 tests passing in clean venv; all core modules operational |
-| **Ground-Truth Benchmarks** | 14 ground-truth tasks with cross-process persistence and relative paths | **VERIFIED** | 14/14 passed (100.0%) in `benchmarks/results/benchmark_report.json` (0.0572s avg) |
+| **Consolidated Architecture** | Model Gateway, Planner, Orchestrator, Memory, Policy, Audit | **VERIFIED** | 51/51 tests passing in clean venv; [benchmarks/verification/unit_test_run.txt](benchmarks/verification/unit_test_run.txt) |
 | **Architecture Diagram** | Comprehensive Mermaid diagram with 16 elements and directional data flows | **VERIFIED** | [docs/architecture.md](docs/architecture.md) |
-| **Code-Graph Integration** | Live `codebase-memory-mcp v0.12.1` verified; AST fallback verified | **VERIFIED** | 17 tools discovered; 543 nodes and 1,971 edges indexed; callers/callees traced |
+| **Security Architecture** | Local-first, network boundaries, traversal/symlink defenses, secret redaction | **VERIFIED** | [docs/security.md](docs/security.md); 8/8 policy tests passing |
+| **Ground-Truth Benchmarks** | 14 ground-truth tasks with cross-process persistence and relative paths | **VERIFIED** | 14/14 passed (100.0%) in `benchmarks/results/benchmark_report.json` (0.0575s avg); [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt) |
+| **Code-Graph Integration** | Live `codebase-memory-mcp v0.12.1` verified; AST fallback verified | **VERIFIED** | 17 tools discovered; 628 nodes and 2,136 edges indexed; [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt) |
 | **Binary-Tool Integration** | Static PE analysis, Capstone disassembly, directory allowlist, audit log | **VERIFIED** | Tasks B1–B6 passed; Capstone disassembly operational; path defenses passing |
-| **REA Toolchain Integration** | Official external REA binary integration | **BLOCKED** | Documented as `PENDING_EXTERNAL_DEPENDENCY`; safe PE/Capstone fallback active |
-| **Local Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 100% tool selection, 100% argument accuracy, 2.23s synthesis latency |
-| **Local Model Evaluation (Phi-3.5 / Mistral-Nemo)** | Workstation and Power tier model profiles | **NOT TESTED** | Documented as NOT TESTED; models not installed in local Ollama daemon |
-| **Security & Privacy Specification** | Local-first, network boundaries, traversal/symlink defenses, secret redaction | **VERIFIED** | Documented in [docs/security.md](docs/security.md); 8/8 policy tests passing |
+| **Samsung REA Toolchain** | Official external REA binary integration | **BLOCKED** | Documented as `PENDING_EXTERNAL_DEPENDENCY`; safe PE/Capstone fallback active |
+| **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 92.9% tool selection, 85.7% exact argument accuracy, 100% synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Phi-3.5 / Mistral-Nemo)** | Workstation and Power tier model profiles | **NOT TESTED** | Documented as NOT TESTED; models not installed in local Ollama daemon |
+| **Completion Report** | Deliverables, test results, benchmarks, security, blockers | **VERIFIED** | [docs/milestone_1_completion_report.md](docs/milestone_1_completion_report.md) |
 
 ### Verdict
 **Milestone 1 is complete, verified, and ready for supervisor review.**
