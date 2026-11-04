@@ -53,11 +53,19 @@ CANDIDATE_MODELS = [
         "min_ram_gb": 8,
     },
     {
+        "model_tag": "llama3.1:8b",
+        "family": "Llama 3.1",
+        "parameters": "8.03B",
+        "quantization": "Q4_K_M",
+        "target_tier": "Tier 3 (Power / Code & Logic Reasoning)",
+        "min_ram_gb": 16,
+    },
+    {
         "model_tag": "mistral-nemo:12b",
         "family": "Mistral Nemo",
         "parameters": "12.2B",
         "quantization": "Q4_K_M",
-        "target_tier": "Tier 3 (Power / Reverse Engineering)",
+        "target_tier": "Tier 3 (High-Capacity Extended Context)",
         "min_ram_gb": 16,
     },
 ]
@@ -198,15 +206,18 @@ EVALUATION_TASKS = [
 TOOL_SYSTEM_PROMPT = """You are an automated tool selector for the Samsung PRISM Engineering Assistant.
 Available Tools:
 - find_functions(): Discover function definitions in codebase. Arguments: {}
-- find_callers(target: str): Find functions that call the target. Arguments: {"target": "<func_name>"}
-- find_callees(target: str): Find functions called by target. Arguments: {"target": "<func_name>"}
+- find_callers(target: str): Find inbound callers that invoke the target function. Use when asked "who calls X", "callers of X", or functions calling X. Arguments: {"target": "<func_name>"}
+  Example: "Who calls handle_event in this codebase?" -> {"tool": "find_callers", "arguments": {"target": "handle_event"}}
+- find_callees(target: str): Find outbound calls made BY the target function. Use when asked "which functions does X call", "functions called by X", or "callees of X". Arguments: {"target": "<func_name>"}
+  Example: "Which functions does dispatch_event call?" -> {"tool": "find_callees", "arguments": {"target": "dispatch_event"}}
 - get_file_outline(file_path: str): Get classes and methods in a file. Arguments: {"file_path": "<path>"}
 - analyze_binary(file_path: str): Inspect PE headers and architecture. Arguments: {"file_path": "<path>"}
 - disassemble_binary(file_path: str): Disassemble machine code instructions. Arguments: {"file_path": "<path>"}
 - find_binary_imports(file_path: str): List imported DLLs and API functions. Arguments: {"file_path": "<path>"}
 - save_finding(content: str): Persist an engineering finding to memory. Arguments: {"content": "<finding_text>"}
 - search_memory(query: str): Search past engineering findings. Arguments: {"query": "<search_term>"}
-- request_clarification(missing_parameter: str): Use when a mandatory parameter (such as a binary file path) is missing from the query. Arguments: {"missing_parameter": "<name>"}
+- request_clarification(missing_parameter: str): Use when an essential mandatory parameter (such as a binary file path) is missing from the query. Arguments: {"missing_parameter": "<name>"}
+  Example: "Disassemble this binary executable" -> {"tool": "request_clarification", "arguments": {"missing_parameter": "file_path"}}
 - none(): Use when no tool matches the request, or when the request is invalid/ambiguous. Arguments: {}
 
 You must respond ONLY with a single valid JSON object in this exact format:
@@ -439,7 +450,7 @@ def run_model_evaluation() -> Dict[str, Any]:
         tag = candidate["model_tag"]
         logger.info(f"Assessing model candidate: {tag} ({candidate['family']})")
 
-        llm = LocalLLM(model=tag)
+        llm = LocalLLM(model=tag, max_tokens=150, timeout=45)
         is_available, avail_msg = llm.check_availability()
 
         model_entry: Dict[str, Any] = {
@@ -478,8 +489,9 @@ def run_model_evaluation() -> Dict[str, Any]:
                 {"role": "system", "content": TOOL_SYSTEM_PROMPT},
                 {"role": "user", "content": f"Task: {task['query']}"},
             ]
+            meta = {}
             try:
-                resp = llm.chat(messages)
+                resp, meta = llm.chat_with_metadata(messages)
                 elapsed = time.perf_counter() - t0
                 latencies.append(elapsed)
             except Exception as exc:
@@ -488,6 +500,8 @@ def run_model_evaluation() -> Dict[str, Any]:
 
             res = evaluate_task(task, resp)
             res["latency_seconds"] = round(elapsed, 4)
+            res["prompt_eval_count"] = meta.get("prompt_eval_count")
+            res["eval_count"] = meta.get("eval_count")
             task_results.append(res)
 
             if res["valid_json"]:
@@ -503,6 +517,9 @@ def run_model_evaluation() -> Dict[str, Any]:
 
         total_t = len(EVALUATION_TASKS)
         avg_lat = round(sum(latencies) / len(latencies), 4) if latencies else 0.0
+        total_prompt_tok = sum(r.get("prompt_eval_count") or 0 for r in task_results)
+        total_eval_tok = sum(r.get("eval_count") or 0 for r in task_results)
+        avg_eval_tok = round(total_eval_tok / total_t, 1) if total_t > 0 else 0.0
 
         model_entry["tool_calling_evaluation"] = {
             "total_tasks": total_t,
@@ -517,6 +534,9 @@ def run_model_evaluation() -> Dict[str, Any]:
             "overall_specification_correct": overall_correct_count,
             "overall_tool_call_accuracy": f"{(overall_correct_count / total_t) * 100:.1f}%",
             "average_tool_selection_latency_seconds": avg_lat,
+            "total_prompt_tokens": total_prompt_tok,
+            "total_generated_tokens": total_eval_tok,
+            "avg_generated_tokens_per_task": avg_eval_tok,
             "task_breakdown": task_results,
         }
 
@@ -538,8 +558,9 @@ def run_model_evaluation() -> Dict[str, Any]:
                 },
             ]
             t0 = time.perf_counter()
+            synth_meta = {}
             try:
-                synth_resp = llm.chat(synthesis_messages)
+                synth_resp, synth_meta = llm.chat_with_metadata(synthesis_messages)
                 synth_elapsed = time.perf_counter() - t0
                 synth_latencies.append(synth_elapsed)
             except Exception as exc:
@@ -548,6 +569,8 @@ def run_model_evaluation() -> Dict[str, Any]:
 
             case_res = evaluate_synthesis_case(case, synth_resp)
             case_res["latency_seconds"] = round(synth_elapsed, 4)
+            case_res["prompt_eval_count"] = synth_meta.get("prompt_eval_count")
+            case_res["eval_count"] = synth_meta.get("eval_count")
             synthesis_case_results.append(case_res)
             if case_res["passed"]:
                 passed_synth_cases += 1

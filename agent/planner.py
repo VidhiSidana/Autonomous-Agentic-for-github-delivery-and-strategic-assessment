@@ -201,19 +201,19 @@ _VERIFICATION_STATUS: dict[str, str] = {
 def _extract_function_name(query: str) -> Optional[str]:
     """Extract a function name from patterns like 'callers of foo' or 'find foo function'."""
     patterns = [
-        r"callers?\s+of\s+[`'\"]?(\w+)[`'\"]?",
-        r"calls?\s+[`'\"]?(\w+)[`'\"]?",
-        r"who calls?\s+[`'\"]?(\w+)[`'\"]?",
-        r"called by\s+[`'\"]?(\w+)[`'\"]?",
-        r"find\s+[`'\"]?(\w+)[`'\"]?\s+function",
-        r"function\s+[`'\"]?(\w+)[`'\"]?",
-        r"callees?\s+of\s+[`'\"]?(\w+)[`'\"]?",
-        r"calls\s+made by\s+[`'\"]?(\w+)[`'\"]?",
+        r"callers?\s+of\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"calls?\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"who calls?\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"called by\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"find\s+[`'\"]?([\w\.]+)[`'\"]?\s+function",
+        r"function\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"callees?\s+of\s+[`'\"]?([\w\.]+)[`'\"]?",
+        r"calls\s+made by\s+[`'\"]?([\w\.]+)[`'\"]?",
     ]
     for pat in patterns:
         m = re.search(pat, query, re.IGNORECASE)
         if m:
-            return m.group(1)
+            return m.group(1).rstrip(".,;:!?'\"")
     return None
 
 
@@ -228,7 +228,7 @@ def _extract_file_path(query: str) -> Optional[str]:
     for pat in patterns:
         m = re.search(pat, query, re.IGNORECASE)
         if m:
-            return m.group(1)
+            return m.group(1).rstrip(".,;:!?'\"")
     return None
 
 
@@ -366,13 +366,13 @@ class AgentPlanner:
         # -----------------------------------------------------------------
         # Multi-tool: query spans both code and binary domains
         # -----------------------------------------------------------------
-        if _is_multi_tool(q, has_code, has_binary):
+        if _is_multi_tool(user_input, has_code, has_binary):
             return QueryPlan(
                 category=QueryCategory.MULTI_TOOL,
                 raw_query=user_input,
-                function_name=_extract_function_name(q),
-                file_path=_extract_file_path(q),
-                binary_path=_extract_binary_path(q),
+                function_name=_extract_function_name(user_input),
+                file_path=_extract_file_path(user_input),
+                binary_path=_extract_binary_path(user_input),
                 binary_operation=_extract_binary_operation(q),
                 sub_categories=[
                     QueryCategory.CODE_ANALYSIS.value,
@@ -383,8 +383,8 @@ class AgentPlanner:
         # -----------------------------------------------------------------
         # Binary analysis
         # -----------------------------------------------------------------
-        bin_path = _extract_binary_path(q)
-        if has_binary and (not has_code or (bin_path and not _extract_file_path(q))):
+        bin_path = _extract_binary_path(user_input)
+        if has_binary and (not has_code or (bin_path and not _extract_file_path(user_input))):
             binary_path = bin_path
             return QueryPlan(
                 category=QueryCategory.BINARY_ANALYSIS,
@@ -402,8 +402,8 @@ class AgentPlanner:
         # Code analysis
         # -----------------------------------------------------------------
         if has_code:
-            fn_name = _extract_function_name(q)
-            file_path = _extract_file_path(q)
+            fn_name = _extract_function_name(user_input)
+            file_path = _extract_file_path(user_input)
             return QueryPlan(
                 category=QueryCategory.CODE_ANALYSIS,
                 raw_query=user_input,

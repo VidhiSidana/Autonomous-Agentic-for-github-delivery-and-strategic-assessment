@@ -128,6 +128,18 @@ class LocalLLM:
         str
             The assistant's reply, or an error string if the call fails.
         """
+        content, _ = self.chat_with_metadata(messages, system_prompt=system_prompt)
+        return content
+
+    def chat_with_metadata(
+        self,
+        messages: list[Message],
+        system_prompt: Optional[str] = None,
+    ) -> tuple[str, dict]:
+        """
+        Send conversation to LLM and return both reply content and generation metadata
+        (such as token counts and latency metrics from Ollama).
+        """
         full_messages: list[Message] = []
 
         # Prepend system prompt if provided and not already present
@@ -157,7 +169,16 @@ class LocalLLM:
             )
             response.raise_for_status()
             result = response.json()
-            return result["message"]["content"]
+            content = result.get("message", {}).get("content", "")
+            meta = {
+                "prompt_eval_count": result.get("prompt_eval_count"),
+                "eval_count": result.get("eval_count"),
+                "total_duration": result.get("total_duration"),
+                "load_duration": result.get("load_duration"),
+                "prompt_eval_duration": result.get("prompt_eval_duration"),
+                "eval_duration": result.get("eval_duration"),
+            }
+            return content, meta
 
         except requests.exceptions.ConnectionError:
             msg = (
@@ -165,28 +186,27 @@ class LocalLLM:
                 "Ensure Ollama is running."
             )
             logger.error(msg)
-            return msg
+            return msg, {}
 
         except requests.exceptions.Timeout:
             msg = f"Ollama request timed out after {self.timeout}s."
             logger.error(msg)
-            return msg
+            return msg, {}
 
         except requests.exceptions.HTTPError as exc:
-            # Do not log the full response body — may contain model info
             msg = f"Ollama HTTP error: {exc.response.status_code}"
             logger.error(msg)
-            return msg
+            return msg, {}
 
         except (KeyError, ValueError) as exc:
             msg = f"Unexpected Ollama response format: {exc}"
             logger.error(msg)
-            return msg
+            return msg, {}
 
         except requests.exceptions.RequestException as exc:
             msg = f"LLM request failed: {type(exc).__name__}"
             logger.error(msg)
-            return msg
+            return msg, {}
 
 
 # ------------------------------------------------------------------

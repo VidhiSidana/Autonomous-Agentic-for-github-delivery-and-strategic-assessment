@@ -129,17 +129,17 @@ Running 14 benchmark tasks from milestone1_ground_truth.json...
 ==========================================
  Benchmark Summary: 14/14 Passed (100.0%)
  Report saved: benchmarks/results/benchmark_report.json
- Average Latency: 0.0575s
+ Average Latency: 0.0639s
  Cross-Process Persistence: VERIFIED
 ==========================================
 ```
 
 ### Latency Disambiguation:
-- **Total Deterministic Task Time:** ~0.8055 seconds across 14 tasks.
+- **Total Deterministic Task Time:** ~0.8946 seconds across 14 tasks.
 - **Total Benchmark Run Time (with OS subprocesses):** ~1.20 seconds.
-- **Average Deterministic Task Latency (Source of Truth):** **0.0575s** (57.5 ms).
-- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.3575s**.
-- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **1.8278s**.
+- **Average Deterministic Task Latency (Source of Truth):** **0.0639s** (63.9 ms).
+- **LLM Tool-Selection Latency (Qwen 2.5 1.5B via Ollama):** **0.5922s**.
+- **LLM Evidence Synthesis Latency (Qwen 2.5 1.5B via Ollama):** **2.5317s**.
 - **Verification Evidence:** Captured in [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt).
 
 ---
@@ -150,11 +150,14 @@ Evaluated via `benchmarks/evaluate_models.py` against local Ollama daemon (`http
 
 | Model | Tag | Quantization | Local Status | Tool Selection Accuracy | Exact Argument Accuracy | Overall Tool-Call Accuracy | Synthesis Score | Verification Verdict |
 |---|---|---|---|---|---|---|---|---|
-| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **85.7%** (12/14) | **85.7%** (12/14) | **85.7%** (12/14) | **33.3%** (1/3 cases) | **VERIFIED (Active Baseline)** |
-| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled)** |
+| **Qwen 2.5 1.5B** | `qwen2.5:1.5b` | `Q4_K_M` | **VERIFIED** | **78.6%** (11/14) | **78.6%** (11/14) | **78.6%** (11/14) | **33.3%** (1/3 cases) | **VERIFIED (Active Baseline)** |
+| **Phi-3.5 Mini 3.8B** | `phi3.5:latest` | `Q4_K_M` | **VERIFIED** | **0.0%** (0/14)* | **0.0%** (0/14)* | **0.0%** (0/14)* | **66.7%** (2/3 cases) | **VERIFIED (Tested Alternative)** |
+| **Llama 3.1 8B** | `llama3.1:8b` | `Q4_K_M` | **VERIFIED** | **78.6%** (11/14) | **78.6%** (11/14) | **78.6%** (11/14) | **66.7%** (2/3 cases) | **VERIFIED (Power Tier Recommended)** |
 | **Mistral Nemo 12B** | `mistral-nemo:12b` | `Q4_K_M` | **NOT TESTED** | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED | **NOT TESTED (Model not pulled / RAM limit)** |
 
-*Synthesis Evaluation Note: Complete PE evidence passed (100% factual accuracy), while missing evidence and contradiction prompts exposed small-model speculation and sycophancy. This empirically justifies the architecture's deterministic orchestrator and `EvidenceBundle` guardrails.*
+*\*Note on Phi-3.5 Mini: The model produced valid reasoning and tools in conversational prose but failed strict single-JSON output schema compliance without explicit grammar constraints.*
+
+*Synthesis Evaluation Note: Complete PE evidence passed across all models, while missing evidence and contradiction prompts distinguished sycophantic speculation (1.5B) from firm premise refutation (8B). This empirically justifies the architecture's deterministic orchestrator and `EvidenceBundle` guardrails.*
 
 - **Verification Evidence:** Captured in [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt).
 - **Structured Report:** Saved in [benchmarks/results/model_evaluation_report.json](benchmarks/results/model_evaluation_report.json).
@@ -171,7 +174,7 @@ Refer to [docs/security.md](docs/security.md) for full details:
 
 ---
 
-## 10. Automated Unit Test Verification (51 / 51 Passing)
+## 10. Automated Unit Test Verification (54 / 54 Passing)
 
 ### 10.1 Clean Virtual Environment (`/tmp/prism_venv`) with `requirements.txt`
 ```bash
@@ -180,7 +183,7 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 
 | Test Suite | Module | Discovered | Passed | Failed | Errors | Skipped | Time |
 |---|---|---|---|---|---|---|---|
-| Planner Tests | `tests/test_planner.py` | 10 | 10 | 0 | 0 | 0 | 0.001s |
+| Planner Tests | `tests/test_planner.py` | 13 | 13 | 0 | 0 | 0 | 0.002s |
 | Binary Analysis | `tests/test_binary_analysis.py` | 10 | 10 | 0 | 0 | 0 | 0.250s |
 | Engineering Memory | `tests/test_memory.py` | 9 | 9 | 0 | 0 | 0 | 0.030s |
 | Policy & Security | `tests/test_policy.py` | 8 | 8 | 0 | 0 | 0 | 0.004s |
@@ -188,15 +191,15 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 | MCP Client | `tests/test_mcp_client.py` | 4 | 4 | 0 | 0 | 0 | 2.100s |
 | Agent Orchestrator | `tests/test_orchestrator.py` | 3 | 3 | 0 | 0 | 0 | 0.180s |
 | Benchmark Suite | `tests/test_benchmark_runner.py` | 3 | 3 | 0 | 0 | 0 | 1.650s |
-| **Total Automated Suite** | **8 Test Modules** | **51** | **51** | **0** | **0** | **0** | **4.521s** |
+| **Total Automated Suite** | **8 Test Modules** | **54** | **54** | **0** | **0** | **0** | **4.708s** |
 
 - **Verification Evidence:** Captured in [benchmarks/verification/unit_test_run.txt](benchmarks/verification/unit_test_run.txt).
 
 ### 10.2 Unprovisioned Environment (Without `requirements.txt`)
 When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 - **Import Errors:** 5 modules fail to import (`test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, `test_benchmark_runner`).
-- **Discovered Tests:** 29 tests (standard-library-only suites: `test_planner.py`, `test_policy.py`, `test_memory.py`).
-- **Passed:** 24 tests.
+- **Discovered Tests:** 32 tests (standard-library-only suites: `test_planner.py`, `test_policy.py`, `test_memory.py`).
+- **Passed:** 27 tests.
 - **Failures / Errors:** 5 tests (due to missing MCP runtime modules).
 
 ---
@@ -205,17 +208,19 @@ When dependencies (`mcp`, `pefile`, `capstone`) are omitted:
 
 | Deliverable | Requirement | Status | Evidence Reference |
 | :--- | :--- | :--- | :--- |
-| **Consolidated Architecture** | Model Gateway, Planner, Orchestrator, Memory, Policy, Audit | **VERIFIED** | 51/51 tests passing in clean venv; [benchmarks/verification/unit_test_run.txt](benchmarks/verification/unit_test_run.txt) |
+| **Consolidated Architecture** | Model Gateway, Planner, Orchestrator, Memory, Policy, Audit | **VERIFIED** | 54/54 tests passing in clean venv; [benchmarks/verification/unit_test_run.txt](benchmarks/verification/unit_test_run.txt) |
 | **Architecture Diagram** | Comprehensive Mermaid diagram with 16 elements and directional data flows | **VERIFIED** | [docs/architecture.md](docs/architecture.md) |
 | **Security Architecture** | Local-first, network boundaries, traversal/symlink defenses, secret redaction | **VERIFIED** | [docs/security.md](docs/security.md); 8/8 policy tests passing |
-| **Ground-Truth Benchmarks** | 14 ground-truth tasks with cross-process persistence and relative paths | **VERIFIED** | 14/14 passed (100.0%) in `benchmarks/results/benchmark_report.json` (0.0575s avg); [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt) |
+| **Ground-Truth Benchmarks** | 14 ground-truth tasks with cross-process persistence and relative paths | **VERIFIED** | 14/14 passed (100.0%) in `benchmarks/results/benchmark_report.json` (0.0639s avg); [benchmarks/verification/benchmark_run.txt](benchmarks/verification/benchmark_run.txt) |
 | **Code-Graph Integration** | Live `codebase-memory-mcp v0.12.1` verified; AST fallback verified | **VERIFIED** | 17 tools discovered; 636 nodes and 2,139 edges indexed; [benchmarks/verification/codebase_memory_mcp_run.txt](benchmarks/verification/codebase_memory_mcp_run.txt) |
 | **Binary-Tool Integration** | Static PE analysis, Capstone disassembly, directory allowlist, audit log | **VERIFIED** | Tasks B1–B6 passed; Capstone disassembly operational; path defenses passing |
 | **Samsung REA Toolchain** | Official external REA binary integration | **BLOCKED** | Documented as `PENDING_EXTERNAL_DEPENDENCY`; safe PE/Capstone fallback active |
-| **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 85.7% tool selection, 85.7% exact argument accuracy, 33.3% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
-| **Model Evaluation (Phi-3.5 / Mistral-Nemo)** | Workstation and Power tier model profiles | **NOT TESTED** | Documented as NOT TESTED; models not installed in local Ollama daemon |
+| **Model Evaluation (Qwen 2.5 1.5B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 78.6% tool selection, 78.6% exact argument accuracy, 33.3% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Phi-3.5 Mini)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 0.0% tool selection (verbose narrative), 66.7% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Llama 3.1 8B)** | Zero-shot tool selection, argument generation, evidence-grounded synthesis | **VERIFIED** | 78.6% tool selection, 78.6% exact argument accuracy, 66.7% multi-case synthesis score; [benchmarks/verification/model_evaluation_run.txt](benchmarks/verification/model_evaluation_run.txt) |
+| **Model Evaluation (Mistral-Nemo)** | Extended high-capacity power tier model profile | **NOT TESTED** | Documented as NOT TESTED; model not pulled in local Ollama daemon / RAM boundary |
 | **Completion Report** | Deliverables, test results, benchmarks, security, blockers | **VERIFIED** | [docs/milestone_1_completion_report.md](docs/milestone_1_completion_report.md) |
 
 ### Verdict
-**Milestone 1 is complete, verified, and ready for supervisor review.**
+**Milestone 1 is complete except: (a) REA integration BLOCKED pending external binaries, (b) any model not marked TESTED.**
 All deliverables reflect reproducible test executions, avoid speculative claims regarding external dependencies, and maintain consistent, portable documentation.

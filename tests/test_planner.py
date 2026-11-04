@@ -67,6 +67,26 @@ class TestAgentPlanner(unittest.TestCase):
         plan = self.planner.plan("Explain what an MCP server is.")
         self.assertEqual(plan.category, QueryCategory.GENERAL)
 
+    def test_case_preservation_binary_path(self):
+        # Case preservation for binary paths on case-sensitive filesystems
+        plan = self.planner.plan('Analyse binary "/Tmp/MyProj/Sample_Authorized.EXE" and identify its architecture.')
+        self.assertEqual(plan.category, QueryCategory.BINARY_ANALYSIS)
+        self.assertEqual(plan.binary_path, "/Tmp/MyProj/Sample_Authorized.EXE")
+
+        plan_unquoted = self.planner.plan("Analyse binary /Tmp/MyProj/Sample_Authorized.EXE and identify its architecture.")
+        self.assertEqual(plan_unquoted.binary_path, "/Tmp/MyProj/Sample_Authorized.EXE")
+
+    def test_case_preservation_function_name(self):
+        # Dotted CamelCase and mixed-case symbol names
+        plan = self.planner.plan("Who calls UnifiedEngineeringAgent.process_query?")
+        self.assertEqual(plan.category, QueryCategory.CODE_ANALYSIS)
+        self.assertEqual(plan.function_name, "UnifiedEngineeringAgent.process_query")
+
+    def test_case_preservation_file_path(self):
+        plan = self.planner.plan("Which modules does Agent/MainModule.PY depend on?")
+        self.assertEqual(plan.category, QueryCategory.CODE_ANALYSIS)
+        self.assertEqual(plan.file_path, "Agent/MainModule.PY")
+
 
 if __name__ == "__main__":
     unittest.main()

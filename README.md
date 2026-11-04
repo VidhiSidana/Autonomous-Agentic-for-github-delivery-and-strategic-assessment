@@ -202,12 +202,12 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 
 > [!IMPORTANT]
 > **Environment Dependency & Test Discovery:**
-> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 8 test modules load cleanly and **51/51 tests pass (100%)** in ~4.3 seconds.
-> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for `test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, and `test_benchmark_runner`, discovering only the 29 tests that rely exclusively on the Python standard library (`test_planner.py`, `test_policy.py`, `test_memory.py`).
+> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 8 test modules load cleanly and **54/54 tests pass (100%)** in ~4.7 seconds.
+> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for `test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, and `test_benchmark_runner`, discovering only the 32 tests that rely exclusively on the Python standard library (`test_planner.py`, `test_policy.py`, `test_memory.py`).
 > Always run tests with the active virtual environment containing `requirements.txt`.
 
-**Discovered Test Breakdown (51 Total):**
-- `tests/test_planner.py`: **10 tests** (Routing, category detection, multi-tool detection, missing binary paths)
+**Discovered Test Breakdown (54 Total):**
+- `tests/test_planner.py`: **13 tests** (Routing, category detection, multi-tool detection, missing binary paths, case-preservation)
 - `tests/test_binary_analysis.py`: **10 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures)
 - `tests/test_memory.py`: **9 tests** (CRUD operations, session filtering, status updates, multi-threading)
 - `tests/test_policy.py`: **8 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, JSONL auditing)
@@ -226,7 +226,7 @@ Run the 14-task ground-truth benchmark suite:
 python3 benchmarks/benchmark_runner.py
 ```
 - **Results:** 14/14 tasks passing (100.0% success rate across PE architecture, section headers, imports/exports, Capstone disassembly, code architecture, cross-process persistence, multi-tool dual-branch execution, and dynamic schema validation).
-- **Execution Latency:** Total deterministic suite execution time is ~0.80 seconds (average **0.0575s** per task; ~1.20s including independent subprocesses).
+- **Execution Latency:** Total deterministic suite execution time is ~0.89 seconds (average **0.0639s** per task; ~1.20s including independent subprocesses).
 - **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths. Raw execution log is preserved in `benchmarks/verification/benchmark_run.txt`.
 
 ### 8.2 Empirical Model Evaluation Suite
@@ -234,8 +234,11 @@ Run the reproducible model evaluation suite against local Ollama:
 ```bash
 python3 benchmarks/evaluate_models.py
 ```
-- **Evaluated Models:** `qwen2.5:1.5b` (Tested active baseline), `phi3.5:latest` (Shortlisted profile / Not tested), `mistral-nemo:12b` (Shortlisted profile / Not tested).
-- **Qwen 2.5 1.5B Metrics:** 85.7% direct tool selection accuracy (0.3575s average latency), 85.7% exact argument accuracy under strict normalized equality, 85.7% overall tool-call correctness, and 33.3% multi-case synthesis score (1.8278s latency).
+- **Evaluated Models:**
+  - `qwen2.5:1.5b`: **78.6%** tool-call accuracy (0.5922s average latency), 100% valid JSON, 33.3% synthesis score (2.5317s latency).
+  - `phi3.5:latest`: **0.0%** tool-call accuracy (verbose non-JSON wrapper, 4.7689s latency), 66.7% synthesis score (6.5975s latency).
+  - `llama3.1:8b`: **78.6%** tool-call accuracy (3.0293s average latency), 100% valid JSON, 66.7% synthesis score (9.3838s latency).
+  - `mistral-nemo:12b`: **NOT TESTED** (Model not installed in local Ollama daemon / RAM boundary).
 - **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`. Raw execution log is preserved in `benchmarks/verification/model_evaluation_run.txt`.
 
 ---
