@@ -1,0 +1,189 @@
+{
+  "timestamp_utc": "2026-11-04T11:35:49.254511+00:00",
+  "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
+  "total_tasks": 14,
+  "passed_tasks": 14,
+  "success_rate": "100.0%",
+  "average_elapsed_seconds": 0.0639,
+  "cross_process_persistence": {
+    "success": true,
+    "process_a_exit": 0,
+    "process_b_exit": 0,
+    "record_id": 2,
+    "session_id": "session_fe1ccb91",
+    "id_matched": true,
+    "content_verified": true,
+    "status_verified": true,
+    "session_verified": true,
+    "search_count": 2,
+    "reasons": []
+  },
+  "results": [
+    {
+      "task_id": "C1",
+      "category": "code_analysis",
+      "description": "Function discovery across repository",
+      "passed": true,
+      "elapsed_seconds": 0.3789,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "C2",
+      "category": "code_analysis",
+      "description": "Caller identification for process_query",
+      "passed": true,
+      "elapsed_seconds": 0.0522,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "C3",
+      "category": "code_analysis",
+      "description": "Module dependency extraction",
+      "passed": true,
+      "elapsed_seconds": 0.0084,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "C4",
+      "category": "code_analysis",
+      "description": "Code architecture and class outline understanding",
+      "passed": true,
+      "elapsed_seconds": 0.0442,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B1",
+      "category": "binary_analysis",
+      "description": "Binary analysis path policy enforcement",
+      "passed": true,
+      "elapsed_seconds": 0.3227,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B2",
+      "category": "binary_analysis",
+      "description": "Missing binary path triggers clarification",
+      "passed": true,
+      "elapsed_seconds": 0.0005,
+      "evidence_count": 0,
+      "limitations_count": 1,
+      "reasons": []
+    },
+    {
+      "task_id": "B3",
+      "category": "binary_analysis",
+      "description": "Binary metadata and PE architecture extraction",
+      "passed": true,
+      "elapsed_seconds": 0.0077,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B4",
+      "category": "binary_analysis",
+      "description": "PE section header and memory boundary inspection",
+      "passed": true,
+      "elapsed_seconds": 0.0063,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B5",
+      "category": "binary_analysis",
+      "description": "Binary imports and external symbol dependency extraction",
+      "passed": true,
+      "elapsed_seconds": 0.0131,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "B6",
+      "category": "binary_analysis",
+      "description": "Capstone machine code instruction disassembly",
+      "passed": true,
+      "elapsed_seconds": 0.0114,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "M1",
+      "category": "memory",
+      "description": "Persist engineering finding",
+      "passed": true,
+      "elapsed_seconds": 0.0011,
+      "evidence_count": 1,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "M2",
+      "category": "memory",
+      "description": "Cross-session retrieval of verified finding",
+      "passed": true,
+      "elapsed_seconds": 0.0017,
+      "evidence_count": 2,
+      "limitations_count": 0,
+      "reasons": [],
+      "cross_process_persistence": {
+        "success": true,
+        "process_a_exit": 0,
+        "process_b_exit": 0,
+        "record_id": 2,
+        "session_id": "session_fe1ccb91",
+        "id_matched": true,
+        "content_verified": true,
+        "status_verified": true,
+        "session_verified": true,
+        "search_count": 2,
+        "reasons": []
+      }
+    },
+    {
+      "task_id": "M3",
+      "category": "memory",
+      "description": "Multi-session persistence retrieval across engineering iterations",
+      "passed": true,
+      "elapsed_seconds": 0.0009,
+      "evidence_count": 2,
+      "limitations_count": 0,
+      "reasons": []
+    },
+    {
+      "task_id": "MT1",
+      "category": "multi_tool",
+      "description": "Multi-tool cross-domain query",
+      "passed": true,
+      "elapsed_seconds": 0.0459,
+      "evidence_count": 2,
+      "limitations_count": 0,
+      "reasons": [],
+      "multi_tool_execution": {
+        "code_branch": {
+          "tool": "find_functions",
+          "success": true,
+          "source": "code_fallback.find_functions"
+        },
+        "binary_branch": {
+          "tool": "find_binary_functions",
+          "success": true,
+          "source": "binary.find_binary_functions",
+          "file": "benchmarks/results/sample_authorized.exe"
+        }
+      }
+    }
+  ]
+}
