@@ -6,12 +6,15 @@
 
 ## 1. Project Overview
 
-The **Unified Engineering Agent** is an on-premise, zero-cloud developer assistant developed for the **Samsung PRISM** program. It integrates a locally hosted Large Language Model (via Ollama) with Model Context Protocol (MCP) tool servers and persistent SQLite memory to perform:
+The **Unified Engineering Agent** is an on-premise, local-LLM developer assistant developed for the **Samsung PRISM** program. It integrates a locally hosted Large Language Model (LLM) through Ollama with Model Context Protocol (MCP) tool servers, evidence aggregation, and persistent SQLite memory.
+
+The agent is designed to support:
 
 1. **Code Comprehension:** Query functions, callers, callees, classes, module dependencies, and change-impact graphs across local repositories.
-2. **Static Binary Investigation:** Inspect authorised Windows PE/DLL binaries, view architecture, sections, export/import symbols, printable strings, and Capstone machine code disassembly without executing the binary.
-3. **Persistent Engineering Memory:** Multi-session knowledge store with verification tagging (`VERIFIED`, `HYPOTHESIS`, `NEEDS_REVIEW`), secret redaction, and duplicate detection.
-4. **Evidence-Grounded Answers:** Local LLM answers are strictly constrained to empirical tool outputs, citing files, line numbers, and symbol addresses.
+2. **Static Binary Investigation:** Inspect authorized Windows PE/DLL binaries, including architecture, sections, imports/exports, printable strings, and Capstone machine-code disassembly without executing the binary.
+3. **Persistent Engineering Memory:** Store and retrieve engineering findings across sessions, with verification tagging, secret redaction, and duplicate detection.
+4. **Evidence-Grounded Answers:** Use empirical tool outputs to support responses with relevant source files, line numbers, and binary evidence when available.
+5. **Multi-Tool Orchestration:** Coordinate code analysis, binary investigation, memory retrieval, and local LLM response generation.
 
 ---
 
@@ -22,27 +25,46 @@ flowchart TD
     U[User Query / CLI] --> A[Unified Engineering Agent]
     A --> ORCH[Agent Orchestrator]
     ORCH --> P[Structured Query Planner]
-    
-    P -->|Plan & Parameters| ROUTE{Category Router}
-    
-    ROUTE -->|code_analysis| MCP_C[MCP: code_fallback / code_graph]
-    ROUTE -->|binary_analysis| POL{Policy Guard: Path Allowlist}
-    POL -->|Denied| REJ[Deny & Audit Log]
-    POL -->|Authorized| MCP_B[MCP: binary_server]
+
+    P -->|Plan and Parameters| ROUTE{Category Router}
+
+    ROUTE -->|code_analysis| MCP_C[MCP Code Analysis Tools]
+    ROUTE -->|binary_analysis| POL[Policy Guard: Path Allowlist]
+    POL -->|Denied| REJ[Deny and Audit Log]
+    POL -->|Authorized| MCP_B[MCP Binary Analysis Server]
     ROUTE -->|memory| MEM[Engineering Memory: SQLite]
     ROUTE -->|multi_tool| MULTI[Multi-Tool Dispatcher]
+    ROUTE -->|general| LLM[Local LLM Gateway: Ollama]
+
     MULTI --> MCP_C
     MULTI --> MCP_B
-    ROUTE -->|general| LLM[Local LLM Gateway: Ollama]
-    
+
     MCP_C --> EV[Evidence Aggregator]
     MCP_B --> EV
     MEM --> EV
-    
-    EV -->|EvidenceBundle| LLM
-    LLM -->|Evidence-Grounded Response| RES[Verified Output]
+
+    EV --> LLM
+    LLM --> RES[Evidence-Grounded Response]
     RES --> A
+
+    ORCH --> MEM
 ```
+
+### Architecture Components
+
+| Component | Responsibility |
+|---|---|
+| Engineering Agent | Interactive CLI and user-query entry point |
+| Planner | Determines query category and extracts relevant parameters |
+| Orchestrator | Coordinates planning, tool execution, memory, and response generation |
+| Local LLM Gateway | Connects to Ollama for local inference |
+| MCP Client | Connects to configured MCP servers and discovers tools |
+| Code Analysis Server | Provides source-code analysis capabilities |
+| Binary Analysis Server | Provides static binary investigation capabilities |
+| Evidence Aggregator | Normalizes and organizes tool results |
+| Persistent Memory | Stores and retrieves engineering findings |
+| Security Policy | Enforces configured authorization and validation rules |
+| Audit Logging | Records relevant security and binary-analysis events |
 
 ---
 
@@ -50,15 +72,18 @@ flowchart TD
 
 | Technology | Purpose |
 |---|---|
-| **Python 3.11+** | Core programming language |
-| **Ollama** | Local zero-egress LLM execution daemon |
-| **Qwen 2.5 1.5B** *(Default)* | Baseline lightweight local language model |
-| **Model Context Protocol (MCP)** | Standardized tool communication protocol (MCP Python SDK 2.3.0) |
-| **Python AST** | Syntactic code analysis and graph traversal fallback |
-| **pefile** | Windows PE binary inspection (headers, sections, imports/exports) |
-| **Capstone Engine** | Multi-architecture machine code disassembler (x86/x64) |
-| **SQLite3** | Persistent engineering knowledge and session store |
-| **Pydantic v2** | Strict query plan and data validation |
+| Python 3.11+ | Core programming language |
+| Ollama | Local LLM runtime |
+| Qwen 2.5 1.5B | Default lightweight local language model |
+| Model Context Protocol (MCP) | Standardized tool communication |
+| Python AST | Source-code parsing and analysis |
+| pefile | Windows PE binary inspection |
+| Capstone Engine | Machine-code disassembly |
+| SQLite3 | Persistent engineering memory |
+| Pydantic | Query-plan and data validation |
+| asyncio | Asynchronous execution |
+| unittest | Automated testing |
+| Git and GitHub | Version control |
 
 ---
 
@@ -67,198 +92,421 @@ flowchart TD
 ```text
 Autonomous-Agentic-for-github-delivery-and-strategic-assessment/
 ├── config/
-│   ├── settings.py           # Centralized configuration loaded from .env
-│   └── mcp_servers.json      # Declarative MCP server registry
+│   ├── settings.py
+│   └── mcp_servers.json
 ├── agent/
-│   ├── main.py               # Interactive CLI entry point
-│   ├── orchestrator.py       # Async pipeline coordinating planner, tools & LLM
-│   ├── llm.py                # LocalLLM Ollama gateway (configurable)
-│   ├── planner.py            # Structured Pydantic query planner
-│   ├── mcp_client.py         # Persistent multi-server MCP client manager
-│   ├── evidence.py           # Evidence normalization and prompt grounding
-│   └── policy.py             # Path authorization, secret redaction & audit log
+│   ├── main.py
+│   ├── orchestrator.py
+│   ├── llm.py
+│   ├── planner.py
+│   ├── mcp_client.py
+│   ├── evidence.py
+│   └── policy.py
 ├── code_analysis/
-│   └── code_server.py        # Code analysis MCP server (AST tools)
+│   └── code_server.py
 ├── binary_analysis/
-│   └── binary_server.py      # Binary analysis MCP server (PE/Capstone tools)
+│   ├── binary_server.py
+│   └── rea_adapter.py
 ├── memory/
-│   ├── memory.py             # Persistent SQLite engineering memory CRUD
-│   ├── session_manager.py    # Multi-session lifecycle manager
-│   ├── binary_audit.log      # Append-only audit log of binary inspection requests
-│   └── engineering_memory.db # SQLite database file
+│   ├── memory.py
+│   ├── session_manager.py
+│   ├── curated/
+│   └── engineering_memory.db
 ├── mcp_server/
-│   └── test_server.py        # Diagnostic smoke-test MCP server
+│   └── test_server.py
 ├── benchmarks/
-│   ├── datasets/             # Ground truth benchmark tasks
+│   ├── datasets/
 │   │   └── milestone1_ground_truth.json
-│   ├── results/              # Benchmark evaluation reports
-│   └── benchmark_runner.py   # Automated benchmark evaluation suite
+│   ├── results/
+│   ├── verification/
+│   ├── benchmark_runner.py
+│   ├── benchmark_context_budget.py
+│   └── e2e_eval.py
 ├── tests/
-│   ├── test_planner.py
-│   ├── test_memory.py
-│   ├── test_policy.py
-│   ├── test_code_analysis.py
+│   ├── test_benchmark_runner.py
 │   ├── test_binary_analysis.py
+│   ├── test_code_analysis.py
 │   ├── test_mcp_client.py
-│   └── test_orchestrator.py
+│   ├── test_memory.py
+│   ├── test_orchestrator.py
+│   ├── test_planner.py
+│   ├── test_policy.py
+│   ├── test_confirmation_flow.py
+│   ├── test_unified_memory.py
+│   ├── test_unified_memory_layer.py
+│   └── test_context_budget.py
 ├── docs/
-│   ├── architecture.md       # Comprehensive system architecture document (15 components)
-│   ├── model_comparison.md   # Comparative evaluation across 8 dimensions (Qwen, Phi-3.5, Mistral)
-│   ├── security.md           # Security architecture, authorization policies, and threat model
-│   └── milestone_1_completion_report.md # Formal Milestone 1 verification & readiness report
-├── .env.example              # Environment configuration template
-├── requirements.txt          # Python dependencies
+│   ├── architecture.md
+│   ├── evaluation_report.md
+│   ├── model_comparison.md
+│   └── security.md
+├── .env.example
+├── .gitignore
+├── requirements.txt
 └── README.md
 ```
+
+*Note: This is a representative project structure. Runtime-generated databases, logs, reports, and additional modules may be present depending on the current configuration.*
 
 ---
 
 ## 5. Quick Start & Installation
 
-### 5.1 Clone the Repository
-```bash
+### 5.1 Prerequisites
+
+- Python 3.11 or a compatible version supported by the project.
+- Git.
+- Ollama.
+- Windows PowerShell for the documented Windows commands.
+- Visual Studio Code (recommended).
+
+### 5.2 Clone the Repository
+
+```powershell
 git clone https://github.com/VidhiSidana/Autonomous-Agentic-for-github-delivery-and-strategic-assessment.git
+
 cd Autonomous-Agentic-for-github-delivery-and-strategic-assessment
 ```
 
-### 5.2 Create and Activate a Virtual Environment
-```bash
-python3 -m venv .venv
-source .venv/bin/activate   # On Windows: .venv\Scripts\Activate.ps1
+### 5.3 Create and Activate a Virtual Environment
+
+Create the environment:
+
+```powershell
+python -m venv .venv
 ```
 
-### 5.3 Install Dependencies
-```bash
-pip install -r requirements.txt
+Activate it in Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-### 5.4 Configure Environment Variables
-Copy the template and configure your local settings:
+For Linux/macOS:
+
 ```bash
-cp .env.example .env
+source .venv/bin/activate
 ```
 
-To enable binary analysis on sample files, add their directory to `.env`:
+### 5.4 Install Dependencies
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+### 5.5 Configure Environment Variables
+
+Copy the template file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Review the configuration in:
+
+- `config/settings.py`
+- `config/mcp_servers.json`
+- `.env.example`
+
+Configure local paths and settings according to the project setup.
+
+For binary analysis, configure authorized binary directories using the environment variable supported by the project:
+
 ```ini
-BINARY_ALLOWED_DIRS=/path/to/my/binaries,/tmp/samples
+BINARY_ALLOWED_DIRS=/path/to/authorized/binaries
 ```
 
-### 5.5 (Optional) Install & Pull Local LLM Model
-Download Ollama from [ollama.com](https://ollama.com/) and pull the default model:
-```bash
+Use actual local directories in your environment. Do not commit secrets, credentials, or sensitive environment values to version control.
+
+### 5.6 Install and Configure Ollama
+
+Download Ollama from:
+
+https://ollama.com/
+
+Pull the default model:
+
+```powershell
 ollama pull qwen2.5:1.5b
 ```
-*(If Ollama is offline or the model is not pulled, the agent cleanly provides empirical tool evidence directly).*
+
+Verify that it is available:
+
+```powershell
+ollama list
+```
+
+Test the model:
+
+```powershell
+ollama run qwen2.5:1.5b "Explain what a Python function is in two sentences."
+```
+
+The project uses Ollama for local inference. Ensure Ollama is running before launching the agent.
+
+If the LLM is unavailable, the application may use its configured fallback behavior to return empirical tool evidence where supported.
 
 ---
 
 ## 6. Running the Agent
 
-Start the interactive CLI:
-```bash
+From the project root, activate the virtual environment and run:
+
+```powershell
 python agent/main.py
 ```
 
-### Example Commands:
+The agent starts its interactive CLI and accepts engineering queries.
 
-#### Code Comprehension:
+### 6.1 Code Comprehension Examples
+
 ```text
-You: Find functions in this codebase
-You: Who calls process_query?
-You: Which modules does agent/main.py depend on?
-You: What is the change impact of modifying calculate_checksum?
+Who calls process_query?
 ```
 
-#### Binary Analysis:
 ```text
-You: Analyse binary /path/to/my/sample.exe and identify its architecture
-You: Disassemble binary /path/to/my/sample.exe
-You: Extract printable strings from binary /path/to/my/sample.exe
+Find functions in this codebase.
 ```
 
-#### Persistent Engineering Memory & Confirmation Flow:
 ```text
-You: Remember this finding: SQLite uses WAL mode for concurrent access. This is verified.
-You: Search memory for SQLite findings
-You: Retrieve previous engineering findings
-You: /pending                               # List pending findings awaiting confirmation
-You: /confirm 1                             # Promote proposed finding to CONFIRMED status
-You: /reject 2 False positive candidate     # Reject finding with engineer rationale
-You: summary                                # Display session info and recent stored items
+Which modules does agent/main.py depend on?
 ```
 
-#### Multi-Tool Query:
 ```text
-You: Find the authentication function in the codebase and compare with related binary functionality in app.exe
+Find the definition of a function in the source code.
 ```
+
+The available operations depend on the configured code-analysis tools and the repository being analyzed.
+
+### 6.2 Binary Investigation Examples
+
+Use only binaries you are authorized to inspect and paths permitted by the configured security policy.
+
+```text
+Analyze binary /path/to/authorized/sample.exe and identify its architecture.
+```
+
+```text
+Disassemble binary /path/to/authorized/sample.exe.
+```
+
+```text
+Extract printable strings from binary /path/to/authorized/sample.exe.
+```
+
+Binary-analysis capabilities depend on the supported file format, installed dependencies, and configured MCP tools.
+
+### 6.3 Persistent Engineering Memory Examples
+
+```text
+Remember this finding: SQLite uses WAL mode for concurrent access. This is verified.
+```
+
+```text
+Search memory for SQLite findings.
+```
+
+```text
+Retrieve previous engineering findings.
+```
+
+Memory operations depend on the implemented planner and memory-tool interfaces.
+
+### 6.4 Multi-Tool Query Example
+
+```text
+Find the authentication function in the codebase and compare it with related binary functionality in an authorized application binary.
+```
+
+The orchestrator can route supported multi-tool queries to the relevant analysis tools and aggregate their results.
 
 ---
 
 ## 7. Automated Testing & Verification
 
-Run the entire automated test suite:
-```bash
-# Ensure dependencies are installed in your activated virtual environment:
-# pip install -r requirements.txt
+Run the complete automated test suite from the activated virtual environment:
 
-python3 -m unittest discover -s tests -p "test_*.py" -v
+```powershell
+# Install dependencies if not already installed
+pip install -r requirements.txt
+
+# Run all tests
+python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-> [!IMPORTANT]
-> **Environment Dependency & Test Discovery:**
-> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 12 test modules load cleanly and **82/82 tests pass (100%)** in ~4.5 seconds.
-> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for external dependencies, discovering only tests that rely exclusively on the Python standard library.
-> Always run tests with the active virtual environment containing `requirements.txt`.
+### 7.1 Latest Verified Test Results
 
-**Discovered Test Breakdown (82 Total):**
-- `tests/test_confirmation_flow.py`: **5 tests** (Lifecycle `PROPOSED` -> `CONFIRMED`/`REJECTED`, provenance, priority ordering, evidence context formatting)
-- `tests/test_unified_memory_layer.py`: **8 tests** (Session hooks, extractive/LLM summarization, Markdown export/import, deduplication, stale detection, resume digest)
-- `tests/test_context_budget.py`: **5 tests** (Category tool routing, REA compact subset filtering, priority compaction, prompt guardrails)
-- `tests/test_planner.py`: **14 tests** (Routing, category detection, multi-tool detection, missing binary paths, case-preservation)
-- `tests/test_policy.py`: **15 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, append-only audit logging, REA path authorization)
-- `tests/test_binary_analysis.py`: **6 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures, REA prerequisites)
-- `tests/test_mcp_client.py`: **6 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
-- `tests/test_code_analysis.py`: **7 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
-- `tests/test_memory.py`: **6 tests** (CRUD operations, session filtering, status updates, multi-threading)
-- `tests/test_unified_memory.py`: **7 tests** (Backward-compatible memory retrieval & hypothesis lifecycle)
-- `tests/test_orchestrator.py`: **2 tests** (Routing, dynamic schema validation, memory cycle)
-- `tests/test_benchmark_runner.py`: **1 test** (17 ground-truth suite validation, cross-process persistence verification)
+The latest complete standard test run reported:
+
+| Metric | Result |
+|---|---:|
+| Total tests | 86 |
+| Passed | 82 |
+| Skipped | 4 |
+| Failures | 0 |
+| Errors | 0 |
+| Execution time | 170.406 seconds |
+
+**Result: All executed tests passed.**
+
+The four skipped tests are not counted as passed tests.
+
+### 7.2 Test Coverage
+
+The test suite covers:
+
+- Query planning and category routing.
+- Code analysis and AST-based relationships.
+- Static binary and PE analysis.
+- MCP client lifecycle and argument validation.
+- Persistent engineering memory and session management.
+- Policy enforcement and path authorization.
+- Secret redaction and audit logging.
+- Context budgeting and dynamic tool routing.
+- Orchestration and benchmark execution.
+- Cross-process memory persistence.
+- Session capture and confirmation workflows.
+
+### 7.3 Run Individual Test Modules
+
+MCP client tests:
+
+```powershell
+python -m unittest tests.test_mcp_client -v
+```
+
+Memory tests:
+
+```powershell
+python -m unittest tests.test_memory -v
+```
+
+Orchestrator tests:
+
+```powershell
+python -m unittest tests.test_orchestrator -v
+```
+
+Benchmark runner tests:
+
+```powershell
+python -m unittest tests.test_benchmark_runner -v
+```
+
+Always use the activated virtual environment with dependencies installed.
 
 ---
 
 ## 8. Benchmark & Model Evaluation
 
 ### 8.1 Deterministic Ground-Truth Benchmark Suite
-Run the 17-task ground-truth benchmark suite:
-```bash
-python3 benchmarks/benchmark_runner.py
-```
-- **Results:** 17/17 tasks passing (100.0% success rate across PE architecture, section headers, imports/exports, Capstone disassembly, code architecture, cross-process persistence, multi-tool dual-branch execution, dynamic schema validation, and REA integration with fallback comparison).
-- **Execution Latency:** Total deterministic suite execution time is ~1.56 seconds (average **0.0917s** per task; ~1.85s including independent subprocesses).
-- **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths. Raw execution log is preserved in `benchmarks/verification/benchmark_run.txt`.
 
-### 8.2 Milestone 2 Context Budget & Dynamic Tool Router Benchmark
-Run the context budget benchmark measuring token reduction and tool selection:
-```bash
-python3 benchmarks/benchmark_context_budget.py
-```
-- **Prompt Token Reductions:**
-  - `qwen2.5:1.5b`: **64.2% token reduction** (13,472 -> 4,821 prompt tokens, 8,651 tokens saved; latency reduced from 0.428s to 0.341s).
-  - `phi3.5:latest`: **65.1% token reduction** (16,399 -> 5,724 prompt tokens, 10,675 tokens saved; latency reduced from 1.107s to 0.930s).
-  - `llama3.1:8b`: **63.9% token reduction** (13,423 -> 4,840 prompt tokens, 8,583 tokens saved; 81.2% accuracy preserved).
-  - `mistral-nemo:12b`: **NOT TESTED** (Not installed in local Ollama daemon).
-- **Output Report:** Saved to `benchmarks/results/context_budget_report.json`.
+Run the 17-task ground-truth benchmark:
 
-### 8.3 Milestone 2 End-to-End Evaluation Suite (Zero-Egress Verified)
-Run the full 22-task end-to-end evaluation comparing Baseline (grep/file-read) against the Full Agent:
-```bash
-python3 benchmarks/e2e_eval.py
+```powershell
+python benchmarks/benchmark_runner.py
 ```
-- **Zero-Egress Isolation:** **PASSED** (0 non-local socket connections detected; verified 100% on-premise execution).
-- **Overall Success Rate:** **100.0%** (22/22) for Full Agent vs **27.3%** (6/22) for Baseline (+72.7% advantage).
-- **Multi-Session Resume Success:** **100.0%** (resumed sessions accurately restore prior session findings).
-- **False-Hypothesis Rate:** **0.0%** (unverified findings quarantined as `PROPOSED`).
-- **Output Reports:** Saved to `benchmarks/results/e2e_report.json`, `benchmarks/verification/e2e_run.txt`, and [`docs/evaluation_report.md`](docs/evaluation_report.md).
+
+**Latest verified results:**
+
+- **Tasks passed:** 17/17.
+- **Success rate:** 100%.
+- **Average elapsed time:** 0.1237 seconds per task, as recorded in the benchmark report.
+- **Cross-process persistence:** Verified successfully.
+- **Coverage:** Code analysis, PE architecture, binary sections, imports and exports, disassembly, engineering memory, multi-tool execution, REA integration, and fallback behavior.
+
+The benchmark validates deterministic tool and system behavior against known expected results. It does not represent the accuracy of every natural-language response generated by an LLM.
+
+**Output report:**
+
+```text
+benchmarks/results/benchmark_report.json
+```
+
+### 8.2 Context Budget & Dynamic Tool Router Benchmark
+
+Run the context-budget benchmark:
+
+```powershell
+python benchmarks/benchmark_context_budget.py
+```
+
+The benchmark compares a monolithic tool context against the dynamic tool router across 16 tasks per model.
+
+| Model | Monolithic prompt tokens | Dynamic router tokens | Token reduction | Router accuracy |
+|---|---:|---:|---:|---:|
+| Qwen 2.5 1.5B | 13,472 | 7,299 | 45.8% | 87.5% |
+| Phi 3.5 | 16,399 | 8,945 | 45.5% | 87.5% |
+| Llama 3.1 8B | 13,423 | 7,330 | 45.4% | 93.8% |
+| Mistral Nemo 12B | Not tested | Not tested | Not available | Not available |
+
+The dynamic router reduced prompt-token consumption while maintaining or improving tool-call accuracy in the evaluated tasks.
+
+**Output report:**
+
+```text
+benchmarks/results/context_budget_report.json
+```
+
+### 8.3 Milestone 2 End-to-End Evaluation
+
+Run the 22-task end-to-end evaluation comparing the baseline (grep/file-read approach) with the Full Agent:
+
+```powershell
+python benchmarks/e2e_eval.py
+```
+
+**Latest verified results:**
+
+| Evaluation metric | Qwen 2.5 1.5B | Llama 3.1 8B |
+|---|---:|---:|
+| Baseline success | 7/22 (31.8%) | 10/22 (45.5%) |
+| Full Agent success | 21/22 (95.5%) | 21/22 (95.5%) |
+| Ground-truth tasks passed by Full Agent | 17/17 | 17/17 |
+| Real repository tasks passed | 3/3 | 3/3 |
+| Multi-session resume success | 1/2 (50%) | 1/2 (50%) |
+| False-hypothesis rate | 1/3 (33.3%) | 1/3 (33.3%) |
+
+**Interpretation and limitations:**
+
+- The Full Agent achieved 21/22 tasks for both evaluated models.
+- Both models passed all 17 ground-truth tasks and all 3 real-repository tasks.
+- One of the two multi-session resume scenarios failed: recovery of a previous binary finding was unsuccessful.
+- In the false-hypothesis evaluation, one of three tested claims was incorrectly asserted. Evidence-grounding therefore still requires improvement.
+- A simple grep or file-read baseline can be faster for trivial single-file searches because the Full Agent adds planning, tool execution, evidence processing, and response synthesis overhead.
+
+**Zero-egress monitoring:**
+
+The evaluation's socket monitor reported `PASSED`, with no non-local socket connections detected.
+
+Its monitoring scope covers `socket.socket.connect` within the Python process; child-process standard I/O uses inherited pipes. This is evidence from the configured monitor, not an independent packet-capture guarantee.
+
+**Output reports:**
+
+```text
+benchmarks/results/e2e_report.json
+benchmarks/verification/e2e_run.txt
+docs/evaluation_report.md
+```
+
+### 8.4 Genuine LLM Tool-Calling & Evidence Synthesis Evaluation
+
+A separate model evaluation tested 16 tool-calling tasks and 3 evidence-synthesis cases per model.
+
+| Metric | Qwen 2.5 1.5B | Llama 3.1 8B |
+|---|---:|---:|
+| Valid JSON responses | 16/16 (100%) | 16/16 (100%) |
+| Tool selection accuracy | 13/16 (81.2%) | 13/16 (81.2%) |
+| Required arguments present | 15/16 (93.8%) | 15/16 (93.8%) |
+| Exact argument accuracy | 13/16 (81.2%) | 13/16 (81.2%) |
+| Overall tool-call accuracy | 13/16 (81.2%) | 13/16 (81.2%) |
+| Evidence synthesis | 2/3 (66.7%) | 2/3 (66.7%) |
+
+The evidence-synthesis benchmark includes complete evidence, missing evidence, and contradictory-premise scenarios. Its score reflects the benchmark's recorded pass criteria and should not be interpreted as a universal hallucination rate.
+
+**Evaluation environment:** macOS Apple Silicon with Python 3.14.2. This is separate from the Windows environment used for the automated test-suite result.
+
+Mistral Nemo 12B was not available for this evaluation.
 
 ---
 
@@ -266,28 +514,97 @@ python3 benchmarks/e2e_eval.py
 
 | Feature | Milestone | Status | Notes |
 |---|---|---|---|
-| **Local LLM Gateway** | M1 | **IMPLEMENTED AND TESTED** | Configurable Ollama client with timeout, availability checks & graceful fallback |
-| **Structured Query Planner** | M1 | **IMPLEMENTED AND TESTED** | Pydantic `QueryPlan` with parameter extraction and clarification triggers |
-| **Multi-Server MCP Client** | M1 | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
-| **Dynamic MCP Orchestrator**| M1 | **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
-| **Code Analysis MCP (AST)** | M1 | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | M1 | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 636 nodes / 2,139 edges across 26 Python modules |
-| **Binary Analysis MCP** | M1 | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
-| **REA Integration Adapter** | M1 | **IMPLEMENTED / PREREQUISITE_BLOCKED** | Open-source Reverse Engineer Anything (REA) adapter (`morluto/rea`, npm: `rea-agents`). Enforces fail-closed policy authorization, detects Node.js >= 22.23.4 / Ghidra prerequisites, and gracefully falls back to `pefile`/`Capstone` |
-| **Policy & Path Security** | M1 | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |
-| **Unified Engineering Memory** | M1 | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
-| **Engineer Confirmation Flow** | M2 | **IMPLEMENTED AND TESTED** | Explicit lifecycle `PROPOSED` -> `CONFIRMED`/`REJECTED`, CLI commands (`/pending`, `/confirm`, `/reject`), provenance tracking, fact retrieval exclusion |
-| **Session Capture Hooks** | M2 | **IMPLEMENTED AND TESTED** | Automatic hooks (`on_query`, `on_tool_result`, `on_session_end`), `session_events` audit table, local Ollama summarization with extractive fallback |
-| **Curated Markdown Memory** | M2 | **IMPLEMENTED AND TESTED** | Two-way lossless sync between SQLite and `memory/curated/*.md`, YAML frontmatter, dual-layer deduplication (hash + Jaccard), stale detection, secret redaction |
-| **Dynamic Tool Router** | M2 | **IMPLEMENTED AND TESTED** | Category-relevant 4-8 tools filter, compact REA tool subset, 64.2% prompt token reduction on Qwen 1.5B |
-| **Context Budget Manager** | M2 | **IMPLEMENTED AND TESTED** | Model-specific token budgets, priority compaction order, dropped component audit logging, synthesis guardrails |
-| **End-to-End Evaluation** | M2 | **IMPLEMENTED AND TESTED** | 22 tasks (17 ground truth, 3 real code, 2 multi-session resume), 100% Full Agent vs 27.3% Baseline |
-| **Zero-Egress Network Isolation** | M2 | **IMPLEMENTED AND TESTED** | Active socket-level zero-egress monitor (`ZeroEgressMonitor`), 0 external packets, 100% on-premise execution |
+| Local LLM Gateway | M1 | IMPLEMENTED AND TESTED | Configurable Ollama client with timeout, availability checks, and graceful fallback |
+| Structured Query Planner | M1 | IMPLEMENTED AND TESTED | Pydantic query plans, parameter extraction, and clarification triggers |
+| Multi-Server MCP Client | M1 | IMPLEMENTED AND TESTED | Dynamic tool discovery, schema caching, argument validation, and subprocess lifecycle management |
+| Dynamic MCP Orchestrator | M1 | IMPLEMENTED AND TESTED | Intent-to-tool mapping, schema validation, unsupported-operation reporting, and AST fallback |
+| Code Analysis MCP | M1 | IMPLEMENTED AND TESTED | Function and class discovery, caller/callee analysis, imports, and change-impact analysis |
+| codebase-memory-mcp | M1 | IMPLEMENTED AND TESTED | Connected over stdio; dynamically discovered tools and indexed repository structure |
+| Binary Analysis MCP | M1 | IMPLEMENTED AND TESTED | Static PE inspection, architecture, exports, imports, strings, and Capstone disassembly |
+| REA Integration Adapter | M1 | IMPLEMENTED / PREREQUISITE-BLOCKED | REA adapter with policy authorization, prerequisite checks, and pefile/Capstone fallback |
+| Policy & Path Security | M1 | IMPLEMENTED AND TESTED | Directory allowlists, traversal protection, symlink containment, secret redaction, and audit logging |
+| Unified Engineering Memory | M1 | IMPLEMENTED AND TESTED | SQLite storage, verification tagging, secret redaction, and duplicate detection |
+| Engineer Confirmation Flow | M2 | IMPLEMENTED AND TESTED | PROPOSED, CONFIRMED, and REJECTED lifecycle with provenance tracking |
+| Session Capture Hooks | M2 | IMPLEMENTED AND TESTED | Query, tool-result, and session-end hooks with local summarization and extractive fallback |
+| Curated Markdown Memory | M2 | IMPLEMENTED AND TESTED | SQLite/Markdown synchronization, YAML frontmatter, deduplication, stale detection, and secret redaction |
+| Dynamic Tool Router | M2 | IMPLEMENTED AND TESTED | Category-relevant tool filtering and compact tool contexts; 45.8% token reduction on Qwen 2.5 1.5B in the recorded evaluation |
+| Context Budget Manager | M2 | IMPLEMENTED AND TESTED | Model-specific token budgets, priority-based compaction, and dropped-component audit logging |
+| End-to-End Evaluation | M2 | IMPLEMENTED AND TESTED | 22 evaluation tasks; 21/22 Full Agent success for both tested models |
+| Zero-Egress Network Monitoring | M2 | IMPLEMENTED AND TESTED | Socket-level monitoring reported no non-local connections within its stated monitoring scope |
 
 ---
 
-## 10. Authors & Acknowledgements
+## 10. Security Considerations
+
+The agent is intended for controlled engineering investigation.
+
+Security considerations include:
+
+- Restricting analysis to authorized source code and binaries.
+- Enforcing configured binary path allowlists.
+- Validating tool arguments and user inputs.
+- Avoiding exposure of confidential information.
+- Protecting environment variables and secrets.
+- Maintaining relevant audit logs.
+- Reviewing analysis results before taking consequential actions.
+
+The agent should only be used with resources the user is authorized to investigate.
+
+Further security details are available in:
+
+```text
+docs/security.md
+```
+
+---
+
+## 11. Known Limitations and Future Scope
+
+### Current Limitations
+
+- Local LLM response latency can increase for complex requests.
+- MCP asynchronous session cleanup warnings have appeared during some test scenarios and remain under investigation.
+- Analysis results depend on the available tools, input files, and configuration.
+- External reverse-engineering integration may require additional dependencies or prerequisites.
+- The evaluated multi-session resume workflow did not pass every scenario.
+- False-hypothesis evaluation identified a case requiring improved evidence verification.
+- Further benchmarking is needed across larger engineering projects.
+
+### Future Scope
+
+1. Improve local LLM response speed.
+2. Optimize MCP session lifecycle management.
+3. Expand binary-analysis capabilities.
+4. Improve evidence verification and confidence scoring.
+5. Add larger benchmark datasets.
+6. Enhance memory retrieval and ranking.
+7. Improve the user interface.
+8. Expand dependency and security analysis.
+9. Support more complex engineering repositories.
+10. Improve robustness of multi-tool workflows.
+
+---
+
+## 12. Conclusion
+
+The Samsung PRISM Unified Engineering Agent demonstrates the integration of local language models, MCP-based engineering tools, evidence aggregation, and persistent memory into a unified engineering assistance system.
+
+The project aims to simplify code comprehension, static binary investigation, and engineering knowledge management through a modular, extensible, and locally operated AI agent.
+
+By combining specialized analysis tools with evidence-grounded responses and persistent engineering memory, the system provides a foundation for more efficient and intelligent engineering workflows.
+
+---
+
+## 13. Authors & Acknowledgements
 
 Developed for **Samsung PRISM**:
-* **Vidhi Sidana** — GitHub: [@VidhiSidana](https://github.com/VidhiSidana)
-* **Chintan Sood** — GitHub: [@chintansood](https://github.com/chintansood)
+
+- **Vidhi Sidana** — GitHub: [@VidhiSidana](https://github.com/VidhiSidana)
+- **Chintan Sood** — GitHub: [@chintansood](https://github.com/chintansood)
+
+---
+
+**Project Domain:** AI, Software Engineering, Code Comprehension, Static Binary Analysis
+**Primary Language:** Python
+**LLM Runtime:** Ollama
+**Tool Integration Protocol:** Model Context Protocol (MCP)
