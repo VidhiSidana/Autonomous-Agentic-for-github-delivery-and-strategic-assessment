@@ -4,3 +4,4 @@ pefile>=2024.8.26
 capstone>=5.0.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
+PyYAML>=6.0.3

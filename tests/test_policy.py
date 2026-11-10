@@ -283,7 +283,17 @@ class TestPolicyAndAudit(unittest.TestCase):
             secret = outside / "secret.exe"
             secret.write_text("MZ...", encoding="utf-8")
             symlink_target = allowed / "symlink.exe"
-            symlink_target.symlink_to(secret)
+
+            try:
+                symlink_target.symlink_to(secret)
+            except (OSError, NotImplementedError) as exc:
+                if isinstance(exc, OSError) and getattr(exc, "winerror", None) != 1314:
+                    raise
+
+                self.skipTest(
+                    "Symbolic link creation requires Windows Developer Mode "
+                    "or elevated privileges."
+                )
 
             log_path = Path(tmp_dir) / "audit.log"
             import agent.policy
