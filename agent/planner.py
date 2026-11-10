@@ -178,6 +178,8 @@ _MEMORY_OPERATIONS: dict[str, str] = {
     "remember": "save",
     "save": "save",
     "store": "save",
+    "previous session": "search",
+    "last session": "search",
     "retrieve": "retrieve",
     "recall": "retrieve",
     "list memory": "retrieve",
@@ -355,7 +357,10 @@ class AgentPlanner:
         # -----------------------------------------------------------------
         # Memory — highest priority (memory commands rarely mix with tools)
         # -----------------------------------------------------------------
-        if has_memory and not (has_code or has_binary):
+        is_session_recall = (
+            "previous session" in q or "last session" in q
+        )
+        if has_memory and (is_session_recall or not (has_code or has_binary)):
             memory_op = _extract_memory_operation(q)
             kws = _extract_memory_keywords(q, memory_op)
             return QueryPlan(

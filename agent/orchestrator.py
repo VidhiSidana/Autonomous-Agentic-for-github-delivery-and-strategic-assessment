@@ -629,7 +629,7 @@ class AgentOrchestrator:
                 result = self.memory.save_memory(
                     title=title,
                     content=content,
-                    category="engineering_finding",
+                    category=("binary_finding" if item.server_name == "binary" else "technical_finding"),
                     verification_status="VERIFIED",
                     source=item.source,
                     project=str(plan.repository_path or self.default_repo_dir),

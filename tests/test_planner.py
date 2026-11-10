@@ -88,6 +88,12 @@ class TestAgentPlanner(unittest.TestCase):
         self.assertEqual(plan.file_path, "Agent/MainModule.PY")
 
 
+    def test_previous_session_binary_question_routes_to_memory(self):
+        plan = self.planner.plan(
+            "What binary architecture and entry point did we discover in the previous session?"
+        )
+        self.assertEqual(plan.category, QueryCategory.MEMORY)
+        self.assertEqual(plan.memory_operation, "search")
 if __name__ == "__main__":
     unittest.main()
 

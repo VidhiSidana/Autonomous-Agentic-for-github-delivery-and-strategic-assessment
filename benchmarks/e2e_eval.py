@@ -597,13 +597,69 @@ async def evaluate_model_e2e(
         s1 = session_mgr.start_session()
         a_s1 = await orchestrator.process_query(f'Analyze binary "{sample_bin}" and report its PE architecture and headers')
         # Engineer confirms the finding saved by orchestrator
-        all_mem = memory.retrieve_memory(limit=5)
-        confirmed_id = None
-        for m in all_mem:
-            if "AMD64" in m["content"] or "0x1000" in m["content"] or "sample_authorized.exe" in m["title"]:
-                memory.confirm_finding(m["id"], confirmed_by="lead_engineer")
-                confirmed_id = m["id"]
+
+        # Engineer confirms the verified binary finding saved by orchestrator
+        sample_name = str(sample_bin).replace("\\", "/").rsplit("/", 1)[-1].lower()
+
+        verified_findings = memory.retrieve_memory(
+            limit=1000,
+            category="binary_finding",
+            verification_status="VERIFIED",
+        )
+
+        binary_finding = None
+
+        for m in verified_findings:
+            title = str(m["title"] or "")
+            content = str(m["content"] or "")
+            combined = f"{title} {content}".lower()
+
+            has_correct_binary = sample_name in combined
+            has_binary_evidence = any(
+                marker in combined
+                for marker in ("amd64", "x86_64", "0x1000")
+            )
+
+            if has_correct_binary and has_binary_evidence:
+                binary_finding = m
                 break
+
+        if binary_finding is None:
+            raise RuntimeError(
+                f"RS1 setup failed: no VERIFIED finding containing "
+                f"binary evidence for {sample_name}"
+            )
+
+        confirmation = memory.confirm_finding(
+            binary_finding["id"],
+            confirmed_by="lead_engineer",
+        )
+
+        if not confirmation.get("updated"):
+            raise RuntimeError(
+                f"RS1 confirmation failed: {confirmation.get('message')}"
+            )
+
+        confirmed_records = memory.retrieve_memory(
+            limit=1000,
+            category="binary_finding",
+            verification_status="CONFIRMED",
+        )
+
+        if not any(
+            m["id"] == binary_finding["id"]
+            for m in confirmed_records
+        ):
+            raise RuntimeError(
+                "RS1 verification failed: confirmed finding "
+                "could not be retrieved from memory."
+            )
+
+        print(
+            f"[RS1] Confirmed binary finding ID: "
+            f"{binary_finding['id']}"
+        )
+
         session_mgr.on_session_end(s1, summary="Discovered entry point and AMD64 architecture in sample_authorized.exe")
 
         # Session 2: Fresh instance (simulating process restart) recovers finding
