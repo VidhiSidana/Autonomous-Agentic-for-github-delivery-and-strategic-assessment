@@ -83,14 +83,14 @@ def _load_server_configs() -> dict[str, dict]:
     }
 
 
-def _build_server_params(config: dict) -> StdioServerParameters:
+def _build_server_params(cfg: dict) -> StdioServerParameters:
     """
     Build StdioServerParameters from a server config dict.
     Replaces ${PYTHON} with sys.executable.
     Resolves commands in PATH or ~/.local/bin.
     """
     import shutil
-    command = config["command"]
+    command = cfg["command"]
     if command == "${PYTHON}":
         command = sys.executable
     else:
@@ -102,16 +102,22 @@ def _build_server_params(config: dict) -> StdioServerParameters:
         if resolved:
             command = resolved
 
-    args = [
-        str(PROJECT_ROOT / arg) if not Path(arg).is_absolute() else arg
-        for arg in config.get("args", [])
-    ]
+    args = []
+    for arg in cfg.get("args", []):
+        if Path(arg).is_absolute() or arg.startswith("-"):
+            args.append(arg)
+        elif (PROJECT_ROOT / arg).exists():
+            args.append(str(PROJECT_ROOT / arg))
+        else:
+            args.append(arg)
 
     import os
     env = dict(os.environ)
-    import config.settings
-    if config.settings.BINARY_ALLOWED_DIRS:
-        env["BINARY_ALLOWED_DIRS"] = ",".join(str(p) for p in config.settings.BINARY_ALLOWED_DIRS)
+    from config import settings
+    if settings.BINARY_ALLOWED_DIRS:
+        env["BINARY_ALLOWED_DIRS"] = ",".join(str(p) for p in settings.BINARY_ALLOWED_DIRS)
+    if "env" in cfg and isinstance(cfg["env"], dict):
+        env.update(cfg["env"])
 
     return StdioServerParameters(command=command, args=args, env=env)
 

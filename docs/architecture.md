@@ -41,7 +41,7 @@ flowchart TD
         subgraph Binary_MCP_Server["BINARY ANALYSIS MCP (binary_server.py)"]
             PE["PE ANALYSIS\n(pefile inspection)"]
             CAP["CAPSTONE\n(Machine code disassembly)"]
-            REA["REA ADAPTER\n(External boundary:\nPENDING_EXTERNAL_DEPENDENCY)"]
+            REA["REA ADAPTER\n(Reverse Engineer Anything:\nPREREQUISITE_BLOCKED / pefile fallback)"]
         end
     end
 
@@ -100,7 +100,7 @@ flowchart TD
 | **Codebase Memory MCP** | `tests/verify_codebase_memory_mcp.py` / `config/mcp_servers.json` | Live external MCP server powered by Tree-sitter. Provides 17 tools: repo indexing, symbol graph search, caller/callee path tracing, and architectural summaries. |
 | **AST Code Analysis** | `code_analysis/code_server.py` | AST-based code analysis: function discovery, caller finding, callee analysis, class/method discovery, import relationships, and 2-hop change-impact traversal. Serves as reliable fallback. |
 | **Binary Analysis MCP**| `binary_analysis/binary_server.py`| Static PE inspection: architecture detection, exported symbols, imported DLLs, printable strings, Capstone disassembly. Strictly enforced path allowlist and non-execution policy. |
-| **REA Integration Adapter**| `binary_analysis/rea_adapter.py` | Adapter for Samsung Reverse Engineering Assistant (REA). Strictly checks environment; safely reports `PENDING_EXTERNAL_DEPENDENCY` when external binaries/specs are pending, preserving PE/Capstone fallback. |
+| **REA Integration Adapter**| `binary_analysis/rea_adapter.py` | Adapter for open-source Reverse Engineer Anything (REA) MCP server (`morluto/rea`). Enforces policy authorization before invocation, verifies Node.js >= 22.23.4 and Ghidra/Java prerequisites, and cleanly triggers verified pefile/Capstone fallback when prerequisites are unmet. |
 | **Policy & Audit** | `agent/policy.py` | Authorizes target binary paths against `BINARY_ALLOWED_DIRS` using filesystem-aware inode parent checks (`os.path.samefile`), prevents directory traversal and symlink escapes, redacts secrets, and writes sequential audit events to `memory/binary_audit.log`. |
 | **Unified Memory** | `memory/memory.py` | SQLite persistent store (`findings` table) supporting full CRUD, primary key lookup (`get_memory_by_id`), duplicate detection, secret redaction, and verification statuses (`VERIFIED`, `HYPOTHESIS`, `NEEDS_REVIEW`, `REJECTED`). |
 | **Session Manager** | `memory/session_manager.py` | Tracks work session IDs (`session_<hex>`), start/end timestamps, query counts, and compact session summaries. |

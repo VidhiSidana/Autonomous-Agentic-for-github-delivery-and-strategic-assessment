@@ -508,7 +508,10 @@ class AgentOrchestrator:
         op = plan.binary_operation or "metadata"
         server_name = "binary"
 
-        if op == "disassemble":
+        if op == "rea_status":
+            tool_name = "query_rea_status"
+            args = {"binary_path": binary_path}
+        elif op == "disassemble":
             tool_name = "disassemble_binary"
             args = {"binary_path": binary_path, "max_instructions": 50}
         elif op == "functions":

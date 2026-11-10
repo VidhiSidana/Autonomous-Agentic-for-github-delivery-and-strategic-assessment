@@ -3,103 +3,112 @@ Verify subprocess failure does not raise an unhandled exception. ... ok
 test_cross_process_persistence_isolated (test_benchmark_runner.TestBenchmarkRunner.test_cross_process_persistence_isolated)
 Verify cross-process persistence works cleanly on a temporary DB. ... ok
 test_run_benchmarks_returns_summary (test_benchmark_runner.TestBenchmarkRunner.test_run_benchmarks_returns_summary)
-Verify run_benchmarks() returns the structured summary dict. ... [11/04/26 17:49:34] INFO     Connecting to MCP server          mcp_client.py:171
+Verify run_benchmarks() returns the structured summary dict. ... [11/10/26 17:31:41] INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+[11/10/26 17:31:42] INFO     Connecting to MCP server          mcp_client.py:177
                              'code_fallback'...                                 
-[11/04/26 17:49:35] INFO     Connected to MCP server           mcp_client.py:180
+                    INFO     Connected to MCP server           mcp_client.py:186
                              'code_fallback'.                                   
-                    INFO     Connecting to MCP server          mcp_client.py:171
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/lark/grammar.py:43: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10bd988b0>
+  def __init__(self, name: str, filter_out: bool = False) -> None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/lark/grammar.py:43: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10bd989a0>
+  def __init__(self, name: str, filter_out: bool = False) -> None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/lark/grammar.py:43: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10bd98a90>
+  def __init__(self, name: str, filter_out: bool = False) -> None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/lark/grammar.py:43: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10bd98b80>
+  def __init__(self, name: str, filter_out: bool = False) -> None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'binary'...                                        
-                    INFO     Connected to MCP server 'binary'. mcp_client.py:180
-                    INFO     Connecting to MCP server          mcp_client.py:171
+[11/10/26 17:31:43] INFO     Connected to MCP server 'binary'. mcp_client.py:186
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'code_fallback'.                                   
-[11/04/26 17:49:36] INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'binary'.                                          
 ok
 test_extract_strings_from_sample (test_binary_analysis.TestBinaryAnalysisServer.test_extract_strings_from_sample) ... ok
-test_failure_paths_audit_logging (test_binary_analysis.TestBinaryAnalysisServer.test_failure_paths_audit_logging) ... /private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b58b970>
+test_failure_paths_audit_logging (test_binary_analysis.TestBinaryAnalysisServer.test_failure_paths_audit_logging) ... /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dbca890>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b58ba60>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dbcaf20>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b58bb50>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dbcb970>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b58bc40>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc80400>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c2beb60>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc81030>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c2bf3d0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc813f0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c2bfd30>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc81d50>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5ac7c0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc80e50>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5ad8a0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc816c0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5adb70>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc82b60>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5ae5c0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc83010>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5ad6c0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc83100>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5ae020>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc83790>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5af3d0>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc83880>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5af880>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc83a60>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5af970>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dc835b0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5f0040>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dccc7c0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5f0130>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dccc5e0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5f0310>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dccd6c0>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5afe20>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dccdc60>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5f1030>
-  gc.collect()
-ResourceWarning: Enable tracemalloc to get the object allocation traceback
-/private/tmp/prism_venv/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10c5f0e50>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pefile.py:2964: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10dcce020>
   gc.collect()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ok
@@ -114,196 +123,196 @@ test_find_change_impact (test_code_analysis.TestCodeAnalysisAST.test_find_change
 test_find_classes (test_code_analysis.TestCodeAnalysisAST.test_find_classes) ... ok
 test_find_functions (test_code_analysis.TestCodeAnalysisAST.test_find_functions) ... ok
 test_find_module_relationships (test_code_analysis.TestCodeAnalysisAST.test_find_module_relationships) ... ok
-test_argument_validation_missing_required (test_mcp_client.TestMCPClient.test_argument_validation_missing_required) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_argument_validation_missing_required (test_mcp_client.TestMCPClient.test_argument_validation_missing_required) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71256 running                                  
+                             pid=96290 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-                    INFO     Connected to MCP server 'test'.   mcp_client.py:180
+[11/10/26 17:31:44] INFO     Connected to MCP server 'test'.   mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71256 running                                  
+                             pid=96290 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
 ok
-test_argument_validation_wrong_type (test_mcp_client.TestMCPClient.test_argument_validation_wrong_type) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_argument_validation_wrong_type (test_mcp_client.TestMCPClient.test_argument_validation_wrong_type) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71257 running                                  
+                             pid=96291 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-                    INFO     Connected to MCP server 'test'.   mcp_client.py:180
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71257 running                                  
+                             pid=96291 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
 ok
 test_available_servers (test_mcp_client.TestMCPClient.test_available_servers) ... ok
-test_call_addition_tool (test_mcp_client.TestMCPClient.test_call_addition_tool) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_call_addition_tool (test_mcp_client.TestMCPClient.test_call_addition_tool) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71258 running                                  
+                             pid=96292 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-[11/04/26 17:49:37] INFO     Connected to MCP server 'test'.   mcp_client.py:180
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71258 running                                  
+                             pid=96292 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
 ok
-test_call_test_server_tool (test_mcp_client.TestMCPClient.test_call_test_server_tool) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_call_test_server_tool (test_mcp_client.TestMCPClient.test_call_test_server_tool) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71260 running                                  
+                             pid=96293 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-                    INFO     Connected to MCP server 'test'.   mcp_client.py:180
+[11/10/26 17:31:45] INFO     Connected to MCP server 'test'.   mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71260 running                                  
+                             pid=96293 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
 ok
-test_list_tools_with_schemas (test_mcp_client.TestMCPClient.test_list_tools_with_schemas) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_list_tools_with_schemas (test_mcp_client.TestMCPClient.test_list_tools_with_schemas) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71261 running                                  
+                             pid=96294 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-                    INFO     Connected to MCP server 'test'.   mcp_client.py:180
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71261 running                                  
+                             pid=96294 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
 ok
-test_verify_all_configured_servers_independently (test_mcp_client.TestMCPClient.test_verify_all_configured_servers_independently) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_verify_all_configured_servers_independently (test_mcp_client.TestMCPClient.test_verify_all_configured_servers_independently) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'test'...                                          
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71262 running                                  
+                             pid=96295 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=8 idle bufsize=0>                               
                              stdout=<_UnixReadPipeTransport                     
                              fd=9 polling>>                                     
-[11/04/26 17:49:38] INFO     Connected to MCP server 'test'.   mcp_client.py:180
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:186
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_fallback'...                                 
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71263 running                                  
+                             pid=96296 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=10 idle bufsize=0>                              
                              stdout=<_UnixReadPipeTransport                     
                              fd=11 polling>>                                    
-                    INFO     Connected to MCP server           mcp_client.py:180
+[11/10/26 17:31:46] INFO     Connected to MCP server           mcp_client.py:186
                              'code_fallback'.                                   
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'binary'...                                        
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71265 running                                  
+                             pid=96298 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=12 idle bufsize=0>                              
                              stdout=<_UnixReadPipeTransport                     
                              fd=13 polling>>                                    
-                    INFO     Connected to MCP server 'binary'. mcp_client.py:180
+                    INFO     Connected to MCP server 'binary'. mcp_client.py:186
                     INFO     <_UnixReadPipeTransport fd=9     unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71262 running                                  
+                             pid=96295 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=8 closed>                             
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=9 closed>>                            
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'test'.                                            
                     INFO     <_UnixReadPipeTransport fd=11    unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71263 running                                  
+                             pid=96296 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=10 closed>                            
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=11 closed>>                           
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'code_fallback'.                                   
-[11/04/26 17:49:39] INFO     <_UnixReadPipeTransport fd=13    unix_events.py:559
+                    INFO     <_UnixReadPipeTransport fd=13    unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71265 running                                  
+                             pid=96298 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=12 closed>                            
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=13 closed>>                           
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'binary'.                                          
 ok
 test_duplicate_detection (test_memory.TestEngineeringMemory.test_duplicate_detection) ... ok
@@ -313,33 +322,33 @@ test_secret_redaction_on_save (test_memory.TestEngineeringMemory.test_secret_red
 test_session_manager (test_memory.TestEngineeringMemory.test_session_manager) ... ok
 test_update_and_delete_memory (test_memory.TestEngineeringMemory.test_update_and_delete_memory) ... ok
 test_binary_analysis_clarification_on_missing_path (test_orchestrator.TestOrchestrator.test_binary_analysis_clarification_on_missing_path) ... ok
-test_code_analysis_routing_and_evidence (test_orchestrator.TestOrchestrator.test_code_analysis_routing_and_evidence) ...                     INFO     Connecting to MCP server          mcp_client.py:171
+test_code_analysis_routing_and_evidence (test_orchestrator.TestOrchestrator.test_code_analysis_routing_and_evidence) ...                     INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_graph'...                                    
-                    INFO     Connecting to MCP server          mcp_client.py:171
+                    INFO     Connecting to MCP server          mcp_client.py:177
                              'code_fallback'...                                 
                     INFO     execute program                 base_events.py:1802
                              '/private/tmp/prism_venv/bin/py                    
                              thon3':                                            
                              <_UnixSubprocessTransport                          
-                             pid=71268 running                                  
+                             pid=96301 running                                  
                              stdin=<_UnixWritePipeTransport                     
                              fd=52 idle bufsize=0>                              
                              stdout=<_UnixReadPipeTransport                     
                              fd=53 polling>>                                    
-                    INFO     Connected to MCP server           mcp_client.py:180
+[11/10/26 17:31:47] INFO     Connected to MCP server           mcp_client.py:186
                              'code_fallback'.                                   
                     INFO     <_UnixReadPipeTransport fd=53    unix_events.py:559
                              polling> was closed by peer                        
                     INFO     <_UnixSubprocessTransport    base_subprocess.py:236
-                             pid=71268 running                                  
+                             pid=96301 running                                  
                              stdin=<_UnixWritePipeTranspo                       
                              rt closed fd=52 closed>                            
                              stdout=<_UnixReadPipeTranspo                       
                              rt closed fd=53 closed>>                           
                              exited with return code 0                          
-                    INFO     Disconnected from MCP server      mcp_client.py:358
+                    INFO     Disconnected from MCP server      mcp_client.py:364
                              'code_fallback'.                                   
 ok
 test_dynamic_tool_matching_and_schema_validation (test_orchestrator.TestOrchestrator.test_dynamic_tool_matching_and_schema_validation)
@@ -365,6 +374,14 @@ test_case_differing_sibling_paths (test_policy.TestPolicyAndAudit.test_case_diff
 Verify that case differences cannot escape authorization boundary. ... ok
 test_directory_traversal (test_policy.TestPolicyAndAudit.test_directory_traversal)
 Paths containing traversal sequences must be rejected immediately. ... ok
+test_rea_path_authorization_allowed (test_policy.TestPolicyAndAudit.test_rea_path_authorization_allowed)
+REA tool calls on allowed binary paths must be approved and audited. ... ok
+test_rea_path_authorization_denied (test_policy.TestPolicyAndAudit.test_rea_path_authorization_denied)
+REA tool calls on paths outside allowed directories must be strictly denied. ... ok
+test_rea_path_authorization_symlink (test_policy.TestPolicyAndAudit.test_rea_path_authorization_symlink)
+REA tool calls on symlinks escaping allowed directory must be denied. ... ok
+test_rea_path_authorization_traversal (test_policy.TestPolicyAndAudit.test_rea_path_authorization_traversal)
+REA tool calls containing directory traversal must fail-closed. ... ok
 test_redact_secrets (test_policy.TestPolicyAndAudit.test_redact_secrets) ... ok
 test_sibling_directory_rejection (test_policy.TestPolicyAndAudit.test_sibling_directory_rejection)
 A sibling directory with a matching prefix must never be authorized. ... ok
@@ -374,29 +391,32 @@ test_unauthorized_directory (test_policy.TestPolicyAndAudit.test_unauthorized_di
 A file outside the approved directories must be rejected. ... ok
 
 ----------------------------------------------------------------------
-Ran 54 tests in 4.733s
+Ran 58 tests in 5.272s
 
 OK
 
-Running 14 benchmark tasks from milestone1_ground_truth.json...
+Running 17 benchmark tasks from milestone1_ground_truth.json...
 
-[PASS] Task C1: Function discovery across repository (0.401s)
-[PASS] Task C2: Caller identification for process_query (0.048s)
-[PASS] Task C3: Module dependency extraction (0.008s)
-[PASS] Task C4: Code architecture and class outline understanding (0.046s)
-[PASS] Task B1: Binary analysis path policy enforcement (0.346s)
+[PASS] Task C1: Function discovery across repository (0.845s)
+[PASS] Task C2: Caller identification for process_query (0.046s)
+[PASS] Task C3: Module dependency extraction (0.007s)
+[PASS] Task C4: Code architecture and class outline understanding (0.045s)
+[PASS] Task B1: Binary analysis path policy enforcement (0.322s)
 [PASS] Task B2: Missing binary path triggers clarification (0.000s)
-[PASS] Task B3: Binary metadata and PE architecture extraction (0.012s)
-[PASS] Task B4: PE section header and memory boundary inspection (0.006s)
+[PASS] Task B3: Binary metadata and PE architecture extraction (0.052s)
+[PASS] Task B4: PE section header and memory boundary inspection (0.017s)
 [PASS] Task B5: Binary imports and external symbol dependency extraction (0.006s)
-[PASS] Task B6: Capstone machine code instruction disassembly (0.013s)
+[PASS] Task B6: Capstone machine code instruction disassembly (0.023s)
 [PASS] Task M1: Persist engineering finding (0.001s)
-[PASS] Task M2: Cross-session retrieval of verified finding (0.002s)
+[PASS] Task M2: Cross-session retrieval of verified finding (0.001s)
 [PASS] Task M3: Multi-session persistence retrieval across engineering iterations (0.001s)
-[PASS] Task MT1: Multi-tool cross-domain query (0.048s)
+[PASS] Task MT1: Multi-tool cross-domain query (0.056s)
+[PASS] Task REA1: REA engine availability and prerequisite status check on authorized binary (0.012s)
+[PASS] Task REA2: Binary function analysis via REA integration with export fallback comparison (0.015s)
+[PASS] Task REA3: Entry point instruction disassembly comparing REA integration with Capstone fallback (0.016s)
 
 ==========================================
- Benchmark Summary: 14/14 Passed (100.0%)
- Report saved: /var/folders/m7/fgr_07552pj1gvtht193s_500000gn/T/tmpz809sp0g/benchmark_report.json
+ Benchmark Summary: 17/17 Passed (100.0%)
+ Report saved: /var/folders/m7/fgr_07552pj1gvtht193s_500000gn/T/tmpc1ugnej_/benchmark_report.json
 ==========================================
 

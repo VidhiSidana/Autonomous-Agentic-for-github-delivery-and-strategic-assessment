@@ -183,6 +183,45 @@
       "expected_answer": "Executes both code comprehension (function discovery) and static binary analysis (PE section / function discovery) without policy denial.",
       "expected_evidence": "Code branch verified item + Binary branch verified item",
       "success_criteria": "Executes both code analysis and binary analysis workflows"
+    },
+    {
+      "id": "REA1",
+      "category": "binary_analysis",
+      "description": "REA engine availability and prerequisite status check on authorized binary",
+      "query": "Query REA status for binary \"{sample_bin}\"",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "query_rea_status",
+      "expected_content_match": "fallback_engine",
+      "expected_answer": "Checks REA engine health and verifies fallback to pefile/Capstone when prerequisites are unmet.",
+      "expected_evidence": "REA status report with operational or prerequisite diagnostic status and fallback engine",
+      "success_criteria": "Validates REA adapter status check and reports fallback engine on authorized binary"
+    },
+    {
+      "id": "REA2",
+      "category": "binary_analysis",
+      "description": "Binary function analysis via REA integration with export fallback comparison",
+      "query": "Analyze exported functions in binary \"{sample_bin}\" via REA with fallback",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "find_binary_functions",
+      "expected_content_match": "rea_integration",
+      "expected_answer": "Attempts function analysis through REA integration and falls back to pefile export directory inspection.",
+      "expected_evidence": "Function export evidence containing rea_integration status and active engine fallback",
+      "success_criteria": "Executes function analysis through REA integration gate and compares with PE export fallback"
+    },
+    {
+      "id": "REA3",
+      "category": "binary_analysis",
+      "description": "Entry point instruction disassembly comparing REA integration with Capstone fallback",
+      "query": "Decompile entry point of binary \"{sample_bin}\" comparing REA with Capstone fallback",
+      "fixture": "benchmarks/results/sample_authorized.exe",
+      "expected_category": "binary_analysis",
+      "expected_tool": "disassemble_binary",
+      "expected_content_match": "nop",
+      "expected_answer": "Disassembles entry point instructions using Capstone while verifying REA adapter status.",
+      "expected_evidence": "Disassembly evidence including nop instruction, rea_integration metadata, and Capstone fallback",
+      "success_criteria": "Disassembles entry point machine instructions with verified REA adapter integration and fallback comparison"
     }
   ]
 }

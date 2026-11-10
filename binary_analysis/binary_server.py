@@ -174,7 +174,7 @@ def query_rea_status(binary_path: Optional[str] = None) -> str:
     available, msg = rea.is_rea_available()
     return json.dumps({
         "rea_configured": available,
-        "status": "OPERATIONAL" if available else "PENDING_EXTERNAL_DEPENDENCY",
+        "status": "OPERATIONAL" if available else "PREREQUISITE_BLOCKED",
         "message": msg,
         "fallback_engine": "pefile/Capstone static fallback",
         "zero_execution_guarantee": True,
@@ -192,6 +192,10 @@ def find_binary_functions(binary_path: str) -> str:
 
     try:
         pe = pefile.PE(str(file_path))
+        rea = REAAdapter()
+        rea_result = rea.analyze(str(file_path), operation="functions")
+        rea_operational = (rea_result.get("status") == "REA_OPERATIONAL")
+
         if not hasattr(pe, "DIRECTORY_ENTRY_EXPORT"):
             write_audit_event(
                 operation="find_binary_functions",
@@ -203,6 +207,8 @@ def find_binary_functions(binary_path: str) -> str:
                 "file": file_path.name,
                 "exported_functions": [],
                 "count": 0,
+                "rea_integration": rea_result,
+                "active_engine": "REA" if rea_operational else "pefile static export fallback",
                 "limitation": "No export table (DIRECTORY_ENTRY_EXPORT) found. Internal unexported functions require REA/decompiler integration.",
             })
 
@@ -214,6 +220,10 @@ def find_binary_functions(binary_path: str) -> str:
                 "address_rva": hex(symbol.address),
                 "ordinal": symbol.ordinal,
             })
+
+        rea = REAAdapter()
+        rea_result = rea.analyze(str(file_path), operation="functions")
+        rea_operational = (rea_result.get("status") == "REA_OPERATIONAL")
 
         write_audit_event(
             operation="find_binary_functions",
@@ -227,6 +237,8 @@ def find_binary_functions(binary_path: str) -> str:
             "count": len(functions),
             "exported_functions": functions,
             "evidence_type": "PE_EXPORTS",
+            "rea_integration": rea_result,
+            "active_engine": "REA" if rea_operational else "pefile static export fallback",
             "limitation": "Listing only reflects exported symbols. Internal static functions require full decompiler.",
         }, indent=2)
 
@@ -417,6 +429,10 @@ def disassemble_binary(binary_path: str, max_instructions: int = 50) -> str:
             if len(instructions) >= max_instructions:
                 break
 
+        rea = REAAdapter()
+        rea_result = rea.analyze(str(file_path), operation="disassemble")
+        rea_operational = (rea_result.get("status") == "REA_OPERATIONAL")
+
         write_audit_event(
             operation="disassemble_binary",
             target_path=str(file_path),
@@ -431,6 +447,8 @@ def disassemble_binary(binary_path: str, max_instructions: int = 50) -> str:
             "instruction_count": len(instructions),
             "instructions": instructions,
             "evidence_type": "CAPSTONE_DISASSEMBLY",
+            "rea_integration": rea_result,
+            "active_engine": "REA" if rea_operational else "Capstone static disassembly fallback",
             "limitation": "Disassembly starts at entry point offset; internal non-contiguous procedures are not mapped.",
         }, indent=2)
 

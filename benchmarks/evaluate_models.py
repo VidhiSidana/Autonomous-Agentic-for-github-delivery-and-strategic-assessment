@@ -201,12 +201,32 @@ EVALUATION_TASKS = [
         "required_args": [],
         "expected_args": {},
     },
+    {
+        "task_id": "T15_REA_OPEN_BINARY",
+        "domain": "binary_analysis",
+        "task_type": "executable_tool_call",
+        "query": "Open binary sample_authorized.exe in REA for deep reverse engineering analysis",
+        "expected_tool": "open_binary",
+        "required_args": ["path"],
+        "expected_args": {"path": "sample_authorized.exe"},
+        "acceptable_alternatives": ["file_path", "target"],
+    },
+    {
+        "task_id": "T16_REA_STATUS_QUERY",
+        "domain": "binary_analysis",
+        "task_type": "executable_tool_call",
+        "query": "Query REA engine status and availability for sample_authorized.exe",
+        "expected_tool": "query_rea_status",
+        "required_args": ["file_path"],
+        "expected_args": {"file_path": "sample_authorized.exe"},
+        "acceptable_alternatives": ["binary_path", "path"],
+    },
 ]
 
 TOOL_SYSTEM_PROMPT = """You are an automated tool selector for the Samsung PRISM Engineering Assistant.
 
 CRITICAL INSTRUCTION - ALLOWED TOOLS LIST:
-You must ONLY select from the following 11 exact tool names:
+You must ONLY select from the following 13 exact tool names:
 1. find_functions
 2. find_callers
 3. find_callees
@@ -217,7 +237,9 @@ You must ONLY select from the following 11 exact tool names:
 8. save_finding
 9. search_memory
 10. request_clarification
-11. none
+11. open_binary
+12. query_rea_status
+13. none
 
 Do NOT invent, rename, or prefix other names (e.g. do not invent "find_file_outline").
 
@@ -236,6 +258,10 @@ Available Tools Specification:
 - search_memory(query: str): Search past engineering findings. Arguments: {"query": "<search_term>"}
 - request_clarification(missing_parameter: str): Use when an essential mandatory parameter (such as a binary file path) is missing from the query. Arguments: {"missing_parameter": "<name>"}
   Example: "Disassemble this binary executable" -> {"tool": "request_clarification", "arguments": {"missing_parameter": "file_path"}}
+- open_binary(path: str): Open local binary executable in REA for deep reverse engineering analysis. Arguments: {"path": "<file_path>"}
+  Example: "Open binary sample.exe in REA for reverse engineering" -> {"tool": "open_binary", "arguments": {"path": "sample.exe"}}
+- query_rea_status(file_path: str): Check status and health of the REA reverse engineering engine for a binary. Arguments: {"file_path": "<file_path>"}
+  Example: "Query REA engine status for sample.exe" -> {"tool": "query_rea_status", "arguments": {"file_path": "sample.exe"}}
 - none(): Use when no tool matches the request, or when the request is invalid/ambiguous. Arguments: {}
 
 You must respond ONLY with a single valid JSON object in this exact format:

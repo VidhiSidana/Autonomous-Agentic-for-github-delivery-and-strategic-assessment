@@ -21,6 +21,15 @@
       "args": ["binary_analysis/binary_server.py"],
       "enabled": true
     },
+    "rea": {
+      "description": "Reverse Engineer Anything (REA) open-source MCP server (morluto/rea) for multi-engine binary decompilation",
+      "command": "npx",
+      "args": ["-y", "rea-agents", "mcp"],
+      "env": {
+        "REA_MCP_INPUT_SCHEMA_PROFILE": "compact"
+      },
+      "enabled": true
+    },
     "code_graph": {
       "description": "codebase-memory-mcp: full Tree-sitter code knowledge graph",
       "command": "codebase-memory-mcp",

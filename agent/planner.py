@@ -153,6 +153,7 @@ _MULTI_TOOL_PATTERNS: list[str] = [
 
 # Operation sub-keywords
 _BINARY_OPERATIONS: dict[str, str] = {
+    "rea status": "rea_status",
     "disassemble": "disassemble",
     "disassembly": "disassemble",
     "assembly": "disassemble",
@@ -161,14 +162,16 @@ _BINARY_OPERATIONS: dict[str, str] = {
     "export": "functions",
     "function": "functions",
     "functions": "functions",
-    "metadata": "metadata",
-    "architecture": "metadata",
-    "section": "metadata",
-    "header": "metadata",
     "string": "strings",
     "strings": "strings",
     "import": "imports",
     "imports": "imports",
+    "rea": "rea_status",
+    "reverse engineer anything": "rea_status",
+    "metadata": "metadata",
+    "architecture": "metadata",
+    "section": "metadata",
+    "header": "metadata",
 }
 
 _MEMORY_OPERATIONS: dict[str, str] = {

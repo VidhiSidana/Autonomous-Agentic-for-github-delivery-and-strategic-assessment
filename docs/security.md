@@ -62,11 +62,13 @@ The agent can connect to external servers such as `codebase-memory-mcp`:
 
 ---
 
-## 5. Samsung REA Dependency Status
+## 5. Reverse Engineer Anything (REA) Integration & Security Containment
 
-* **Status:** `PENDING_EXTERNAL_DEPENDENCY`.
-* **Safety Principle:** The agent does not invent hypothetical command-line flags, HTTP endpoints, or simulated responses for the Samsung Reverse Engineering Assistant (REA).
-* **Isolation:** The `REAAdapter` evaluates official executable availability. While external Samsung PRISM binaries or specifications are awaited, the adapter reports `PENDING_EXTERNAL_DEPENDENCY` and delegates all disassembly and binary analysis to the verified `pefile` and `Capstone` local engine.
+* **Architecture Role**: Primary multi-engine decompiler and binary analysis provider for the agent (`morluto/rea`, npm package `rea-agents`, MIT License).
+* **Measured Status**: `INTEGRATED / PREREQUISITE_BLOCKED` (Host Node.js version is `v20.19.4`; REA requires `^22.23.4 || ^24.22.1 || >=26.12.1` due to `zstdDecompress` in `node:zlib`, plus Ghidra/Java for native binary decompilation).
+* **Fail-Closed Policy Enforcement**: REA does not confirm operations or restrict filesystem access internally. Every REA tool invocation (`open_binary`, `inspect_binary_layout`, `inspect_pe_imports`) is intercepted by `agent/policy.py` (`authorize_rea_tool_call` and `authorize_binary_path`). File paths outside `BINARY_ALLOWED_DIRS`, directory traversal (`..`), and symlinks escaping allowed boundaries are rejected fail-closed before any subprocess is launched.
+* **Audit Logging**: Every REA tool invocation is logged to `memory/binary_audit.log` (CSV format) recording timestamp, operation, target path, authorization decision, and status.
+* **Verified Fallback**: When host prerequisites (Node 22+ and Ghidra) are unmet, `REAAdapter` cleanly reports the exact diagnostic blocker and triggers graceful fallback to the local `pefile` and `Capstone` static analysis engine. Target code is never executed.
 
 ---
 

@@ -3,9 +3,13 @@ Tests for binary_analysis.binary_server tools.
 """
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from binary_analysis.binary_server import (
     analyze_binary,
@@ -68,7 +72,7 @@ class TestBinaryAnalysisServer(unittest.TestCase):
         raw = query_rea_status()
         data = json.loads(raw)
         self.assertIn("status", data)
-        self.assertEqual(data["status"], "PENDING_EXTERNAL_DEPENDENCY")
+        self.assertEqual(data["status"], "PREREQUISITE_BLOCKED")
         self.assertFalse(data["rea_configured"])
         self.assertTrue(data["zero_execution_guarantee"])
 
@@ -79,11 +83,11 @@ class TestBinaryAnalysisServer(unittest.TestCase):
         sample_bin = self.bin_dir / "target.exe"
         sample_bin.write_bytes(b"MZ\x90\x00fake")
 
-        # 1. Default state without supervisor-provided runner -> PENDING_EXTERNAL_DEPENDENCY
+        # 1. Default state when host prerequisites are unmet -> PREREQUISITE_BLOCKED
         adapter_default = REAAdapter()
         res_default = adapter_default.analyze(str(sample_bin), operation="metadata")
         self.assertFalse(res_default["success"])
-        self.assertEqual(res_default["status"], "PENDING_EXTERNAL_DEPENDENCY")
+        self.assertEqual(res_default["status"], "PREREQUISITE_BLOCKED")
         self.assertTrue(res_default["fallback_recommended"])
 
         # 2. When verified runner is provisioned and succeeds

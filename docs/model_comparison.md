@@ -4,55 +4,56 @@
 The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero-cloud operation. In the Milestone 1 architecture, the system employs a hybrid design:
 - **Integrated System Layer:** An algorithmic and rule-guided pipeline (`AgentPlanner` + `AgentOrchestrator`) that performs deterministic query categorization, path validation, and dynamic MCP argument-schema matching.
 - **Local LLM Layer:** A local open-weight instruction model (interfaced via Ollama) responsible for synthesizing empirical tool evidence into grounded technical answers.
-- **Autonomous LLM Calling:** An independent benchmark layer (`benchmarks/evaluate_models.py`) evaluating each model's direct ability to select tools and emit valid JSON argument schemas without planner assistance.
+- **Autonomous LLM Calling:** An independent benchmark layer (`benchmarks/evaluate_models.py`) evaluating each model's direct ability to select tools and emit valid JSON argument schemas without planner assistance across 16 tasks (including native REA tools `open_binary` and `query_rea_status`).
 
 ---
 
 ## 2. Evaluation Categories & Empirical Results
 
 ### Category A: Deterministic Planner Performance (Integrated System)
-- **Scope:** Evaluated across the 14-task ground-truth benchmark suite (`benchmarks/datasets/milestone1_ground_truth.json`).
+- **Scope:** Evaluated across the 17-task ground-truth benchmark suite (`benchmarks/datasets/milestone1_ground_truth.json`).
 - **Mechanism:** Deterministic regex and Pydantic validation rules in `agent/planner.py`.
-- **Accuracy:** **100.0%** (14/14 queries correctly routed to `CODE_ANALYSIS`, `BINARY_ANALYSIS`, `MEMORY`, or `MULTI_TOOL`).
+- **Accuracy:** **100.0%** (17/17 queries correctly routed to `CODE_ANALYSIS`, `BINARY_ANALYSIS`, `MEMORY`, or `MULTI_TOOL`).
 - **Missing Argument Detection:** Successfully flagged missing target binary paths (Task B2) and triggered clarification prompts.
 
 ### Category B: Tool Execution Performance (Integrated System)
-- **Scope:** Empirical tool execution against real MCP servers (`code_fallback`, `code_graph`, `binary`) and SQLite memory.
-- **Execution Success Rate:** **100.0%** (14/14 benchmark tasks executed successfully without runtime exceptions).
+- **Scope:** Empirical tool execution against real MCP servers (`code_fallback`, `code_graph`, `binary`, `rea`) and SQLite memory.
+- **Execution Success Rate:** **100.0%** (17/17 benchmark tasks executed successfully without runtime exceptions).
 - **Dynamic Schema Validation:** `AgentOrchestrator` validates all parameters against discovered tool schemas prior to invocation.
 - **Multi-Tool Dispatch:** Verified dual-branch dispatch (Task MT1: simultaneous code symbol discovery and PE binary inspection).
+- **REA Integration & Fallback:** Verified tasks REA1, REA2, and REA3 executing through the REA adapter with diagnostic prerequisite reporting and graceful fallback to `pefile`/`Capstone`.
 
 ### Category C: LLM Tool-Selection Performance (Direct LLM Calling)
-- **Scope:** Direct zero-shot tool selection tested via `benchmarks/evaluate_models.py` across 14 varied queries without planner assistance.
+- **Scope:** Direct zero-shot tool selection tested via `benchmarks/evaluate_models.py` across 16 varied queries without planner assistance.
 - **Parser & Prompt Improvements:** Uses `json.JSONDecoder().raw_decode` anchored to the first `{` to prevent trailing prose from invalidating correct calls, passes Ollama `format="json"`, and restricts generation length via `num_predict=128`.
 - **Results by Model Candidate:**
   - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
-    - Valid JSON Rate: **100.0%** (14/14 valid JSON responses)
-    - Tool Selection Accuracy: **78.6%** (11/14 correct tool selections across all tasks; **100.0% (11/11)** on executable tool tasks)
-    - *Invented Tool Fix (T05):* Previously, Qwen extrapolated the `find_` prefix and invented `find_file_outline`. After explicitly specifying the allowed tool list (`get_file_outline`), Qwen emitted `get_file_outline` with 100% argument accuracy.
+    - Valid JSON Rate: **100.0%** (16/16 valid JSON responses)
+    - Tool Selection Accuracy: **81.2%** (13/16 correct tool selections across all tasks; **100.0% (13/13)** on executable tool tasks including REA tasks T15 and T16)
+    - *Invented Tool Fix (T05):* Emitted `get_file_outline` with 100% argument accuracy after allowed tool list specification.
   - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):**
-    - Valid JSON Rate: **100.0%** (14/14 valid JSON responses via `raw_decode` and `format="json"`)
-    - Tool Selection Accuracy: **71.4%** (10/14 correct tool selections)
+    - Valid JSON Rate: **100.0%** (16/16 valid JSON responses via `raw_decode` and `format="json"`)
+    - Tool Selection Accuracy: **87.5%** (14/16 correct tool selections; **100.0% (13/13)** on executable tool tasks)
   - **Llama 3.1 8B (`llama3.1:8b`):**
-    - Valid JSON Rate: **100.0%** (14/14 valid JSON responses)
-    - Tool Selection Accuracy: **78.6%** (11/14 correct tool selections across all tasks; **100.0% (11/11)** on executable tool tasks)
-  - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed in local Ollama daemon / RAM boundary).
+    - Valid JSON Rate: **100.0%** (16/16 valid JSON responses)
+    - Tool Selection Accuracy: **81.2%** (13/16 correct tool selections across all tasks; **100.0% (13/13)** on executable tool tasks)
+  - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed in local Ollama daemon / host RAM constrained).
 
 ### Category D: LLM Argument-Generation Performance (Direct LLM Calling)
 - **Scope:** Measuring whether required arguments are present and whether exact argument values match ground truth via strict normalized equality.
 - **Results by Model Candidate:**
   - **Qwen 2.5 1.5B (`qwen2.5:1.5b`):**
-    - Required Arguments Present: **92.9%** (13/14 tasks)
-    - Exact Argument Correctness: **78.6%** (11/14 tasks matched expected argument values under strict normalized equality)
-    - Overall Tool-Call Accuracy (Tool Correct AND Exact Args Correct): **78.6%** (11/14 tasks)
+    - Required Arguments Present: **93.8%** (15/16 tasks)
+    - Exact Argument Correctness: **81.2%** (13/16 tasks matched expected argument values under strict normalized equality)
+    - Overall Tool-Call Accuracy (Tool Correct AND Exact Args Correct): **81.2%** (13/16 tasks)
   - **Phi-3.5 Mini 3.8B (`phi3.5:latest`):**
-    - Required Arguments Present: **92.9%** (13/14 tasks)
-    - Exact Argument Correctness: **64.3%** (9/14 tasks)
-    - Overall Tool-Call Accuracy: **64.3%** (9/14 tasks)
+    - Required Arguments Present: **93.8%** (15/16 tasks)
+    - Exact Argument Correctness: **81.2%** (13/16 tasks)
+    - Overall Tool-Call Accuracy: **81.2%** (13/16 tasks)
   - **Llama 3.1 8B (`llama3.1:8b`):**
-    - Required Arguments Present: **92.9%** (13/14 tasks)
-    - Exact Argument Correctness: **78.6%** (11/14 tasks matched expected argument values under strict normalized equality)
-    - Overall Tool-Call Accuracy: **78.6%** (11/14 tasks)
+    - Required Arguments Present: **93.8%** (15/16 tasks)
+    - Exact Argument Correctness: **81.2%** (13/16 tasks matched expected argument values under strict normalized equality)
+    - Overall Tool-Call Accuracy: **81.2%** (13/16 tasks)
   - **Mistral Nemo 12B (`mistral-nemo:12b`):** **NOT TESTED** (Model not installed).
 
 ### Category E: Evidence-Grounded Synthesis (Direct LLM Calling)
@@ -75,21 +76,21 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
 
 ### Category F: Latency Disambiguation & Token Consumption
 - **Deterministic Pipeline Latency (Source of Truth: `benchmarks/results/benchmark_report.json`):**
-  - Average Task Latency: **0.0639 seconds** (63.9 ms per task)
-  - Total Suite Execution (including independent subprocess persistence tests): **~1.20 seconds**
+  - Average Task Latency: **0.0917 seconds** (91.7 ms per task)
+  - Total Suite Execution (including independent subprocess persistence tests): **~1.56 seconds**
 - **LLM Direct Inference Latency & Tokens (Source of Truth: `benchmarks/results/model_evaluation_report.json`):**
   - **Qwen 2.5 1.5B:**
-    - Average Tool-Calling Latency: **0.4307s** per query
-    - Token Usage: 9,708 prompt tokens, 284 generated tokens (avg **20.3 tokens/task**)
-    - Average Synthesis Latency: **1.3758s**
+    - Average Tool-Calling Latency: **0.4440s** per query
+    - Token Usage: 13,472 prompt tokens, 323 generated tokens (avg **20.2 tokens/task**)
+    - Average Synthesis Latency: **1.4366s**
   - **Phi-3.5 Mini 3.8B:**
-    - Average Tool-Calling Latency: **1.1188s** per query
-    - Token Usage: 11,585 prompt tokens, 344 generated tokens (avg **24.6 tokens/task**)
-    - Average Synthesis Latency: **5.3672s**
+    - Average Tool-Calling Latency: **1.1348s** per query
+    - Token Usage: 15,967 prompt tokens, 388 generated tokens (avg **24.2 tokens/task**)
+    - Average Synthesis Latency: **5.3631s**
   - **Llama 3.1 8B:**
-    - Average Tool-Calling Latency: **1.6977s** per query
-    - Token Usage: 9,737 prompt tokens, 289 generated tokens (avg **20.6 tokens/task**)
-    - Average Synthesis Latency: **4.4946s**
+    - Average Tool-Calling Latency: **1.7186s** per query
+    - Token Usage: 13,513 prompt tokens, 329 generated tokens (avg **20.6 tokens/task**)
+    - Average Synthesis Latency: **4.4541s**
   - **Mistral Nemo 12B:** **NOT TESTED**
 
 ### Category G: Hardware Requirements & Resource Footprint
@@ -113,16 +114,17 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
 | **Model Size on Disk** | 986 MB | 2.2 GB | 4.9 GB | ~7.3 GB |
 | **Context Window** | 32k tokens | 128k tokens | 128k tokens | 128k tokens |
 | **Local Ollama Status** | **TESTED & VERIFIED** | **TESTED & VERIFIED** | **TESTED & VERIFIED** | **NOT TESTED** |
-| **A. Planner Routing Accuracy** | **100.0%** (Deterministic) | **100.0%** (Deterministic) | **100.0%** (Deterministic) | **100.0%** (Deterministic) |
-| **B. Tool Execution Success** | **100.0%** (Deterministic) | **100.0%** (Deterministic) | **100.0%** (Deterministic) | **100.0%** (Deterministic) |
-| **C. LLM Tool Selection Accuracy** | **78.6%** (11/14 tasks) | **71.4%** (10/14 tasks) | **78.6%** (11/14 tasks) | **NOT TESTED** |
-| **D. LLM Exact Argument Accuracy** | **78.6%** (11/14 tasks) | **64.3%** (9/14 tasks) | **78.6%** (11/14 tasks) | **NOT TESTED** |
-| **D. Overall Tool-Call Accuracy** | **78.6%** (Tool + Args) | **64.3%** (Tool + Args) | **78.6%** (Tool + Args) | **NOT TESTED** |
+| **A. Planner Routing Accuracy** | **100.0%** (17/17 tasks) | **100.0%** (17/17 tasks) | **100.0%** (17/17 tasks) | **100.0%** (Deterministic) |
+| **B. Tool Execution Success** | **100.0%** (17/17 tasks) | **100.0%** (17/17 tasks) | **100.0%** (17/17 tasks) | **100.0%** (Deterministic) |
+| **C. LLM Tool Selection Accuracy** | **81.2%** (13/16 tasks) | **87.5%** (14/16 tasks) | **81.2%** (13/16 tasks) | **NOT TESTED** |
+| **D. LLM Required Args Present** | **93.8%** (15/16 tasks) | **93.8%** (15/16 tasks) | **93.8%** (15/16 tasks) | **NOT TESTED** |
+| **D. LLM Exact Argument Accuracy** | **81.2%** (13/16 tasks) | **81.2%** (13/16 tasks) | **81.2%** (13/16 tasks) | **NOT TESTED** |
+| **D. Overall Tool-Call Accuracy** | **81.2%** (13/16 tasks) | **81.2%** (13/16 tasks) | **81.2%** (13/16 tasks) | **NOT TESTED** |
 | **E. Multi-Case Synthesis Score** | **33.3%** (1/3 passed) | **66.7%** (2/3 passed) | **66.7%** (2/3 passed) | **NOT TESTED** |
-| **F. Deterministic Pipeline Latency**| **0.0639s** average | **0.0639s** average | **0.0639s** average | **0.0639s** average |
-| **F. LLM Tool Selection Latency** | **0.4307s** per query | **1.1188s** per query | **1.6977s** per query | **NOT TESTED** |
-| **F. LLM Synthesis Latency** | **1.3758s** per case | **5.3672s** per case | **4.4946s** per case | **NOT TESTED** |
-| **F. Avg Generated Tokens/Task** | **20.3 tokens** | **24.6 tokens** | **20.6 tokens** | **NOT TESTED** |
+| **F. Deterministic Pipeline Latency**| **0.0917s** average | **0.0917s** average | **0.0917s** average | **0.0917s** average |
+| **F. LLM Tool Selection Latency** | **0.4440s** per query | **1.1348s** per query | **1.7186s** per query | **NOT TESTED** |
+| **F. LLM Synthesis Latency** | **1.4366s** per case | **5.3631s** per case | **4.4541s** per case | **NOT TESTED** |
+| **F. Avg Generated Tokens/Task** | **20.2 tokens** | **24.2 tokens** | **20.6 tokens** | **NOT TESTED** |
 | **G. Minimum Hardware Profile** | 4 GB RAM (CPU-capable) | 8 GB RAM / Apple Silicon | 16 GB RAM / Apple Silicon | 16 GB RAM / 12 GB GPU VRAM |
 
 ---
@@ -131,29 +133,30 @@ The **Samsung PRISM Unified Engineering Agent** is designed for on-premise, zero
 
 ### Candidate 1: Qwen 2.5 1.5B (Active Baseline Default)
 - **Strengths:**
-  - Ultra-fast inference: **0.43s tool selection**, **1.38s synthesis**.
+  - Ultra-fast inference: **0.44s tool selection**, **1.44s synthesis**.
   - Lightweight memory footprint (986 MB disk, ~1.1 GB RAM active).
-  - 100% valid JSON generation rate with concise output (avg 20.3 tokens/task).
-  - **100.0% (11/11)** accuracy on executable tool-call queries.
+  - 100% valid JSON generation rate with concise output (avg 20.2 tokens/task).
+  - **100.0% (13/13)** accuracy on executable tool-call queries (including REA `open_binary` and `query_rea_status`).
 - **Weaknesses:**
   - Susceptible to false-premise sycophancy on synthesis cases (synthesis score: 33.3%).
 - **Verdict:** **Retained as default lightweight baseline** for Milestone 1. Guarded by the deterministic orchestrator and `EvidenceBundle` limitation checks.
 
 ### Candidate 2: Phi-3.5 Mini 3.8B (Tested Alternative)
 - **Strengths:**
+  - Highest tool selection accuracy (**87.5%**, 14/16 tasks).
   - Solid reasoning in evidence synthesis (66.7% score), correctly rejecting false premises (Case 3).
   - 100% valid JSON rate achieved with `raw_decode` and Ollama `format="json"`.
-  - Latency dropped to **1.12s tool call** with `num_predict=128`.
+  - Latency of **1.13s tool call** with `num_predict=128`.
 - **Weaknesses:**
-  - Lower exact argument accuracy (**64.3%**) due to minor parameter deviations.
+  - Synthesis latency is higher (**5.36s**).
 - **Verdict:** **Viable alternative for 8 GB+ workstations**, performing significantly better when constrained by JSON mode.
 
 ### Candidate 3: Llama 3.1 8B (Power Tier Baseline)
 - **Strengths:**
   - Top-tier formatting adherence (100% valid JSON rate, avg 20.6 tokens/task).
-  - Matches Qwen 2.5 on tool selection and argument generation (**78.6%** accuracy across all tasks, **100%** on executable queries).
+  - Strong tool-calling accuracy (**81.2%** overall, **100%** on executable queries).
   - Superior evidence synthesis (**66.7%** passed), firmly refuting contradictory premises without hallucinating.
-  - Balanced latency (**1.70s tool call**, **4.49s synthesis**).
+  - Consistent latency (**1.72s tool call**, **4.45s synthesis**).
 - **Weaknesses:**
   - Requires ~5.8 GB active RAM, necessitating a 16 GB RAM workstation.
 - **Verdict:** **Recommended model for high-fidelity technical synthesis** on developer workstations with 16 GB RAM.
@@ -174,10 +177,10 @@ Based strictly on the measured empirical data:
 
 2. **High-Fidelity Engineering Analysis — `llama3.1:8b` (Tier 2/3):**
    - **When to use:** Deep binary reverse engineering, complex multi-hop code comprehension, and final report synthesis where accuracy on ambiguous evidence is paramount.
-   - **Trade-off:** ~4x higher tool-calling latency (1.70s vs 0.43s) and ~3.3x higher synthesis latency (4.49s vs 1.38s), requiring a 16 GB RAM host.
+   - **Trade-off:** Higher tool-calling latency (1.72s vs 0.44s) and higher synthesis latency (4.45s vs 1.44s), requiring a 16 GB RAM host.
 
 3. **Hybrid Agent Recommendation:**
-   - Run the **deterministic planner + MCP tool execution** (latency: **0.0639s**, 100% accuracy) for all query routing and evidence gathering.
+   - Run the **deterministic planner + MCP tool execution** (latency: **0.0917s**, 100% accuracy) for all query routing and evidence gathering.
    - Dispatch the aggregated `EvidenceBundle` to **`qwen2.5:1.5b`** for rapid factual summaries, or optionally to **`llama3.1:8b`** when complex multi-hypothesis reasoning is requested.
 
 ---
@@ -189,4 +192,3 @@ To run the genuine model evaluation suite against local Ollama:
 python3 benchmarks/evaluate_models.py
 ```
 - Detailed evaluation results are saved to: `benchmarks/results/model_evaluation_report.json`.
-- Raw terminal execution logs are preserved in: `benchmarks/verification/model_evaluation_run.txt`.

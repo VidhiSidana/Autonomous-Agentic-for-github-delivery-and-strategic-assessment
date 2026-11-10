@@ -5,12 +5,16 @@ escape prevention, sibling directory isolation, secret redaction, and audit logg
 """
 
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
 import config.settings
-from agent.policy import authorize_binary_path, redact_secrets, write_audit_event
+from agent.policy import authorize_binary_path, authorize_rea_tool_call, redact_secrets, write_audit_event
 
 
 class TestPolicyAndAudit(unittest.TestCase):
@@ -184,6 +188,120 @@ class TestPolicyAndAudit(unittest.TestCase):
                 self.assertIn("sess_123", content)
                 self.assertNotIn("secret123", content)
             finally:
+                agent.policy._get_audit_log_path = orig_get
+
+    def test_rea_path_authorization_allowed(self):
+        """REA tool calls on allowed binary paths must be approved and audited."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            allowed = (Path(tmp_dir) / "allowed_bin").resolve()
+            allowed.mkdir()
+            target = allowed / "sample.exe"
+            target.write_text("MZ...", encoding="utf-8")
+
+            log_path = Path(tmp_dir) / "audit.log"
+            import agent.policy
+            orig_dirs = config.settings.BINARY_ALLOWED_DIRS
+            orig_get = agent.policy._get_audit_log_path
+            config.settings.BINARY_ALLOWED_DIRS = [allowed]
+            agent.policy._get_audit_log_path = lambda: log_path
+
+            try:
+                ok, msg = authorize_rea_tool_call("open_binary", {"path": str(target)})
+                self.assertTrue(ok)
+                self.assertEqual(msg, "Authorized")
+                self.assertTrue(log_path.exists())
+                log_data = log_path.read_text(encoding="utf-8")
+                self.assertIn("rea_open_binary", log_data)
+                self.assertIn("AUTHORIZED", log_data)
+            finally:
+                config.settings.BINARY_ALLOWED_DIRS = orig_dirs
+                agent.policy._get_audit_log_path = orig_get
+
+    def test_rea_path_authorization_denied(self):
+        """REA tool calls on paths outside allowed directories must be strictly denied."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            allowed = (Path(tmp_dir) / "allowed").resolve()
+            allowed.mkdir()
+            outside = (Path(tmp_dir) / "outside").resolve()
+            outside.mkdir()
+            target = outside / "evil.exe"
+            target.write_text("MZ...", encoding="utf-8")
+
+            log_path = Path(tmp_dir) / "audit.log"
+            import agent.policy
+            orig_dirs = config.settings.BINARY_ALLOWED_DIRS
+            orig_get = agent.policy._get_audit_log_path
+            config.settings.BINARY_ALLOWED_DIRS = [allowed]
+            agent.policy._get_audit_log_path = lambda: log_path
+
+            try:
+                ok, msg = authorize_rea_tool_call("open_binary", {"path": str(target)})
+                self.assertFalse(ok)
+                self.assertIn("Access Denied", msg)
+                self.assertTrue(log_path.exists())
+                log_data = log_path.read_text(encoding="utf-8")
+                self.assertIn("rea_open_binary", log_data)
+                self.assertIn("DENIED", log_data)
+            finally:
+                config.settings.BINARY_ALLOWED_DIRS = orig_dirs
+                agent.policy._get_audit_log_path = orig_get
+
+    def test_rea_path_authorization_traversal(self):
+        """REA tool calls containing directory traversal must fail-closed."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            allowed = (Path(tmp_dir) / "allowed").resolve()
+            allowed.mkdir()
+
+            log_path = Path(tmp_dir) / "audit.log"
+            import agent.policy
+            orig_dirs = config.settings.BINARY_ALLOWED_DIRS
+            orig_get = agent.policy._get_audit_log_path
+            config.settings.BINARY_ALLOWED_DIRS = [allowed]
+            agent.policy._get_audit_log_path = lambda: log_path
+
+            try:
+                ok, msg = authorize_rea_tool_call("inspect_binary_layout", {"path": f"{allowed}/../../etc/passwd"})
+                self.assertFalse(ok)
+                self.assertIn("Access Denied", msg)
+                self.assertIn("traversal", msg.lower())
+                self.assertTrue(log_path.exists())
+                log_data = log_path.read_text(encoding="utf-8")
+                self.assertIn("rea_inspect_binary_layout", log_data)
+                self.assertIn("DENIED", log_data)
+            finally:
+                config.settings.BINARY_ALLOWED_DIRS = orig_dirs
+                agent.policy._get_audit_log_path = orig_get
+
+    def test_rea_path_authorization_symlink(self):
+        """REA tool calls on symlinks escaping allowed directory must be denied."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            allowed = (Path(tmp_dir) / "allowed").resolve()
+            allowed.mkdir()
+            outside = (Path(tmp_dir) / "outside").resolve()
+            outside.mkdir()
+
+            secret = outside / "secret.exe"
+            secret.write_text("MZ...", encoding="utf-8")
+            symlink_target = allowed / "symlink.exe"
+            symlink_target.symlink_to(secret)
+
+            log_path = Path(tmp_dir) / "audit.log"
+            import agent.policy
+            orig_dirs = config.settings.BINARY_ALLOWED_DIRS
+            orig_get = agent.policy._get_audit_log_path
+            config.settings.BINARY_ALLOWED_DIRS = [allowed]
+            agent.policy._get_audit_log_path = lambda: log_path
+
+            try:
+                ok, msg = authorize_rea_tool_call("open_binary", {"path": str(symlink_target)})
+                self.assertFalse(ok)
+                self.assertIn("Access Denied", msg)
+                self.assertTrue(log_path.exists())
+                log_data = log_path.read_text(encoding="utf-8")
+                self.assertIn("rea_open_binary", log_data)
+                self.assertIn("DENIED", log_data)
+            finally:
+                config.settings.BINARY_ALLOWED_DIRS = orig_dirs
                 agent.policy._get_audit_log_path = orig_get
 
 

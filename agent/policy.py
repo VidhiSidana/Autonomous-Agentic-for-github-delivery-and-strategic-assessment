@@ -163,6 +163,62 @@ def authorize_binary_path(binary_path: str) -> tuple[bool, str]:
     )
 
 
+def authorize_rea_tool_call(
+    tool_name: str,
+    arguments: dict,
+    session_id: str = "",
+) -> tuple[bool, str]:
+    """
+    Policy gateway for Reverse Engineer Anything (REA) MCP tool invocations.
+    Because REA does not perform path allowlisting or security confirmation internally,
+    every REA call is routed through this gate to enforce fail-closed authorization,
+    traversal defense, symlink isolation, and append-only audit logging.
+    """
+    path_keys = ("path", "file_path", "binary_path", "target", "snapshot_path")
+    paths_to_check = []
+
+    for key in path_keys:
+        val = arguments.get(key)
+        if isinstance(val, str) and val.strip():
+            paths_to_check.append((key, val.strip()))
+
+    if paths_to_check:
+        for key, p_str in paths_to_check:
+            ok, reason = authorize_binary_path(p_str)
+            if not ok:
+                write_audit_event(
+                    operation=f"rea_{tool_name}",
+                    target_path=p_str,
+                    authorized=False,
+                    result_status="DENIED",
+                    session_id=session_id,
+                    extra=f"Policy denial on {key}: {reason}",
+                )
+                return False, f"Access Denied by Policy on '{key}': {reason}"
+
+        primary_path = paths_to_check[0][1]
+        write_audit_event(
+            operation=f"rea_{tool_name}",
+            target_path=primary_path,
+            authorized=True,
+            result_status="AUTHORIZED",
+            session_id=session_id,
+            extra="All target paths approved by policy",
+        )
+        return True, "Authorized"
+
+    # Tool calls without explicit path parameters (e.g. binary_overview, close_binary)
+    write_audit_event(
+        operation=f"rea_{tool_name}",
+        target_path="",
+        authorized=True,
+        result_status="AUTHORIZED",
+        session_id=session_id,
+        extra="Session-scoped tool call approved",
+    )
+    return True, "Authorized"
+
+
 # ---------------------------------------------------------------------------
 # Audit logging
 # ---------------------------------------------------------------------------
