@@ -1,83 +1,45 @@
 === SAMSUNG PRISM MILESTONE 2 END-TO-END EVALUATION RUN ===
-Timestamp: 2026-11-10T17:09:16.277410+00:00
+Timestamp: 2026-11-10T20:47:51.956748+00:00
 
 ----------------------------------------------------
 Model: qwen2.5:1.5b
 Zero-Egress Check: PASSED
 Sample Size: 22 tasks (17 ground truth + 3 real open-source code + 2 multi-session resume) + 3 false-hypothesis tasks
 
-Baseline Success Rate:   31.8% (7/22)
-Full Agent Success Rate: 95.5% (21/22)
-Baseline Avg Latency:    2.4752s
-Full Agent Avg Latency:  4.526s
-Baseline Total Tokens:   26091
-Full Agent Total Tokens: 17443
-Multi-Session Resume:    Full Agent 50.0% vs Baseline 0.0%
+Baseline Success Rate:   22.7% (5/22)
+Full Agent Success Rate: 100.0% (22/22)
+Baseline Avg Latency:    31.9934s
+Full Agent Avg Latency:  28.1437s
+Baseline Total Tokens:   20982
+Full Agent Total Tokens: 11132
+Multi-Session Resume:    Full Agent 100.0% vs Baseline 0.0%
 False-Hypothesis Rate:   33.3% (1/3 falsely asserted)
 
 Where Agent is NOT better: For simple single-file grep queries on small repositories, the baseline is faster (latency ~0.05s-0.2s) because the full agent incurs planning, evidence normalization, and structured synthesis overhead. Baseline also consumes zero LLM prompt tokens when regex matches immediately without multi-turn LLM reasoning.
 
 Task Breakdown (Full Agent):
-  [PASS] C1: Found 6 repository functions: ['process_query', 'plan', 'execute_query', 'authorize_binary_path', 'save_memory', 'main'] (3.1712s, 520 tok)
-  [PASS] C2: Identified callers of process_query (1.9786s, 561 tok)
-  [PASS] C3: Identified 5 dependencies of agent/main.py (1.6247s, 681 tok)
-  [PASS] C4: Identified class architecture (5 classes) (4.6291s, 1361 tok)
-  [PASS] B1: Correctly rejected unauthorized binary path per policy (2.2374s, 384 tok)
-  [PASS] B2: Triggered clarification for missing binary path (0.0022s, 0 tok)
-  [PASS] B3: Extracted PE machine architecture AMD64 / 0x8664 (5.2391s, 1445 tok)
-  [PASS] B4: Identified PE section boundaries and virtual address (5.097s, 1427 tok)
-  [PASS] B5: Extracted binary import table / confirmed empty table (4.1805s, 1391 tok)
-  [PASS] B6: Disassembled machine code instructions (2.5712s, 1222 tok)
-  [PASS] M1: Persisted finding with VERIFIED status in memory (0.7837s, 259 tok)
-  [PASS] M2: Retrieved past finding 'auth_service.py' from memory (0.6885s, 298 tok)
-  [PASS] M3: Found engineering finding matching 'auth_service' (1.0204s, 324 tok)
-  [PASS] MT1: Executed cross-domain code and binary analysis (6.0845s, 1854 tok)
-  [PASS] REA1: Verified REA status and fallback engine (4.4527s, 1412 tok)
-  [PASS] REA2: Analyzed functions via REA with fallback (7.186s, 1668 tok)
-  [PASS] REA3: Decompiled entry point comparing REA with fallback (3.6789s, 1403 tok)
-  [PASS] RC1: Located def abort at bottle.py:2697 (2.2928s, 574 tok)
-  [PASS] RC2: Identified HTTPError callers in bottle.py (2.3294s, 579 tok)
-  [PASS] RC3: Outlined Bottle class and routing methods (40.3128s, 0 tok)
-  [FAIL] RS1: Failed to recover binary finding from prior session (0.0029s, 0 tok)
-  [PASS] RS2: Proposed finding successfully confirmed by engineer and retrieved as fact across sessions. (0.0094s, 80 tok)
+  [PASS] C1: Found 6 repository functions: ['process_query', 'plan', 'execute_query', 'authorize_binary_path', 'save_memory', 'main'] (55.2658s, 584 tok)
+  [PASS] C2: Identified callers of process_query (42.8293s, 735 tok)
+  [PASS] C3: Identified 5 dependencies of agent/main.py (23.1685s, 557 tok)
+  [PASS] C4: Identified class architecture (5 classes) (45.7241s, 0 tok)
+  [PASS] B1: Correctly rejected unauthorized binary path per policy (26.2585s, 350 tok)
+  [PASS] B2: Triggered clarification for missing binary path (0.0176s, 0 tok)
+  [PASS] B3: Extracted PE machine architecture AMD64 / 0x8664 (36.6183s, 805 tok)
+  [PASS] B4: Identified PE section boundaries and virtual address (42.3805s, 765 tok)
+  [PASS] B5: Extracted binary import table / confirmed empty table (20.5281s, 367 tok)
+  [PASS] B6: Disassembled machine code instructions (28.202s, 818 tok)
+  [PASS] M1: Persisted finding with VERIFIED status in memory (15.0506s, 269 tok)
+  [PASS] M2: Retrieved past finding 'auth_service.py' from memory (11.0569s, 298 tok)
+  [PASS] M3: Found engineering finding matching 'auth_service' (16.8929s, 347 tok)
+  [PASS] MT1: Executed cross-domain code and binary analysis (46.8601s, 0 tok)
+  [PASS] REA1: Verified REA status and fallback engine (34.7143s, 1057 tok)
+  [PASS] REA2: Analyzed functions via REA with fallback (31.4139s, 1190 tok)
+  [PASS] REA3: Decompiled entry point comparing REA with fallback (32.5741s, 1203 tok)
+  [PASS] RC1: Located def abort at bottle.py:2697 (21.8148s, 557 tok)
+  [PASS] RC2: Identified HTTPError callers in bottle.py (21.0906s, 573 tok)
+  [PASS] RC3: Outlined Bottle class and routing methods (22.3972s, 577 tok)
+  [PASS] RS1: Recovered investigated binary architecture and entry point from prior session (44.2143s, 0 tok)
+  [PASS] RS2: Proposed finding successfully confirmed by engineer and retrieved as fact across sessions. (0.0898s, 80 tok)
 
-----------------------------------------------------
-Model: llama3.1:8b
-Zero-Egress Check: PASSED
-Sample Size: 22 tasks (17 ground truth + 3 real open-source code + 2 multi-session resume) + 3 false-hypothesis tasks
-
-Baseline Success Rate:   45.5% (10/22)
-Full Agent Success Rate: 95.5% (21/22)
-Baseline Avg Latency:    19.4326s
-Full Agent Avg Latency:  22.935s
-Baseline Total Tokens:   41282
-Full Agent Total Tokens: 12108
-Multi-Session Resume:    Full Agent 50.0% vs Baseline 0.0%
-False-Hypothesis Rate:   33.3% (1/3 falsely asserted)
-
-Where Agent is NOT better: For simple single-file grep queries on small repositories, the baseline is faster (latency ~0.05s-0.2s) because the full agent incurs planning, evidence normalization, and structured synthesis overhead. Baseline also consumes zero LLM prompt tokens when regex matches immediately without multi-turn LLM reasoning.
-
-Task Breakdown (Full Agent):
-  [PASS] C1: Found 6 repository functions: ['process_query', 'plan', 'execute_query', 'authorize_binary_path', 'save_memory', 'main'] (39.3165s, 901 tok)
-  [PASS] C2: Identified callers of process_query (15.1705s, 673 tok)
-  [PASS] C3: Identified 5 dependencies of agent/main.py (23.2491s, 1011 tok)
-  [PASS] C4: Identified class architecture (5 classes) (36.2198s, 1858 tok)
-  [PASS] B1: Correctly rejected unauthorized binary path per policy (10.8279s, 396 tok)
-  [PASS] B2: Triggered clarification for missing binary path (0.0039s, 0 tok)
-  [PASS] B3: Extracted PE machine architecture AMD64 / 0x8664 (40.1384s, 0 tok)
-  [PASS] B4: Identified PE section boundaries and virtual address (40.1538s, 0 tok)
-  [PASS] B5: Extracted binary import table / confirmed empty table (35.1589s, 2038 tok)
-  [PASS] B6: Disassembled machine code instructions (40.1482s, 0 tok)
-  [PASS] M1: Persisted finding with VERIFIED status in memory (6.3704s, 277 tok)
-  [PASS] M2: Retrieved past finding 'auth_service.py' from memory (4.4913s, 292 tok)
-  [PASS] M3: Found engineering finding matching 'auth_service' (3.5473s, 278 tok)
-  [PASS] MT1: Executed cross-domain code and binary analysis (40.3933s, 0 tok)
-  [PASS] REA1: Verified REA status and fallback engine (40.2588s, 0 tok)
-  [PASS] REA2: Analyzed functions via REA with fallback (39.7667s, 2215 tok)
-  [PASS] REA3: Decompiled entry point comparing REA with fallback (40.1372s, 0 tok)
-  [PASS] RC1: Located def abort at bottle.py:2697 (18.5156s, 731 tok)
-  [PASS] RC2: Identified HTTPError callers in bottle.py (15.2097s, 677 tok)
-  [PASS] RC3: Outlined Bottle class and routing methods (15.4784s, 681 tok)
-  [FAIL] RS1: Failed to recover binary finding from prior session (0.0012s, 0 tok)
-  [PASS] RS2: Proposed finding successfully confirmed by engineer and retrieved as fact across sessions. (0.012s, 80 tok)
+Model: llama3.1:8b - NOT TESTED (Model 'llama3.1:8b' not found in Ollama. Available: qwen2.5:1.5b. Run: ollama pull llama3.1:8b)
 
