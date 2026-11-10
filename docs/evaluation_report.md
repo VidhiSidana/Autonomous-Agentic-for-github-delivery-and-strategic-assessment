@@ -4,8 +4,8 @@
 **Milestone:** Month 3 (Milestone 2 Delivery)  
 **Evaluation Date:** 2026-11-10  
 **Evaluator Run:** `benchmarks/e2e_eval.py`  
-**Raw Report:** [`benchmarks/results/e2e_report.json`](file:///Users/chintansood7/samsung%20prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/e2e_report.json)  
-**Execution Log:** [`benchmarks/verification/e2e_run.txt`](file:///Users/chintansood7/samsung%20prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/e2e_run.txt)  
+**Raw Report:** [`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)  
+**Execution Log:** [`benchmarks/verification/e2e_run.txt`](../benchmarks/verification/e2e_run.txt)  
 
 ---
 
@@ -18,16 +18,21 @@ Milestone 2 introduced the **Unified Memory Layer**, the **Engineer Confirmation
 
 ### Key Measured Outcomes
 
-| Metric | Baseline (Grep / Plain File) | Full Agent (Milestone 2) | Impact / Delta |
-| :--- | :---: | :---: | :---: |
-| **Overall Task Success Rate** | **27.3%** (6/22) | **100.0%** (22/22) | **+72.7% Absolute Improvement** |
-| **Ground-Truth Tasks (17)** | 35.3% (6/17) | **100.0%** (17/17) | Full parity with Milestone 1 ground truth |
-| **Real Code Tasks (3)** | 0.0% (0/3) | **100.0%** (3/3) | Accurate symbol resolution & call tracing |
-| **Multi-Session Resume Tasks (2)** | 0.0% (0/2) | **100.0%** (2/2) | Cross-session digest & confirmation sync |
-| **Zero-Egress Network Isolation** | N/A | **PASSED** (0 non-local connections) | 100% on-premise execution (Localhost Ollama + stdio) |
-| **False-Hypothesis Rate** | N/A (no memory) | **0.0%** | Unverified findings quarantined as `PROPOSED` |
-| **Average Prompt Tokens / Task** | 4,127 tokens (raw dumps) | **3,887 tokens** (budgeted) | **-5.8% reduction in token consumption** |
-| **Multi-Session Resume Success** | 0.0% (amnesic) | **100.0%** | Digest preserves previous session findings |
+#### Model Comparison Table (End-to-End Evaluation)
+
+| Metric | Qwen 2.5 1.5B (Baseline) | Qwen 2.5 1.5B (Full Agent) | Llama 3.1 8B (Baseline) | Llama 3.1 8B (Full Agent) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Overall Task Success Rate** | 31.8% (7/22) | **95.5% (21/22)** | 45.5% (10/22) | **95.5% (21/22)** |
+| **Ground-Truth Tasks (17)** | 41.2% (7/17) | **100.0% (17/17)** | 58.8% (10/17) | **100.0% (17/17)** |
+| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** |
+| **Multi-Session Resume (2)** | 0.0% (0/2) | **50.0% (1/2)** | 0.0% (0/2) | **50.0% (1/2)** |
+| **Total Tokens Consumed** | 26,091 tok | **17,443 tok (-33.1%)** | 41,282 tok | **12,108 tok (-70.7%)** |
+| **Avg Tokens / Task** | 1,186.0 tok | **792.9 tok** | 1,876.5 tok | **550.4 tok** |
+| **Average Task Latency** | 2.48s | 4.53s | 19.43s | 22.94s |
+| **False-Hypothesis Rate** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** |
+| **Zero-Egress Check** | PASSED | **PASSED** | PASSED | **PASSED** |
+
+> **Where Agent is NOT better:** For simple single-file grep queries on small repositories, the baseline is faster (latency ~0.05s-0.2s) because the full agent incurs planning, evidence normalization, and structured synthesis overhead. Baseline also consumes zero LLM prompt tokens when regex matches immediately without multi-turn LLM reasoning.
 
 ---
 
@@ -102,16 +107,16 @@ class ZeroEgressMonitor:
 
 In addition to end-to-end evaluation, `benchmarks/benchmark_context_budget.py` measured the direct impact of the **Dynamic Tool Router** and **Compact Category Schemas** against candidates in local Ollama:
 
-| Candidate Model | Monolithic Baseline Prompt Tokens | Dynamic Router Prompt Tokens | Token Reduction (%) | Monolithic Latency | Dynamic Router Latency |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Qwen 2.5 1.5B** | 13,472 | **4,821** | **-64.2%** | 0.428s | **0.341s** |
-| **Phi-3.5 Mini 3.8B** | 16,399 | **5,724** | **-65.1%** | 1.107s | **0.930s** |
-| **Llama 3.1 8B** | 13,423 | **4,840** | **-63.9%** | 1.721s | **1.559s** |
-| **Mistral Nemo 12B** | *NOT TESTED* | *NOT TESTED* | *NOT TESTED* | N/A | *Not installed in local Ollama* |
+| Candidate Model | Baseline Monolithic Prompt Tokens | Dynamic Router Prompt Tokens | Token Reduction (%) | Monolithic Tool Acc. | Dynamic Router Tool Acc. | Monolithic Latency | Dynamic Router Latency |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Qwen 2.5 1.5B** | 13,472 | **7,299** | **-45.8%** (6,173 tokens saved) | 81.2% (13/16) | **87.5% (14/16)** (+6.3%) | 0.433s | **0.395s** (-8.8%) |
+| **Phi-3.5 Mini 3.8B** | 16,399 | **8,945** | **-45.5%** (7,454 tokens saved) | 81.2% (13/16) | **87.5% (14/16)** (+6.3%) | 1.120s | **1.059s** (-5.4%) |
+| **Llama 3.1 8B** | 13,423 | **7,330** | **-45.4%** (6,093 tokens saved) | 81.2% (13/16) | **93.8% (15/16)** (+12.6%) | 1.716s | **1.658s** (-3.4%) |
+| **Mistral Nemo 12B** | *NOT TESTED* | *NOT TESTED* | *NOT TESTED* | N/A | *NOT TESTED* | N/A | *Not installed in local Ollama* |
 
 ### Empirical Insights
 
-1. **Context Window Protection:** For 1.5B and 3.8B models, reducing tool schema tokens by **>64%** prevents context pollution, leaving ample room for empirical tool evidence.
-2. **Latency Gains:** Tool selection inference time dropped by **16% to 20%** across tested models due to smaller prompt evaluations.
-3. **Accuracy Stability:** On Llama 3.1 8B, accuracy remained rock-solid at **81.2%**, proving that compact category routing preserves precision while slashing token overhead.
+1. **Context Window Protection & Savings:** Across all tested models, category-routed dynamic prompting reduces prompt tokens by **~45.5%** (saving over 6,000 to 7,400 tokens per evaluation pass), preventing context pollution and leaving ample room for empirical tool evidence.
+2. **Elimination of Accuracy Regressions:** The addition of concise parameter specifications (`target`, `file_path`, `missing_parameter`) and compact few-shot examples improved tool selection accuracy on Qwen 2.5 1.5B (+6.3% to 87.5%), Phi-3.5 (+6.3% to 87.5%), and Llama 3.1 8B (+12.6% to 93.8%).
+3. **Inference Latency Reduction:** Smaller prompt evaluation sizes reduce LLM prompt-eval duration by **3.4% to 8.8%** across local models.
 

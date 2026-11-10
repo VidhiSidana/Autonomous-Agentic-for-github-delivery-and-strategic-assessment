@@ -16,6 +16,7 @@ and return structured OrchestrationResult objects.
 
 import json
 import logging
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,6 +56,9 @@ class OrchestrationResult:
     clarification_question: Optional[str] = None
     session_id: Optional[str] = None
     error: Optional[str] = None
+    prompt_tokens: int = 0
+    eval_tokens: int = 0
+    total_tokens: int = 0
 
 
 class AgentOrchestrator:
@@ -142,9 +146,7 @@ class AgentOrchestrator:
             logger.error("Error during tool execution: %s", exc, exc_info=True)
             evidence_bundle.add_limitation(f"Tool execution exception: {exc}")
         
-        # Automatically persist verified analysis findings.
-       # Automatically persist verified analysis findings.
-                # Automatically persist verified analysis findings.
+        # Automatically persist verified analysis findings and record hypotheses.
         if plan.category in (
             QueryCategory.CODE_ANALYSIS,
             QueryCategory.BINARY_ANALYSIS,
@@ -154,11 +156,11 @@ class AgentOrchestrator:
                 evidence_bundle,
                 plan,
             )
-
             if saved_count:
                 print(
                     f"[Memory] Automatically saved {saved_count} finding(s)."
                 )
+            self._record_hypothesis_findings(evidence_bundle, plan, session_id)
 
         # Step 4: Evidence Synthesis via Local LLM
         response_text = await self._generate_response(
@@ -167,8 +169,9 @@ class AgentOrchestrator:
             evidence_bundle,
         )
 
-        # Step 4: Evidence Synthesis via Local LLM
-        response_text = await self._generate_response(user_query, plan, evidence_bundle)
+        token_meta = getattr(self, "_last_token_meta", {}) or {}
+        p_tokens = token_meta.get("prompt_eval_count") or 0
+        e_tokens = token_meta.get("eval_count") or 0
 
         return OrchestrationResult(
             query=user_query,
@@ -177,6 +180,9 @@ class AgentOrchestrator:
             evidence_bundle=evidence_bundle,
             response_text=response_text,
             session_id=session_id,
+            prompt_tokens=p_tokens,
+            eval_tokens=e_tokens,
+            total_tokens=p_tokens + e_tokens,
         )
         # ------------------------------------------------------------------
     # Automatic engineering memory retrieval
@@ -379,6 +385,8 @@ class AgentOrchestrator:
         if project_name:
             try:
                 tools_with_schemas = await self.mcp.list_tools_with_schemas("code_graph")
+                from agent.tool_router import filter_available_tools_for_category
+                tools_with_schemas = filter_available_tools_for_category(plan.category.value, tools_with_schemas)
 
                 if plan.function_name:
                     # Dynamically discover and validate symbol search tool
@@ -638,6 +646,32 @@ class AgentOrchestrator:
 
         return saved_count
 
+    def _record_hypothesis_findings(
+        self,
+        bundle: EvidenceBundle,
+        plan: QueryPlan,
+        session_id: str,
+    ) -> int:
+        """
+        Record hypothesis-labelled evidence as PROPOSED findings in memory.
+        Ensures strict separation from VERIFIED facts.
+        """
+        proposed_count = 0
+        for item in bundle.hypothesis_items:
+            if not item.summary.strip():
+                continue
+            try:
+                self.memory.propose_finding(
+                    title=f"[Hypothesis] {item.summary[:60]}",
+                    content=f"Proposed Hypothesis:\n{item.summary}\nDetail:\n{item.detail}",
+                    evidence_refs=item.source,
+                    session_id=session_id,
+                )
+                proposed_count += 1
+            except Exception as exc:
+                logger.debug("Failed to record hypothesis finding: %s", exc)
+        return proposed_count
+
     # ------------------------------------------------------------------
     # Response synthesis
     # ------------------------------------------------------------------
@@ -653,6 +687,37 @@ class AgentOrchestrator:
         is not reachable or the model is not yet pulled.
         Applies context budgeting and compact grounded prompts.
         """
+        # Code Guard: if the evidence bundle has no relevant VERIFIED items,
+        # return "INSUFFICIENT EVIDENCE" without calling the LLM.
+        if plan.category in (
+            QueryCategory.CODE_ANALYSIS,
+            QueryCategory.BINARY_ANALYSIS,
+            QueryCategory.MULTI_TOOL,
+            QueryCategory.MEMORY,
+        ):
+            if not bundle.has_verified:
+                limitation_summary = "; ".join(bundle.limitations) if bundle.limitations else "No verified findings available."
+                return f"INSUFFICIENT EVIDENCE: {limitation_summary}"
+
+            # Check query relevance: if specific non-stopword query concepts are completely absent
+            stop_words = {
+                "what", "which", "where", "who", "when", "why", "how", "is", "are", "was", "were",
+                "the", "a", "an", "in", "to", "and", "or", "of", "for", "with", "this", "that", "these",
+                "tell", "me", "show", "find", "check", "confirm", "whether", "used", "build", "report",
+                "inspect", "analyse", "analyze", "binary", "file", "codebase", "repository", "does", "do", "did"
+            }
+            query_tokens = set(re.findall(r"\w+", user_query.lower()))
+            content_tokens = {t for t in query_tokens - stop_words if len(t) >= 3 and not t.endswith((".exe", ".bin", ".py"))}
+            if content_tokens:
+                ev_text = " ".join(
+                    f"{it.summary} {it.detail} {it.file_path or ''} {it.function_name or ''} {it.binary_address or ''}"
+                    for it in bundle.verified_items
+                ).lower()
+                matched = [t for t in content_tokens if t in ev_text]
+                if not matched:
+                    missing_terms = ", ".join(sorted(content_tokens))
+                    return f"INSUFFICIENT EVIDENCE: The collected empirical evidence contains no data regarding: {missing_terms}."
+
         from agent.context_budget import ContextBudgetManager
         budget_mgr = ContextBudgetManager(model_tag=self.llm.model)
         compacted = budget_mgr.build_grounded_prompts(user_query, bundle)
@@ -661,10 +726,12 @@ class AgentOrchestrator:
         # Check LLM availability
         available, reason = self.llm.check_availability()
         if available:
-            return self.llm.chat(
+            content, meta = self.llm.chat_with_metadata(
                 messages=[{"role": "user", "content": user_prompt}],
                 system_prompt=system_prompt,
             )
+            self._last_token_meta = meta
+            return content
 
         # Graceful evidence-grounded fallback when local LLM is offline or model not pulled
         fallback_lines = [

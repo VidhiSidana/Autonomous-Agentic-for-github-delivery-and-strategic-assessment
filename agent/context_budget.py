@@ -40,10 +40,10 @@ MODEL_BUDGETS: dict[str, dict[str, int]] = {
     },
     "llama3.1:8b": {
         "context_window": 16384,
-        "max_prompt_tokens": 13000,
-        "max_evidence_chars": 18000,
-        "max_item_detail_chars": 3000,
-        "max_history_turns": 6,
+        "max_prompt_tokens": 8000,
+        "max_evidence_chars": 6000,
+        "max_item_detail_chars": 1000,
+        "max_history_turns": 4,
     },
     "mistral-nemo:12b": {
         "context_window": 32768,

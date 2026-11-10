@@ -3,243 +3,136 @@ Dynamic Tool Router for the Samsung PRISM Unified Engineering Agent.
 
 Provides:
   - Category-relevant tool filtering (4-8 tools per category instead of all tools)
-  - REA tool filtering: exposes a compact subset (binary_overview, analyze_function,
-    batch_decompile, build_call_path) + pefile/Capstone tools
-  - Compact tool schemas optimized for small context windows (Qwen 1.5B, Phi-3.5)
+  - REA tool filtering: exposes a compact subset (binary_overview, open_binary,
+    query_rea_status) + pefile/Capstone tools
+  - Compact tool schemas and category few-shot examples for small models (Qwen 1.5B, Phi-3.5)
+  - Runtime filtering helper to restrict available MCP tools to category allowlists
 """
 
 from typing import Any, Optional
 
 
-# Canonical compact tool schemas grouped by category
 ROUTER_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
     # ------------------------------------------------------------------
-    # Code Analysis Tools (4-5 tools)
+    # Code Analysis Tools (4 tools)
     # ------------------------------------------------------------------
     "find_functions": {
         "name": "find_functions",
-        "description": "Find or list function and method definitions across the codebase.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "Optional function name filter."},
-            },
-            "required": [],
-        },
+        "spec": "find_functions(): Find function definitions in codebase. Arguments: {}",
+        "example": '{"tool": "find_functions", "arguments": {}}',
         "category": "code_analysis",
     },
     "find_callers": {
         "name": "find_callers",
-        "description": "Trace incoming calls to target function across the codebase.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "target": {"type": "string", "description": "Exact name of target function."},
-            },
-            "required": ["target"],
-        },
+        "spec": 'find_callers(target: str): Find callers that invoke target function. Arguments: {"target": "<func_name>"}',
+        "example": 'Who calls process_query? -> {"tool": "find_callers", "arguments": {"target": "process_query"}}',
         "category": "code_analysis",
     },
     "find_callees": {
         "name": "find_callees",
-        "description": "Trace outgoing calls made by target function.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "target": {"type": "string", "description": "Exact name of target function."},
-            },
-            "required": ["target"],
-        },
+        "spec": 'find_callees(target: str): Find calls made by function. Arguments: {"target": "<func_name>"}',
+        "example": 'Calls in dispatch? -> {"tool": "find_callees", "arguments": {"target": "dispatch"}}',
         "category": "code_analysis",
     },
     "get_file_outline": {
         "name": "get_file_outline",
-        "description": "Get class, method, and function declarations in a file.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Relative file path."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'get_file_outline(file_path: str): Symbols in a file. Arguments: {"file_path": "<path>"}',
+        "example": 'Outline in agent.py -> {"tool": "get_file_outline", "arguments": {"file_path": "agent.py"}}',
         "category": "code_analysis",
     },
 
     # ------------------------------------------------------------------
-    # Binary Analysis Tools (Compact REA + pefile/Capstone subset: 7 tools)
+    # Binary Analysis Tools (7 tools)
     # ------------------------------------------------------------------
     "analyze_binary": {
         "name": "analyze_binary",
-        "description": "Inspect PE binary metadata, architecture, and section headers.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'analyze_binary(file_path: str): Inspect PE headers and architecture. Arguments: {"file_path": "<path>"}',
+        "example": 'Inspect sample.exe -> {"tool": "analyze_binary", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "disassemble_binary": {
         "name": "disassemble_binary",
-        "description": "Disassemble machine code instructions from binary entry point.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-                "offset": {"type": "integer", "description": "Optional disassembly offset."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'disassemble_binary(file_path: str): Disassemble machine instructions. Arguments: {"file_path": "<path>"}',
+        "example": 'Disassemble sample.exe -> {"tool": "disassemble_binary", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "find_binary_imports": {
         "name": "find_binary_imports",
-        "description": "Extract imported DLLs and imported API symbols from PE binary.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'find_binary_imports(file_path: str): List imported DLLs and symbols. Arguments: {"file_path": "<path>"}',
+        "example": 'Imports of sample.exe -> {"tool": "find_binary_imports", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "binary_overview": {
         "name": "binary_overview",
-        "description": "High-level structural summary of binary in REA reverse-engineering engine.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["file_path"],
-        },
-        "category": "binary_analysis",
-    },
-    "analyze_function": {
-        "name": "analyze_function",
-        "description": "Analyze and decompile a specific function address or symbol in REA.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-                "function_name": {"type": "string", "description": "Function symbol or address."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'binary_overview(file_path: str): REA structural overview of binary. Arguments: {"file_path": "<path>"}',
+        "example": 'Overview of sample.exe -> {"tool": "binary_overview", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "batch_decompile": {
         "name": "batch_decompile",
-        "description": "Batch decompile multiple functions in binary via REA.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["file_path"],
-        },
-        "category": "binary_analysis",
-    },
-    "build_call_path": {
-        "name": "build_call_path",
-        "description": "Construct call graph paths between functions in binary via REA.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-                "from_fn": {"type": "string", "description": "Starting function."},
-                "to_fn": {"type": "string", "description": "Destination function."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'batch_decompile(file_path: str): REA batch decompile functions. Arguments: {"file_path": "<path>"}',
+        "example": 'Batch decompile sample.exe -> {"tool": "batch_decompile", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "open_binary": {
         "name": "open_binary",
-        "description": "Open binary in REA reverse engineering engine.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["path"],
-        },
+        "spec": 'open_binary(path: str): Open local binary in REA for reverse engineering. Arguments: {"path": "<file_path>"}',
+        "example": 'Open binary sample.exe in REA -> {"tool": "open_binary", "arguments": {"path": "sample.exe"}}',
         "category": "binary_analysis",
     },
     "query_rea_status": {
         "name": "query_rea_status",
-        "description": "Query REA engine status and availability for a binary.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Authorized binary file path."},
-            },
-            "required": ["file_path"],
-        },
+        "spec": 'query_rea_status(file_path: str): Query REA engine status and availability. Arguments: {"file_path": "<file_path>"}',
+        "example": 'Query REA status for sample.exe -> {"tool": "query_rea_status", "arguments": {"file_path": "sample.exe"}}',
         "category": "binary_analysis",
     },
 
     # ------------------------------------------------------------------
-    # Memory Tools (2-3 tools)
+    # Memory Tools (2 tools)
     # ------------------------------------------------------------------
     "save_finding": {
         "name": "save_finding",
-        "description": "Store verified technical finding or confirmed hypothesis into memory.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "content": {"type": "string", "description": "Finding description."},
-                "title": {"type": "string", "description": "Optional title."},
-            },
-            "required": ["content"],
-        },
+        "spec": 'save_finding(content: str): Persist an engineering finding to memory. Arguments: {"content": "<text>"}',
+        "example": 'Remember finding: WAL enabled -> {"tool": "save_finding", "arguments": {"content": "WAL enabled"}}',
         "category": "memory",
     },
     "search_memory": {
         "name": "search_memory",
-        "description": "Search persistent engineering memory by keyword or phrase.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Keywords to search."},
-            },
-            "required": ["query"],
-        },
+        "spec": 'search_memory(query: str): Search past engineering findings. Arguments: {"query": "<search_term>"}',
+        "example": 'Search memory for WAL -> {"tool": "search_memory", "arguments": {"query": "WAL"}}',
         "category": "memory",
     },
 
     # ------------------------------------------------------------------
-    # Clarification / Fallback Tools
+    # Clarification & Fallback
     # ------------------------------------------------------------------
     "request_clarification": {
         "name": "request_clarification",
-        "description": "Ask user for missing required parameter (e.g. file_path or target function).",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "missing_parameter": {"type": "string", "description": "Name of missing parameter."},
-            },
-            "required": ["missing_parameter"],
-        },
+        "spec": 'request_clarification(missing_parameter: str): Use when essential parameter is missing. Arguments: {"missing_parameter": "<name>"}',
+        "example": 'Disassemble this -> {"tool": "request_clarification", "arguments": {"missing_parameter": "file_path"}}',
         "category": "clarification",
+    },
+    "none": {
+        "name": "none",
+        "spec": 'none(): Use when no tool matches request. Arguments: {}',
+        "example": 'Compile C code -> {"tool": "none", "arguments": {}}',
+        "category": "unsupported",
     },
 }
 
 
 def get_tools_for_category(
     category: Optional[str] = None,
-    include_clarification: bool = True,
+    include_fallback: bool = True,
 ) -> list[dict[str, Any]]:
     """
-    Return a curated, compact list of 4-8 tools relevant to the category.
-    If category is None or multi-tool, returns the compact set across domains.
+    Return category-specific tools (4-8 tools).
+    Always includes clarification and none fallback if requested.
     """
     cat = (category or "").lower()
     selected: list[dict[str, Any]] = []
 
-    for tool_name, info in ROUTER_TOOL_SCHEMAS.items():
+    for name, info in ROUTER_TOOL_SCHEMAS.items():
         tool_cat = info.get("category", "")
         if cat in ("code", "code_analysis"):
             if tool_cat == "code_analysis":
@@ -250,57 +143,69 @@ def get_tools_for_category(
         elif cat in ("memory", "persistent_memory"):
             if tool_cat == "memory":
                 selected.append(info)
+        elif cat in ("clarification", "unsupported"):
+            if tool_cat in ("clarification", "unsupported"):
+                selected.append(info)
         else:
-            # Default or multi-tool: include core subset
-            if tool_name in (
+            # Default cross-domain subset
+            if name in (
                 "find_functions",
                 "find_callers",
                 "get_file_outline",
                 "analyze_binary",
                 "disassemble_binary",
-                "binary_overview",
                 "save_finding",
                 "search_memory",
             ):
                 selected.append(info)
 
-    if include_clarification and "request_clarification" in ROUTER_TOOL_SCHEMAS:
-        clar = ROUTER_TOOL_SCHEMAS["request_clarification"]
-        if clar not in selected:
-            selected.append(clar)
+    if include_fallback:
+        if ROUTER_TOOL_SCHEMAS["request_clarification"] not in selected:
+            selected.append(ROUTER_TOOL_SCHEMAS["request_clarification"])
+        if ROUTER_TOOL_SCHEMAS["none"] not in selected:
+            selected.append(ROUTER_TOOL_SCHEMAS["none"])
 
     return selected
 
 
 def build_tool_selection_prompt(
     category: Optional[str] = None,
-    compact: bool = True,
 ) -> str:
     """
-    Build a dynamic tool selection prompt exposing ONLY category-relevant tools.
-    Reduces tool list token footprint from ~70k tokens (full REA) to < 500 tokens.
+    Build a dynamic tool selection prompt with exact argument specifications and
+    compact few-shot examples for the category.
     """
     tools = get_tools_for_category(category)
-    tool_lines = []
-    allowed_names = []
+    tool_names = [t["name"] for t in tools]
 
-    for i, t in enumerate(tools, 1):
-        name = t["name"]
-        desc = t["description"]
-        req = t["parameters"].get("required", [])
-        req_str = f" [Required: {', '.join(req)}]" if req else " [No required args]"
-        tool_lines.append(f"{i}. {name}: {desc}{req_str}")
-        allowed_names.append(name)
+    lines = [
+        "Select ONLY from allowed tools:",
+        ", ".join(tool_names),
+        "\nTool Specifications & Examples:",
+    ]
+    for t in tools:
+        lines.append(f"- {t['spec']}")
+        if "example" in t and t["example"]:
+            lines.append(f"  Ex: {t['example']}")
 
-    allowed_str = ", ".join(allowed_names)
-    prompt = (
-        f"You are an automated tool selector for the Samsung PRISM Engineering Assistant.\n\n"
-        f"CRITICAL INSTRUCTION - ALLOWED TOOLS LIST:\n"
-        f"You must ONLY select from the following {len(tools)} exact tool names:\n"
-        + "\n".join(tool_lines) +
-        f"\n\nIf the query cannot be fulfilled or is unsupported, output: {{\"tool\": \"none\", \"arguments\": {{}}}}\n"
-        f"If an essential parameter (like a binary or file path) is missing, select 'request_clarification'.\n"
-        f"Always return valid JSON: {{\"tool\": \"<tool_name>\", \"arguments\": {{...}}}}"
+    lines.append(
+        '\nRespond ONLY with a single JSON object: {"tool": "<name>", "arguments": {<args>}}'
     )
-    return prompt
+    return "\n".join(lines)
 
+
+def filter_available_tools_for_category(
+    category: str,
+    available_tools: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Runtime filter: restricts an MCP server's exposed tools (which may contain 17-229 tools)
+    to the active category subset to keep the prompt budget low.
+    """
+    allowed_names = set(t["name"] for t in get_tools_for_category(category))
+    # Also allow standard prefix matches (e.g. ast_, code_)
+    filtered = {}
+    for tool_name, schema in available_tools.items():
+        if tool_name in allowed_names or any(a in tool_name for a in allowed_names):
+            filtered[tool_name] = schema
+    return filtered or available_tools

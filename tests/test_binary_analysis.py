@@ -67,13 +67,29 @@ class TestBinaryAnalysisServer(unittest.TestCase):
         self.assertIn("strings", data)
         self.assertIn("HelloPRISMAgent", data["strings"])
 
-    def test_query_rea_status_default(self):
+    from unittest.mock import MagicMock, patch
+
+    @patch("shutil.which", return_value=None)
+    def test_query_rea_status_prerequisites_unmet(self, mock_which):
         from binary_analysis.binary_server import query_rea_status
         raw = query_rea_status()
         data = json.loads(raw)
         self.assertIn("status", data)
         self.assertEqual(data["status"], "PREREQUISITE_BLOCKED")
         self.assertFalse(data["rea_configured"])
+        self.assertTrue(data["zero_execution_guarantee"])
+
+    @patch("shutil.which")
+    @patch("subprocess.run")
+    def test_query_rea_status_prerequisites_met(self, mock_run, mock_which):
+        mock_which.side_effect = lambda cmd: f"/usr/local/bin/{cmd}"
+        mock_run.return_value = unittest.mock.MagicMock(stdout="v22.24.0\n", returncode=0)
+        from binary_analysis.binary_server import query_rea_status
+        raw = query_rea_status()
+        data = json.loads(raw)
+        self.assertIn("status", data)
+        self.assertEqual(data["status"], "OPERATIONAL")
+        self.assertTrue(data["rea_configured"])
         self.assertTrue(data["zero_execution_guarantee"])
 
     def test_rea_adapter_live_invocation(self):
@@ -83,12 +99,13 @@ class TestBinaryAnalysisServer(unittest.TestCase):
         sample_bin = self.bin_dir / "target.exe"
         sample_bin.write_bytes(b"MZ\x90\x00fake")
 
-        # 1. Default state when host prerequisites are unmet -> PREREQUISITE_BLOCKED
-        adapter_default = REAAdapter()
-        res_default = adapter_default.analyze(str(sample_bin), operation="metadata")
-        self.assertFalse(res_default["success"])
-        self.assertEqual(res_default["status"], "PREREQUISITE_BLOCKED")
-        self.assertTrue(res_default["fallback_recommended"])
+        # 1. State when host prerequisites are mocked as unmet -> PREREQUISITE_BLOCKED
+        with unittest.mock.patch("shutil.which", return_value=None):
+            adapter_default = REAAdapter()
+            res_default = adapter_default.analyze(str(sample_bin), operation="metadata")
+            self.assertFalse(res_default["success"])
+            self.assertEqual(res_default["status"], "PREREQUISITE_BLOCKED")
+            self.assertTrue(res_default["fallback_recommended"])
 
         # 2. When verified runner is provisioned and succeeds
         def mock_rea_runner(path: str, op: str) -> dict:

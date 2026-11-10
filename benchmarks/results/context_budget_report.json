@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-11-10T13:47:26.485094+00:00",
+  "timestamp_utc": "2026-11-10T15:17:34.514843+00:00",
   "title": "Samsung PRISM Milestone 2 Context Budget & Dynamic Tool Router Evaluation",
   "total_evaluation_tasks": 16,
   "models_evaluated": [
@@ -15,22 +15,22 @@
         "overall_tool_call_accuracy": "81.2%",
         "total_prompt_tokens": 13472,
         "avg_prompt_tokens_per_task": 842.0,
-        "avg_latency_seconds": 0.4283
+        "avg_latency_seconds": 0.4329
       },
       "milestone2_dynamic_router": {
         "total_tasks": 16,
-        "correct_tool_selections": 12,
-        "tool_selection_accuracy": "75.0%",
-        "exact_arguments_correct": 11,
-        "exact_argument_accuracy": "68.8%",
-        "overall_specification_correct": 11,
-        "overall_tool_call_accuracy": "68.8%",
-        "total_prompt_tokens": 4821,
-        "avg_prompt_tokens_per_task": 301.3,
-        "avg_latency_seconds": 0.3405
+        "correct_tool_selections": 14,
+        "tool_selection_accuracy": "87.5%",
+        "exact_arguments_correct": 14,
+        "exact_argument_accuracy": "87.5%",
+        "overall_specification_correct": 14,
+        "overall_tool_call_accuracy": "87.5%",
+        "total_prompt_tokens": 7299,
+        "avg_prompt_tokens_per_task": 456.2,
+        "avg_latency_seconds": 0.3954
       },
-      "prompt_token_reduction_pct": "64.2%",
-      "tokens_saved": 8651,
+      "prompt_token_reduction_pct": "45.8%",
+      "tokens_saved": 6173,
       "status": "TESTED"
     },
     {
@@ -45,22 +45,22 @@
         "overall_tool_call_accuracy": "81.2%",
         "total_prompt_tokens": 16399,
         "avg_prompt_tokens_per_task": 1024.9,
-        "avg_latency_seconds": 1.1072
+        "avg_latency_seconds": 1.1199
       },
       "milestone2_dynamic_router": {
         "total_tasks": 16,
-        "correct_tool_selections": 11,
-        "tool_selection_accuracy": "68.8%",
-        "exact_arguments_correct": 10,
-        "exact_argument_accuracy": "62.5%",
-        "overall_specification_correct": 10,
-        "overall_tool_call_accuracy": "62.5%",
-        "total_prompt_tokens": 5724,
-        "avg_prompt_tokens_per_task": 357.8,
-        "avg_latency_seconds": 0.9297
+        "correct_tool_selections": 14,
+        "tool_selection_accuracy": "87.5%",
+        "exact_arguments_correct": 14,
+        "exact_argument_accuracy": "87.5%",
+        "overall_specification_correct": 14,
+        "overall_tool_call_accuracy": "87.5%",
+        "total_prompt_tokens": 8945,
+        "avg_prompt_tokens_per_task": 559.1,
+        "avg_latency_seconds": 1.059
       },
-      "prompt_token_reduction_pct": "65.1%",
-      "tokens_saved": 10675,
+      "prompt_token_reduction_pct": "45.5%",
+      "tokens_saved": 7454,
       "status": "TESTED"
     },
     {
@@ -75,22 +75,22 @@
         "overall_tool_call_accuracy": "81.2%",
         "total_prompt_tokens": 13423,
         "avg_prompt_tokens_per_task": 838.9,
-        "avg_latency_seconds": 1.7209
+        "avg_latency_seconds": 1.7155
       },
       "milestone2_dynamic_router": {
         "total_tasks": 16,
-        "correct_tool_selections": 13,
-        "tool_selection_accuracy": "81.2%",
-        "exact_arguments_correct": 13,
-        "exact_argument_accuracy": "81.2%",
-        "overall_specification_correct": 13,
-        "overall_tool_call_accuracy": "81.2%",
-        "total_prompt_tokens": 4840,
-        "avg_prompt_tokens_per_task": 302.5,
-        "avg_latency_seconds": 1.5586
+        "correct_tool_selections": 15,
+        "tool_selection_accuracy": "93.8%",
+        "exact_arguments_correct": 15,
+        "exact_argument_accuracy": "93.8%",
+        "overall_specification_correct": 15,
+        "overall_tool_call_accuracy": "93.8%",
+        "total_prompt_tokens": 7330,
+        "avg_prompt_tokens_per_task": 458.1,
+        "avg_latency_seconds": 1.6581
       },
-      "prompt_token_reduction_pct": "63.9%",
-      "tokens_saved": 8583,
+      "prompt_token_reduction_pct": "45.4%",
+      "tokens_saved": 6093,
       "status": "TESTED"
     },
     {
