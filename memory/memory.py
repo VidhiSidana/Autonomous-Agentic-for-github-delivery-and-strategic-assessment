@@ -29,10 +29,20 @@ logger = logging.getLogger(__name__)
 # Verification status constants
 # ---------------------------------------------------------------------------
 STATUS_VERIFIED     = "VERIFIED"
+STATUS_CONFIRMED    = "CONFIRMED"
+STATUS_PROPOSED     = "PROPOSED"
 STATUS_HYPOTHESIS   = "HYPOTHESIS"
-STATUS_REJECTED     = "REJECTED"
 STATUS_NEEDS_REVIEW = "NEEDS_REVIEW"
-VALID_STATUSES = {STATUS_VERIFIED, STATUS_HYPOTHESIS, STATUS_REJECTED, STATUS_NEEDS_REVIEW}
+STATUS_REJECTED     = "REJECTED"
+VALID_STATUSES = {
+    STATUS_VERIFIED,
+    STATUS_CONFIRMED,
+    STATUS_PROPOSED,
+    STATUS_HYPOTHESIS,
+    STATUS_NEEDS_REVIEW,
+    STATUS_REJECTED,
+}
+FACT_STATUSES = {STATUS_VERIFIED, STATUS_CONFIRMED}
 
 # ---------------------------------------------------------------------------
 # Memory categories
@@ -117,12 +127,16 @@ class EngineeringMemory:
                     is_stale            INTEGER DEFAULT 0,
                     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_reviewed_at    TIMESTAMP DEFAULT NULL
+                    last_reviewed_at    TIMESTAMP DEFAULT NULL,
+                    evidence_refs       TEXT    DEFAULT '',
+                    confirmed_by        TEXT    DEFAULT '',
+                    confirmed_at        TIMESTAMP DEFAULT NULL,
+                    rejection_reason    TEXT    DEFAULT ''
                 )
             """)
 
             # Non-destructive migration: add columns that may be missing
-            # from databases created with the original 4-column schema
+            # from databases created with previous schemas
             existing = {
                 row[1]
                 for row in conn.execute("PRAGMA table_info(findings)")
@@ -137,6 +151,10 @@ class EngineeringMemory:
                 "is_stale":            "INTEGER DEFAULT 0",
                 "updated_at":          "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
                 "last_reviewed_at":    "TIMESTAMP DEFAULT NULL",
+                "evidence_refs":       "TEXT DEFAULT ''",
+                "confirmed_by":        "TEXT DEFAULT ''",
+                "confirmed_at":        "TIMESTAMP DEFAULT NULL",
+                "rejection_reason":    "TEXT DEFAULT ''",
             }
             for col, definition in migrations.items():
                 if col not in existing:
@@ -159,15 +177,21 @@ class EngineeringMemory:
         project: str = "",
         session_id: str = "",
         confidence: float = 1.0,
+        evidence_refs: str = "",
+        confirmed_by: str = "",
+        confirmed_at: Optional[str] = None,
+        rejection_reason: str = "",
     ) -> dict[str, Any]:
         """
         Save a new engineering memory entry.
 
         Returns a dict with the new row's id and status message.
         """
-        # Import here to avoid circular imports
         from agent.policy import redact_secrets
+        title = redact_secrets(title)
         content = redact_secrets(content)
+        evidence_refs = redact_secrets(evidence_refs)
+        rejection_reason = redact_secrets(rejection_reason)
 
         if verification_status not in VALID_STATUSES:
             verification_status = STATUS_NEEDS_REVIEW
@@ -195,11 +219,13 @@ class EngineeringMemory:
                 INSERT INTO findings
                     (title, content, category, verification_status,
                      source, project, session_id, confidence,
-                     created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     created_at, updated_at, evidence_refs, confirmed_by,
+                     confirmed_at, rejection_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (title, content, category, verification_status,
-                 source, project, session_id, confidence, now, now),
+                 source, project, session_id, confidence, now, now,
+                 evidence_refs, confirmed_by, confirmed_at, rejection_reason),
             )
             new_id = cursor.lastrowid
 
@@ -208,6 +234,112 @@ class EngineeringMemory:
             "id": new_id,
             "message": f"Memory saved (id={new_id}, status={verification_status}).",
         }
+
+    def propose_finding(
+        self,
+        title: str,
+        content: str,
+        category: str = "hypothesis",
+        evidence_refs: str = "",
+        source: str = "",
+        project: str = "",
+        session_id: str = "",
+        confidence: float = 0.5,
+    ) -> dict[str, Any]:
+        """
+        Propose an unverified hypothesis or finding awaiting engineer confirmation.
+        Status is strictly PROPOSED; it is never retrieved as an established fact.
+        """
+        return self.save_memory(
+            title=title,
+            content=content,
+            category=category,
+            verification_status=STATUS_PROPOSED,
+            source=source,
+            project=project,
+            session_id=session_id,
+            confidence=confidence,
+            evidence_refs=evidence_refs,
+        )
+
+    def confirm_finding(
+        self,
+        memory_id: int,
+        confirmed_by: str = "engineer",
+        target_status: str = STATUS_CONFIRMED,
+    ) -> dict[str, Any]:
+        """
+        Engineer confirmation flow:
+        Promotes a PROPOSED or HYPOTHESIS finding to CONFIRMED (or VERIFIED).
+        Records who confirmed it and when (UTC).
+        """
+        now = _now_utc()
+        with self._connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE findings
+                SET verification_status = ?, confirmed_by = ?, confirmed_at = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (target_status, confirmed_by, now, now, memory_id),
+            )
+            if cursor.rowcount == 0:
+                return {"updated": False, "message": f"No memory found with id={memory_id}."}
+        return {
+            "updated": True,
+            "id": memory_id,
+            "status": target_status,
+            "confirmed_by": confirmed_by,
+            "confirmed_at": now,
+            "message": f"Finding id={memory_id} confirmed by {confirmed_by} (promoted to {target_status}).",
+        }
+
+    def reject_finding(
+        self,
+        memory_id: int,
+        reason: str = "",
+        rejected_by: str = "engineer",
+    ) -> dict[str, Any]:
+        """
+        Rejects a finding and records the engineer's rationale and timestamp.
+        Excluded from all fact retrievals.
+        """
+        from agent.policy import redact_secrets
+        now = _now_utc()
+        clean_reason = redact_secrets(reason)
+        with self._connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE findings
+                SET verification_status = ?, rejection_reason = ?, confirmed_by = ?, confirmed_at = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (STATUS_REJECTED, clean_reason, rejected_by, now, now, memory_id),
+            )
+            if cursor.rowcount == 0:
+                return {"updated": False, "message": f"No memory found with id={memory_id}."}
+        return {
+            "updated": True,
+            "id": memory_id,
+            "status": STATUS_REJECTED,
+            "rejection_reason": clean_reason,
+            "message": f"Finding id={memory_id} rejected by {rejected_by} (reason: {clean_reason or 'none provided'}).",
+        }
+
+    def get_pending_proposals(self, session_id: Optional[str] = None) -> list[sqlite3.Row]:
+        """List findings awaiting engineer confirmation (PROPOSED status)."""
+        conditions = ["verification_status = 'PROPOSED'", "is_stale = 0"]
+        params: list[Any] = []
+        if session_id:
+            conditions.append("session_id = ?")
+            params.append(session_id)
+        where = f"WHERE {' AND '.join(conditions)}"
+        with self._connection() as conn:
+            cursor = conn.execute(
+                f"SELECT * FROM findings {where} ORDER BY id ASC",
+                params,
+            )
+            return cursor.fetchall()
 
     # Backward-compatible alias used by the original agent
     def save_finding(self, title: str, content: str) -> str:
@@ -225,9 +357,11 @@ class EngineeringMemory:
         verification_status: Optional[str] = None,
         session_id: Optional[str] = None,
         include_stale: bool = False,
+        include_proposed: bool = False,
     ) -> list[sqlite3.Row]:
         """
-        Retrieve memory entries, newest first, with optional filters.
+        Retrieve memory entries, ordered by confirmation priority (CONFIRMED/VERIFIED first),
+        then newest first. By default, PROPOSED and REJECTED items are excluded from fact retrieval.
         """
         conditions: list[str] = []
         params: list[Any] = []
@@ -240,16 +374,26 @@ class EngineeringMemory:
         if verification_status:
             conditions.append("verification_status = ?")
             params.append(verification_status)
+        elif not include_proposed:
+            conditions.append("verification_status NOT IN ('PROPOSED', 'REJECTED')")
+
         if session_id:
             conditions.append("session_id = ?")
             params.append(session_id)
 
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        order_clause = (
+            "ORDER BY CASE verification_status "
+            "WHEN 'CONFIRMED' THEN 1 "
+            "WHEN 'VERIFIED' THEN 2 "
+            "WHEN 'HYPOTHESIS' THEN 3 "
+            "ELSE 4 END, id DESC"
+        )
         params.append(limit)
 
         with self._connection() as conn:
             cursor = conn.execute(
-                f"SELECT * FROM findings {where} ORDER BY id DESC LIMIT ?",
+                f"SELECT * FROM findings {where} {order_clause} LIMIT ?",
                 params,
             )
             return cursor.fetchall()
@@ -272,11 +416,12 @@ class EngineeringMemory:
         self,
         keyword: str,
         verification_status: Optional[str] = None,
+        include_proposed: bool = False,
     ) -> list[sqlite3.Row]:
         """
         Search findings by keyword in title and content.
         Matches exact phrase or individual search terms (OR logic across terms).
-        Optionally filter by verification status.
+        Optionally filter by verification status. By default excludes PROPOSED and REJECTED.
         """
         # Split into individual search terms of length >= 3
         words = [w.strip() for w in keyword.split() if len(w.strip()) >= 3]
@@ -296,10 +441,20 @@ class EngineeringMemory:
         if verification_status:
             where += " AND verification_status = ?"
             params.append(verification_status)
+        elif not include_proposed:
+            where += " AND verification_status NOT IN ('PROPOSED', 'REJECTED')"
+
+        order_clause = (
+            "ORDER BY CASE verification_status "
+            "WHEN 'CONFIRMED' THEN 1 "
+            "WHEN 'VERIFIED' THEN 2 "
+            "WHEN 'HYPOTHESIS' THEN 3 "
+            "ELSE 4 END, id DESC"
+        )
 
         with self._connection() as conn:
             cursor = conn.execute(
-                f"SELECT * FROM findings {where} ORDER BY id DESC",
+                f"SELECT * FROM findings {where} {order_clause}",
                 params,
             )
             return cursor.fetchall()
@@ -408,16 +563,50 @@ class EngineeringMemory:
     # Hypothesis confirmation / rejection
     # ------------------------------------------------------------------
 
-    def confirm_hypothesis(self, memory_id: int) -> dict[str, Any]:
+    def confirm_hypothesis(
+        self,
+        memory_id: int,
+        confirmed_by: str = "engineer",
+        target_status: str = STATUS_VERIFIED,
+    ) -> dict[str, Any]:
         """
-        Promote a HYPOTHESIS to VERIFIED — requires explicit engineer action.
+        Promote a HYPOTHESIS to VERIFIED (or CONFIRMED) — requires explicit engineer action.
         Never called automatically.
         """
-        return self.update_memory(memory_id, verification_status=STATUS_VERIFIED)
+        return self.confirm_finding(memory_id, confirmed_by=confirmed_by, target_status=target_status)
 
-    def reject_hypothesis(self, memory_id: int) -> dict[str, Any]:
-        """Mark a hypothesis as REJECTED."""
-        return self.update_memory(memory_id, verification_status=STATUS_REJECTED)
+    def reject_hypothesis(
+        self,
+        memory_id: int,
+        reason: str = "",
+        rejected_by: str = "engineer",
+    ) -> dict[str, Any]:
+        """Mark a hypothesis as REJECTED with reason and timestamp."""
+        return self.reject_finding(memory_id, reason=reason, rejected_by=rejected_by)
+
+    # ------------------------------------------------------------------
+    # Curated Memory & Deduplication Proxies (TASK B2)
+    # ------------------------------------------------------------------
+
+    def export_curated_memory(self, curated_dir: Optional[Path] = None) -> list[Path]:
+        from memory.curated_memory import CuratedMemoryManager
+        mgr = CuratedMemoryManager(memory=self, curated_dir=curated_dir)
+        return mgr.export_curated_memory()
+
+    def import_curated_memory(self, curated_dir: Optional[Path] = None) -> dict[str, int]:
+        from memory.curated_memory import CuratedMemoryManager
+        mgr = CuratedMemoryManager(memory=self, curated_dir=curated_dir)
+        return mgr.import_curated_memory()
+
+    def check_duplicate(self, title: str, content: str, jaccard_threshold: float = 0.8) -> Optional[dict[str, Any]]:
+        from memory.curated_memory import CuratedMemoryManager
+        mgr = CuratedMemoryManager(memory=self)
+        return mgr.check_duplicate(title, content, jaccard_threshold=jaccard_threshold)
+
+    def detect_stale_findings(self, project_root: Optional[Path] = None) -> list[dict[str, Any]]:
+        from memory.curated_memory import CuratedMemoryManager
+        mgr = CuratedMemoryManager(memory=self, project_root=project_root)
+        return mgr.detect_stale_findings()
 
 
 # ---------------------------------------------------------------------------

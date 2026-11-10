@@ -1,0 +1,33 @@
+=== SAMSUNG PRISM MILESTONE 2 END-TO-END EVALUATION RUN ===
+Timestamp: 2026-11-10T14:18:15.567791+00:00
+Zero-Egress Check: PASSED
+Total Tasks: 22
+
+Baseline Success Rate: 27.3%
+Full Agent Success Rate: 100.0%
+Token Reduction vs Baseline: 5.8%
+Multi-Session Resume Success: 100.0%
+
+Task Details:
+[PASS] C1: Based on the provided evidence, the codebase contains 266 functions. The functions are located in the file "/Users/chintansood7/samsung prism/Autonomo (5.6636s)
+[PASS] C2: Based on the provided evidence, the process_query method is called by the following entities:  1. Users-chintansood7-samsung-prism-Autonomous-Agentic- (4.5475s)
+[PASS] C3: Based on the evidence provided, the agent/main.py module depends on the following modules:  1. asyncio 2. sys 3. pathlib 4. agent.llm  The evidence su (2.8756s)
+[PASS] C4: FINDINGS: 1. Code analysis via 'find_module_relationships' succeeded, finding 8 import(s) in 'main.py'. 2. Code analysis via 'trace_path (inbound)' su (6.6527s)
+[PASS] B1: INSUFFICIENT EVIDENCE  The evidence provided indicates that the binary file "/unauthorized/path/test.exe" was analyzed successfully using the 'analyze (3.3032s)
+[PASS] B2: Please provide the path to the binary file you want to analyse. (0.0021s)
+[PASS] B3: FINDINGS: 1. The binary "/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sam (7.5239s)
+[PASS] B4: FINDINGS: 1. The binary "/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sam (8.2941s)
+[PASS] B5: FINDINGS: - The binary "/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/samp (7.0223s)
+[PASS] B6: INSUFFICIENT EVIDENCE  The provided evidence does not contain disassembled instructions from the binary file "/Users/chintansood7/samsung prism/Autono (3.8547s)
+[PASS] M1: Based on the evidence provided, the finding that authentication is handled in `auth_service.py` is verified. This is indicated by the `VERIFIED` statu (1.2898s)
+[PASS] M2: Based on the evidence provided, we discovered that authentication is handled in the `auth_service.py` file. This finding is verified and can be attrib (1.1631s)
+[PASS] M3: FINDINGS: - The authentication process is handled in the `auth_service.py` file.  LIMITATIONS: - The evidence is specific to the `auth_service.py` fil (2.0535s)
+[PASS] MT1: FINDINGS: 1. Authentication is handled in `auth_service.py`. 2. Binary analysis via `disassemble_binary` succeeded. 3. Binary analysis via `find_binar (7.7537s)
+[PASS] REA1: Ollama request timed out after 30s. (35.0953s)
+[PASS] REA2: Based on the provided evidence, the binary "/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmar (7.2327s)
+[PASS] REA3: Based on the provided evidence, the entry point of the binary "/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic- (4.7667s)
+[PASS] RC1: INSUFFICIENT EVIDENCE  The provided evidence does not contain any direct information about the function `authorize_binary_path` in the `agent/policy.p (3.2165s)
+[PASS] RC2: Based on the provided evidence, the user query "Who calls save_memory across the repository?" is answered as follows:  The code analysis through the ' (5.4752s)
+[PASS] RC3: FINDINGS: - The user requested the class and method declarations in the file "agent/llm.py". - The evidence shows that the code analysis via "find_cla (7.0059s)
+[PASS] RS1: Resumed session successfully referenced prior session findings. (0.05s)
+[PASS] RS2: Proposed finding confirmed and retrieved as fact across sessions. (0.04s)

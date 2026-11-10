@@ -153,3 +153,86 @@ MCP servers are defined declaratively in `config/mcp_servers.json`:
   }
 }
 ```
+
+---
+
+## 6. Milestone 2 Unified Memory & Curated Layer
+
+Milestone 2 establishes a dual-tier unified memory system combining structured SQLite storage with human-reviewable Markdown files:
+
+1. **Automatic Session Capture Hooks (`memory/session_manager.py`):**
+   - `on_query(session_id, query, intent)`: Automatically logs user intent and queries with secret redaction into the `session_events` audit table.
+   - `on_tool_result(session_id, tool_name, args, success, evidence_refs, token_count)`: Captures tool parameters, execution status, evidence provenance, and token usage per step.
+   - `on_session_end(session_id, summary, llm)`: Synthesizes a technical session summary using the local Ollama LLM. When offline, automatically activates a deterministic extractive summarizer labelled `extractive (LLM unavailable)`. Records summarization latency and token usage.
+   - `get_resume_digest(session_id, max_tokens=500)`: Compiles previous session summaries and confirmed findings within strict context token limits.
+
+2. **Curated Markdown Memory (`memory/curated/` & `memory/curated_memory.py`):**
+   - Stored as human-readable `.md` files with lossless YAML frontmatter:
+     ```yaml
+     ---
+     id: 12
+     title: "Function discovery in main"
+     category: "engineering_finding"
+     status: "CONFIRMED"
+     evidence_refs: "ast_search:agent/main.py:98"
+     date: "2026-11-10T12:00:00Z"
+     confirmed_by: "engineer"
+     ---
+     ```
+   - **Two-Way Lossless Sync:** `export_curated_memory()` dumps SQLite findings to Markdown; `import_curated_memory()` scans for direct engineer edits on disk and re-synchronizes changes back into SQLite.
+   - **Dual-Layer Deduplication:** Matches normalized SHA-256 text hashes and word-level Jaccard similarity (threshold $\ge 0.8$) across both SQLite and Markdown layers.
+   - **Stale Detection:** Detects whether files or symbols referenced in `evidence_refs` or content have been renamed or deleted on disk, automatically marking invalid records with `is_stale = 1`.
+   - **Secret Redaction:** `redact_secrets()` is enforced across all write paths (SQLite inserts/updates, session events, and Markdown files).
+
+---
+
+## 7. Engineer Confirmation Flow
+
+To prevent unverified hypotheses or model speculations from polluting factual memory, Milestone 2 enforces an explicit confirmation lifecycle:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PROPOSED: Agent proposes hypothesis or finding
+    PROPOSED --> CONFIRMED: Engineer reviews (/confirm <id>)
+    PROPOSED --> REJECTED: Engineer rejects (/reject <id> [reason])
+    CONFIRMED --> [*]: Retrievable as established fact
+    REJECTED --> [*]: Excluded from all fact retrievals
+```
+
+- **Quarantine:** Findings with `PROPOSED` status are quarantined and **never** returned in default `retrieve_memory()` or `search_memory()` queries.
+- **Provenance Tracking:** Every record captures `evidence_refs` (`tool:file:line`), `session_id`, `created_at`, `confirmed_by`, `confirmed_at`, and optional `rejection_reason`.
+- **CLI Commands:**
+  - `/pending`: Inspect findings awaiting confirmation.
+  - `/confirm <id>`: Promote a proposed finding to `CONFIRMED`.
+  - `/reject <id> [reason]`: Reject a finding with rationale.
+
+---
+
+## 8. Dynamic Tool Router & Context Budget Manager
+
+To prevent small local models (Qwen 1.5B, Phi-3.5) from suffering context window overflow or tool hallucination, Milestone 2 introduces dynamic context and schema control:
+
+1. **Dynamic Tool Router (`agent/tool_router.py`):**
+   - Filters tools by query category to expose only 4–8 relevant tools instead of the monolithic tool catalog.
+   - Compresses REA reverse engineering tools to a compact, high-value subset: `binary_overview`, `analyze_function`, `batch_decompile`, `build_call_path`, plus local PE/Capstone tools.
+   - Reduces tool selection prompt overhead from ~842 tokens to **~301 tokens (-64.2% reduction)**.
+
+2. **Context Budget Manager (`agent/context_budget.py`):**
+   - Configurable per-model context limits (`qwen2.5:1.5b`: 4096 tokens, `phi3.5:latest`: 8192 tokens, `llama3.1:8b`: 16384 tokens).
+   - **Priority Compaction:**
+     1. System instructions (never dropped)
+     2. Verified evidence (locations, line numbers, and symbols preserved; tool text truncated to budget)
+     3. Memory findings (titles/summaries retained; full dumps dropped)
+     4. Session history (compacted to recent turns)
+     5. Category-routed compact schemas
+   - Logs all truncated or dropped components in `dropped_log`.
+   - **Synthesis Guardrails:** Instructs model to refuse missing facts (`INSUFFICIENT EVIDENCE`) and reject contradictory false premises.
+
+---
+
+## 9. Zero-Egress Network Architecture
+
+All operations are strictly on-premise:
+- **Local Endpoints Only:** Outbound connections are confined to `127.0.0.1:11434` (Ollama) and local UNIX pipes (stdio MCP servers).
+- **Socket Interception:** `ZeroEgressMonitor` intercepts socket initialization during evaluation and enforces immediate refusal on any non-local connection.
+- **Audit Verification:** Verified 100% compliant in `benchmarks/results/e2e_report.json`.

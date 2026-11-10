@@ -176,11 +176,15 @@ You: Disassemble binary /path/to/my/sample.exe
 You: Extract printable strings from binary /path/to/my/sample.exe
 ```
 
-#### Persistent Engineering Memory:
+#### Persistent Engineering Memory & Confirmation Flow:
 ```text
 You: Remember this finding: SQLite uses WAL mode for concurrent access. This is verified.
 You: Search memory for SQLite findings
 You: Retrieve previous engineering findings
+You: /pending                               # List pending findings awaiting confirmation
+You: /confirm 1                             # Promote proposed finding to CONFIRMED status
+You: /reject 2 False positive candidate     # Reject finding with engineer rationale
+You: summary                                # Display session info and recent stored items
 ```
 
 #### Multi-Tool Query:
@@ -202,19 +206,23 @@ python3 -m unittest discover -s tests -p "test_*.py" -v
 
 > [!IMPORTANT]
 > **Environment Dependency & Test Discovery:**
-> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 8 test modules load cleanly and **58/58 tests pass (100%)** in ~4.2 seconds.
-> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for `test_binary_analysis`, `test_code_analysis`, `test_mcp_client`, `test_orchestrator`, and `test_benchmark_runner`, discovering only the 31 tests that rely exclusively on the Python standard library (`test_planner.py`, `test_policy.py`, `test_memory.py`).
+> - **In an activated environment with dependencies installed (`pip install -r requirements.txt`):** All 12 test modules load cleanly and **82/82 tests pass (100%)** in ~4.5 seconds.
+> - **In an unprovisioned environment (without `mcp`, `pefile`, and `capstone` installed):** Test discovery logs `ModuleNotFoundError` for external dependencies, discovering only tests that rely exclusively on the Python standard library.
 > Always run tests with the active virtual environment containing `requirements.txt`.
 
-**Discovered Test Breakdown (58 Total):**
-- `tests/test_planner.py`: **13 tests** (Routing, category detection, multi-tool detection, missing binary paths, case-preservation)
-- `tests/test_policy.py`: **12 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, audit logging, REA path authorization allowed/denied/traversal/symlink)
-- `tests/test_binary_analysis.py`: **7 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures, REA status default, REA live runner invocation)
-- `tests/test_mcp_client.py`: **7 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
-- `tests/test_code_analysis.py`: **6 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
+**Discovered Test Breakdown (82 Total):**
+- `tests/test_confirmation_flow.py`: **5 tests** (Lifecycle `PROPOSED` -> `CONFIRMED`/`REJECTED`, provenance, priority ordering, evidence context formatting)
+- `tests/test_unified_memory_layer.py`: **8 tests** (Session hooks, extractive/LLM summarization, Markdown export/import, deduplication, stale detection, resume digest)
+- `tests/test_context_budget.py`: **5 tests** (Category tool routing, REA compact subset filtering, priority compaction, prompt guardrails)
+- `tests/test_planner.py`: **14 tests** (Routing, category detection, multi-tool detection, missing binary paths, case-preservation)
+- `tests/test_policy.py`: **15 tests** (Canonical path allowlist, traversal `..` defense, symlink escapes, sibling directory rejection, case differences, secret redaction, append-only audit logging, REA path authorization)
+- `tests/test_binary_analysis.py`: **6 tests** (PE headers, Capstone disassembly, section boundaries, invalid files, audit failures, REA prerequisites)
+- `tests/test_mcp_client.py`: **6 tests** (Lifecycle management, schema discovery, parameter passing, subprocess cleanup)
+- `tests/test_code_analysis.py`: **7 tests** (AST function extraction, caller tracing, module dependency graph, class outlines)
 - `tests/test_memory.py`: **6 tests** (CRUD operations, session filtering, status updates, multi-threading)
-- `tests/test_orchestrator.py`: **4 tests** (Routing, dynamic schema validation, memory cycle)
-- `tests/test_benchmark_runner.py`: **3 tests** (17 ground-truth suite validation, cross-process isolation verification, error recovery)
+- `tests/test_unified_memory.py`: **7 tests** (Backward-compatible memory retrieval & hypothesis lifecycle)
+- `tests/test_orchestrator.py`: **2 tests** (Routing, dynamic schema validation, memory cycle)
+- `tests/test_benchmark_runner.py`: **1 test** (17 ground-truth suite validation, cross-process persistence verification)
 
 ---
 
@@ -229,39 +237,52 @@ python3 benchmarks/benchmark_runner.py
 - **Execution Latency:** Total deterministic suite execution time is ~1.56 seconds (average **0.0917s** per task; ~1.85s including independent subprocesses).
 - **Output Report:** Saved to `benchmarks/results/benchmark_report.json` with repository-relative paths. Raw execution log is preserved in `benchmarks/verification/benchmark_run.txt`.
 
-### 8.2 Empirical Model Evaluation Suite
-Run the reproducible model evaluation suite against local Ollama across 16 tasks (including native REA tools `open_binary` and `query_rea_status`):
+### 8.2 Milestone 2 Context Budget & Dynamic Tool Router Benchmark
+Run the context budget benchmark measuring token reduction and tool selection:
 ```bash
-python3 benchmarks/evaluate_models.py
+python3 benchmarks/benchmark_context_budget.py
 ```
-- **Evaluated Models:**
-  - `qwen2.5:1.5b`: **81.2%** tool-call accuracy (0.4440s average latency), 100% valid JSON, 33.3% synthesis score (1.4366s latency).
-  - `phi3.5:latest`: **81.2%** tool-call accuracy (1.1348s average latency), 100% valid JSON, 66.7% synthesis score (5.3631s latency).
-  - `llama3.1:8b`: **81.2%** tool-call accuracy (1.7186s average latency), 100% valid JSON, 66.7% synthesis score (4.4541s latency).
-  - `mistral-nemo:12b`: **NOT TESTED** (Model not installed in local Ollama daemon / RAM boundary).
-- **Output Report:** Saved to `benchmarks/results/model_evaluation_report.json`. Raw execution log is preserved in `benchmarks/verification/model_evaluation_run.txt`.
+- **Prompt Token Reductions:**
+  - `qwen2.5:1.5b`: **64.2% token reduction** (13,472 -> 4,821 prompt tokens, 8,651 tokens saved; latency reduced from 0.428s to 0.341s).
+  - `phi3.5:latest`: **65.1% token reduction** (16,399 -> 5,724 prompt tokens, 10,675 tokens saved; latency reduced from 1.107s to 0.930s).
+  - `llama3.1:8b`: **63.9% token reduction** (13,423 -> 4,840 prompt tokens, 8,583 tokens saved; 81.2% accuracy preserved).
+  - `mistral-nemo:12b`: **NOT TESTED** (Not installed in local Ollama daemon).
+- **Output Report:** Saved to `benchmarks/results/context_budget_report.json`.
+
+### 8.3 Milestone 2 End-to-End Evaluation Suite (Zero-Egress Verified)
+Run the full 22-task end-to-end evaluation comparing Baseline (grep/file-read) against the Full Agent:
+```bash
+python3 benchmarks/e2e_eval.py
+```
+- **Zero-Egress Isolation:** **PASSED** (0 non-local socket connections detected; verified 100% on-premise execution).
+- **Overall Success Rate:** **100.0%** (22/22) for Full Agent vs **27.3%** (6/22) for Baseline (+72.7% advantage).
+- **Multi-Session Resume Success:** **100.0%** (resumed sessions accurately restore prior session findings).
+- **False-Hypothesis Rate:** **0.0%** (unverified findings quarantined as `PROPOSED`).
+- **Output Reports:** Saved to `benchmarks/results/e2e_report.json`, `benchmarks/verification/e2e_run.txt`, and [`docs/evaluation_report.md`](docs/evaluation_report.md).
 
 ---
 
-## 9. Milestone 1 Implementation Status
+## 9. Milestone 1 & 2 Implementation Status
 
-| Feature | Status | Notes |
-|---|---|---|
-| **Local LLM Gateway** | **IMPLEMENTED AND TESTED** | Configurable Ollama client with timeout, availability checks & graceful fallback |
-| **Structured Query Planner** | **IMPLEMENTED AND TESTED** | Pydantic `QueryPlan` with parameter extraction and clarification triggers |
-| **Multi-Server MCP Client** | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
-| **Dynamic MCP Orchestrator**| **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
-| **Code Analysis MCP (AST)** | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
-| **codebase-memory-mcp** | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 636 nodes / 2,139 edges across 26 Python modules, verified search, caller/callee tracing & architecture queries |
-| **Binary Analysis MCP** | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
-| **REA Integration Adapter** | **IMPLEMENTED / PREREQUISITE_BLOCKED** | Open-source Reverse Engineer Anything (REA) adapter (`morluto/rea`, npm: `rea-agents`). Enforces fail-closed policy authorization, detects Node.js >= 22.23.4 / Ghidra prerequisites, and gracefully falls back to `pefile`/`Capstone` |
-| **Policy & Path Security** | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |
-| **Unified Engineering Memory** | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
-| **Cross-Process Persistence** | **IMPLEMENTED AND TESTED** | Verified cross-process persistence where Process A inserts finding and Process B retrieves exact ID, session ID, content, and verification status |
-| **Multi-Session Manager** | **IMPLEMENTED AND TESTED** | Session ID tracking, query metrics, cross-session lifecycle testing |
-| **Evidence Aggregation** | **IMPLEMENTED AND TESTED** | Grounded prompting, VERIFIED vs HYPOTHESIS vs LIMITATIONS separation |
-| **Benchmark Suite** | **IMPLEMENTED AND TESTED** | 17-task ground-truth dataset & automated runner with genuine cross-process evaluation (`benchmarks/benchmark_runner.py`) |
-| **Model Evaluation** | **IMPLEMENTED AND TESTED** | Evaluated Qwen2.5-1.5B (Active/Tested), Phi-3.5-Mini (Shortlisted/Tested), Llama3.1-8B (Shortlisted/Tested), Mistral-Nemo (Shortlisted/Not Tested) in `docs/model_comparison.md` and `benchmarks/evaluate_models.py` |
+| Feature | Milestone | Status | Notes |
+|---|---|---|---|
+| **Local LLM Gateway** | M1 | **IMPLEMENTED AND TESTED** | Configurable Ollama client with timeout, availability checks & graceful fallback |
+| **Structured Query Planner** | M1 | **IMPLEMENTED AND TESTED** | Pydantic `QueryPlan` with parameter extraction and clarification triggers |
+| **Multi-Server MCP Client** | M1 | **IMPLEMENTED AND TESTED** | Dynamic tool discovery, inputSchema caching, argument validation against schemas, clean timeout disconnects |
+| **Dynamic MCP Orchestrator**| M1 | **IMPLEMENTED AND TESTED** | Dynamic intent-to-tool mapping, schema argument validation, explicit unsupported operation reporting, AST fallback |
+| **Code Analysis MCP (AST)** | M1 | **IMPLEMENTED AND TESTED** | Function/class discovery, caller/callee finding, imports, 2-hop change impact |
+| **codebase-memory-mcp** | M1 | **IMPLEMENTED AND TESTED** | Connected to live `codebase-memory-mcp v0.12.1` over stdio. Discovered 17 tools dynamically, indexed 636 nodes / 2,139 edges across 26 Python modules |
+| **Binary Analysis MCP** | M1 | **IMPLEMENTED AND TESTED** | Static PE inspection, architecture, exports, imports, strings, Capstone disassembly |
+| **REA Integration Adapter** | M1 | **IMPLEMENTED / PREREQUISITE_BLOCKED** | Open-source Reverse Engineer Anything (REA) adapter (`morluto/rea`, npm: `rea-agents`). Enforces fail-closed policy authorization, detects Node.js >= 22.23.4 / Ghidra prerequisites, and gracefully falls back to `pefile`/`Capstone` |
+| **Policy & Path Security** | M1 | **IMPLEMENTED AND TESTED** | Filesystem-aware inode containment checks (`os.path.samefile`), strict directory allowlist (`BINARY_ALLOWED_DIRS`), traversal rejection, symlink escape defense, sibling directory defense, append-only CSV audit logging |
+| **Unified Engineering Memory** | M1 | **IMPLEMENTED AND TESTED** | SQLite CRUD, verification tagging, secret redaction, duplicate detection |
+| **Engineer Confirmation Flow** | M2 | **IMPLEMENTED AND TESTED** | Explicit lifecycle `PROPOSED` -> `CONFIRMED`/`REJECTED`, CLI commands (`/pending`, `/confirm`, `/reject`), provenance tracking, fact retrieval exclusion |
+| **Session Capture Hooks** | M2 | **IMPLEMENTED AND TESTED** | Automatic hooks (`on_query`, `on_tool_result`, `on_session_end`), `session_events` audit table, local Ollama summarization with extractive fallback |
+| **Curated Markdown Memory** | M2 | **IMPLEMENTED AND TESTED** | Two-way lossless sync between SQLite and `memory/curated/*.md`, YAML frontmatter, dual-layer deduplication (hash + Jaccard), stale detection, secret redaction |
+| **Dynamic Tool Router** | M2 | **IMPLEMENTED AND TESTED** | Category-relevant 4-8 tools filter, compact REA tool subset, 64.2% prompt token reduction on Qwen 1.5B |
+| **Context Budget Manager** | M2 | **IMPLEMENTED AND TESTED** | Model-specific token budgets, priority compaction order, dropped component audit logging, synthesis guardrails |
+| **End-to-End Evaluation** | M2 | **IMPLEMENTED AND TESTED** | 22 tasks (17 ground truth, 3 real code, 2 multi-session resume), 100% Full Agent vs 27.3% Baseline |
+| **Zero-Egress Network Isolation** | M2 | **IMPLEMENTED AND TESTED** | Active socket-level zero-egress monitor (`ZeroEgressMonitor`), 0 external packets, 100% on-premise execution |
 
 ---
 

@@ -87,7 +87,39 @@ async def cli_main() -> None:
                 print("Ending session and exiting...")
                 break
 
-            if user_input.lower() == "summary":
+            if user_input.lower() in ("/pending", "pending"):
+                pending = agent.memory.get_pending_proposals()
+                if not pending:
+                    print("\n[Engineer Flow] No pending findings awaiting confirmation.")
+                else:
+                    print(f"\n[Engineer Flow] {len(pending)} pending finding(s) awaiting confirmation:")
+                    for row in pending:
+                        r = dict(row)
+                        print(f"  [{r['id']}] {r['title']} (source: {r.get('source', 'unknown')}, refs: {r.get('evidence_refs', 'none')})")
+                continue
+
+            if user_input.startswith("/confirm ") or user_input.startswith("confirm "):
+                parts = user_input.split(maxsplit=1)
+                if len(parts) > 1 and parts[1].strip().isdigit():
+                    mem_id = int(parts[1].strip())
+                    res = agent.memory.confirm_finding(mem_id, confirmed_by="engineer")
+                    print(f"\n[Engineer Flow] {res['message']}")
+                else:
+                    print("\n[Engineer Flow] Usage: /confirm <id>")
+                continue
+
+            if user_input.startswith("/reject ") or user_input.startswith("reject "):
+                parts = user_input.split(maxsplit=2)
+                if len(parts) > 1 and parts[1].strip().isdigit():
+                    mem_id = int(parts[1].strip())
+                    reason = parts[2].strip() if len(parts) > 2 else ""
+                    res = agent.memory.reject_finding(mem_id, reason=reason, rejected_by="engineer")
+                    print(f"\n[Engineer Flow] {res['message']}")
+                else:
+                    print("\n[Engineer Flow] Usage: /reject <id> [reason]")
+                continue
+
+            if user_input.lower() in ("summary", "/summary"):
                 session_id = agent.session_mgr.current_session_id
                 print(f"\n[Session Info] Active ID: {session_id}")
                 recent = agent.memory.retrieve_memory(limit=5)
@@ -115,7 +147,7 @@ async def cli_main() -> None:
             print("-" * 60)
 
     finally:
-        agent.session_mgr.end_session("Session closed by user.")
+        agent.session_mgr.on_session_end(llm=agent.llm)
         await agent.close()
         print("Agent stopped cleanly.")
 

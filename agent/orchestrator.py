@@ -94,10 +94,10 @@ class AgentOrchestrator:
         """
         overrides = overrides or {}
         session_id = self.session_mgr.current_session_id or "unknown"
-        self.session_mgr.increment_query_count()
 
         # Step 1: Query Understanding & Planning
         plan = self.planner.plan(user_query)
+        self.session_mgr.on_query(session_id, user_query, intent=getattr(plan, "category", None).value if getattr(plan, "category", None) else "")
 
         # Apply any explicit parameter overrides (e.g. from tests or UI)
         for key, val in overrides.items():
@@ -598,6 +598,25 @@ class AgentOrchestrator:
                 f"Details:\n{item.detail[:3000]}"
             )
 
+            ref_parts = []
+            if item.tool_name:
+                ref_parts.append(item.tool_name)
+            if item.file_path:
+                ref_parts.append(str(item.file_path))
+            if item.line_number:
+                ref_parts.append(str(item.line_number))
+            evidence_refs = ":".join(ref_parts)
+
+            # Record tool result hook in session events
+            self.session_mgr.on_tool_result(
+                session_id=self.session_mgr.current_session_id or "",
+                tool_name=item.tool_name,
+                args={"file_path": item.file_path, "line": item.line_number, "function": item.function_name},
+                success=True,
+                evidence_refs=evidence_refs,
+                result_summary=item.summary,
+            )
+
             try:
                 result = self.memory.save_memory(
                     title=title,
@@ -608,6 +627,7 @@ class AgentOrchestrator:
                     project=str(plan.repository_path or self.default_repo_dir),
                     session_id=self.session_mgr.current_session_id or "",
                     confidence=0.9,
+                    evidence_refs=evidence_refs,
                 )
 
                 if result.get("saved"):
@@ -631,8 +651,12 @@ class AgentOrchestrator:
         """
         Generate answer via LocalLLM if available, or structured fallback if Ollama
         is not reachable or the model is not yet pulled.
+        Applies context budgeting and compact grounded prompts.
         """
-        system_prompt, user_prompt = build_llm_prompt(bundle)
+        from agent.context_budget import ContextBudgetManager
+        budget_mgr = ContextBudgetManager(model_tag=self.llm.model)
+        compacted = budget_mgr.build_grounded_prompts(user_query, bundle)
+        system_prompt, user_prompt = compacted.system_prompt, compacted.user_prompt
 
         # Check LLM availability
         available, reason = self.llm.check_availability()

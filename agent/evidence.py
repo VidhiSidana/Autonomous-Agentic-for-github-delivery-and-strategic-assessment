@@ -84,7 +84,10 @@ class EvidenceBundle:
             lines.append("No tool results available. Do not invent information.\n")
         else:
             for i, item in enumerate(self.items, start=1):
-                lines.append(f"[{item.kind.value} #{i}]")
+                if item.kind == EvidenceKind.HYPOTHESIS:
+                    lines.append(f"[{item.kind.value} #{i} - UNVERIFIED HYPOTHESIS, NOT AN ESTABLISHED FACT]")
+                else:
+                    lines.append(f"[{item.kind.value} #{i}]")
                 lines.append(f"Source : {item.source}")
                 if item.file_path:
                     loc = item.file_path
@@ -262,11 +265,15 @@ def normalise_memory_result(
         else:
             continue
 
+        # Exclude PROPOSED and REJECTED findings from being treated as established facts
+        if status.upper() in ("PROPOSED", "REJECTED"):
+            continue
+
         kind = (
             EvidenceKind.VERIFIED
-            if status in ("VERIFIED", "verified")
+            if status.upper() in ("VERIFIED", "CONFIRMED")
             else EvidenceKind.HYPOTHESIS
-            if status in ("HYPOTHESIS", "hypothesis")
+            if status.upper() == "HYPOTHESIS"
             else EvidenceKind.LIMITATION
         )
 

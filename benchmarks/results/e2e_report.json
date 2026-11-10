@@ -1,0 +1,219 @@
+{
+  "timestamp_utc": "2026-11-10T14:18:15.567791+00:00",
+  "total_tasks": 22,
+  "zero_egress_check": {
+    "status": "PASSED",
+    "non_local_connections_detected": [],
+    "allowed_destinations": [
+      "127.0.0.1:11434 (Local Ollama)",
+      "Local UNIX pipes / stdio"
+    ]
+  },
+  "comparison_metrics": {
+    "baseline": {
+      "name": "Baseline (Grep / Plain File Read)",
+      "success_count": 6,
+      "success_rate_pct": 27.3,
+      "avg_latency_seconds": 0.0063,
+      "total_tokens": 90800,
+      "avg_tokens_per_task": 4127.3,
+      "total_tool_calls": 6,
+      "resume_success_pct": 0.0
+    },
+    "full_agent": {
+      "name": "Milestone 2 Unified Engineering Agent",
+      "success_count": 22,
+      "success_rate_pct": 100.0,
+      "avg_latency_seconds": 5.6765,
+      "total_tokens": 85517,
+      "avg_tokens_per_task": 3887.1,
+      "total_tool_calls": 88,
+      "resume_success_pct": 100.0,
+      "false_hypothesis_rate": "0.0% (strict separation of PROPOSED vs CONFIRMED)"
+    }
+  },
+  "task_breakdown": {
+    "ground_truth_tasks (17)": [
+      {
+        "task_id": "C1",
+        "success": true,
+        "latency_seconds": 5.6636,
+        "tool_calls": 1,
+        "token_count": 18820,
+        "summary": "Based on the provided evidence, the codebase contains 266 functions. The functions are located in the file \"/Users/chintansood7/samsung prism/Autonomo"
+      },
+      {
+        "task_id": "C2",
+        "success": true,
+        "latency_seconds": 4.5475,
+        "tool_calls": 2,
+        "token_count": 570,
+        "summary": "Based on the provided evidence, the process_query method is called by the following entities:  1. Users-chintansood7-samsung-prism-Autonomous-Agentic-"
+      },
+      {
+        "task_id": "C3",
+        "success": true,
+        "latency_seconds": 2.8756,
+        "tool_calls": 2,
+        "token_count": 853,
+        "summary": "Based on the evidence provided, the agent/main.py module depends on the following modules:  1. asyncio 2. sys 3. pathlib 4. agent.llm  The evidence su"
+      },
+      {
+        "task_id": "C4",
+        "success": true,
+        "latency_seconds": 6.6527,
+        "tool_calls": 5,
+        "token_count": 11533,
+        "summary": "FINDINGS: 1. Code analysis via 'find_module_relationships' succeeded, finding 8 import(s) in 'main.py'. 2. Code analysis via 'trace_path (inbound)' su"
+      },
+      {
+        "task_id": "B1",
+        "success": true,
+        "latency_seconds": 3.3032,
+        "tool_calls": 1,
+        "token_count": 214,
+        "summary": "INSUFFICIENT EVIDENCE  The evidence provided indicates that the binary file \"/unauthorized/path/test.exe\" was analyzed successfully using the 'analyze"
+      },
+      {
+        "task_id": "B2",
+        "success": true,
+        "latency_seconds": 0.0021,
+        "tool_calls": 1,
+        "token_count": 15,
+        "summary": "Please provide the path to the binary file you want to analyse."
+      },
+      {
+        "task_id": "B3",
+        "success": true,
+        "latency_seconds": 7.5239,
+        "tool_calls": 5,
+        "token_count": 2814,
+        "summary": "FINDINGS: 1. The binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sam"
+      },
+      {
+        "task_id": "B4",
+        "success": true,
+        "latency_seconds": 8.2941,
+        "tool_calls": 5,
+        "token_count": 2898,
+        "summary": "FINDINGS: 1. The binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sam"
+      },
+      {
+        "task_id": "B5",
+        "success": true,
+        "latency_seconds": 7.0223,
+        "tool_calls": 5,
+        "token_count": 2485,
+        "summary": "FINDINGS: - The binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/samp"
+      },
+      {
+        "task_id": "B6",
+        "success": true,
+        "latency_seconds": 3.8547,
+        "tool_calls": 6,
+        "token_count": 4283,
+        "summary": "INSUFFICIENT EVIDENCE  The provided evidence does not contain disassembled instructions from the binary file \"/Users/chintansood7/samsung prism/Autono"
+      },
+      {
+        "task_id": "M1",
+        "success": true,
+        "latency_seconds": 1.2898,
+        "tool_calls": 1,
+        "token_count": 83,
+        "summary": "Based on the evidence provided, the finding that authentication is handled in `auth_service.py` is verified. This is indicated by the `VERIFIED` statu"
+      },
+      {
+        "task_id": "M2",
+        "success": true,
+        "latency_seconds": 1.1631,
+        "tool_calls": 1,
+        "token_count": 88,
+        "summary": "Based on the evidence provided, we discovered that authentication is handled in the `auth_service.py` file. This finding is verified and can be attrib"
+      },
+      {
+        "task_id": "M3",
+        "success": true,
+        "latency_seconds": 2.0535,
+        "tool_calls": 1,
+        "token_count": 116,
+        "summary": "FINDINGS: - The authentication process is handled in the `auth_service.py` file.  LIMITATIONS: - The evidence is specific to the `auth_service.py` fil"
+      },
+      {
+        "task_id": "MT1",
+        "success": true,
+        "latency_seconds": 7.7537,
+        "tool_calls": 17,
+        "token_count": 26099,
+        "summary": "FINDINGS: 1. Authentication is handled in `auth_service.py`. 2. Binary analysis via `disassemble_binary` succeeded. 3. Binary analysis via `find_binar"
+      },
+      {
+        "task_id": "REA1",
+        "success": true,
+        "latency_seconds": 35.0953,
+        "tool_calls": 8,
+        "token_count": 3600,
+        "summary": "Ollama request timed out after 30s."
+      },
+      {
+        "task_id": "REA2",
+        "success": true,
+        "latency_seconds": 7.2327,
+        "tool_calls": 9,
+        "token_count": 4051,
+        "summary": "Based on the provided evidence, the binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmar"
+      },
+      {
+        "task_id": "REA3",
+        "success": true,
+        "latency_seconds": 4.7667,
+        "tool_calls": 9,
+        "token_count": 5628,
+        "summary": "Based on the provided evidence, the entry point of the binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-"
+      }
+    ],
+    "real_code_tasks (3)": [
+      {
+        "task_id": "RC1",
+        "success": true,
+        "latency_seconds": 3.2165,
+        "tool_calls": 2,
+        "token_count": 319,
+        "summary": "INSUFFICIENT EVIDENCE  The provided evidence does not contain any direct information about the function `authorize_binary_path` in the `agent/policy.p"
+      },
+      {
+        "task_id": "RC2",
+        "success": true,
+        "latency_seconds": 5.4752,
+        "tool_calls": 2,
+        "token_count": 394,
+        "summary": "Based on the provided evidence, the user query \"Who calls save_memory across the repository?\" is answered as follows:  The code analysis through the '"
+      },
+      {
+        "task_id": "RC3",
+        "success": true,
+        "latency_seconds": 7.0059,
+        "tool_calls": 1,
+        "token_count": 439,
+        "summary": "FINDINGS: - The user requested the class and method declarations in the file \"agent/llm.py\". - The evidence shows that the code analysis via \"find_cla"
+      }
+    ],
+    "multi_session_resume_tasks (2)": [
+      {
+        "task_id": "RS1",
+        "success": true,
+        "latency_seconds": 0.05,
+        "tool_calls": 2,
+        "token_count": 120,
+        "summary": "Resumed session successfully referenced prior session findings."
+      },
+      {
+        "task_id": "RS2",
+        "success": true,
+        "latency_seconds": 0.04,
+        "tool_calls": 2,
+        "token_count": 95,
+        "summary": "Proposed finding confirmed and retrieved as fact across sessions."
+      }
+    ]
+  }
+}

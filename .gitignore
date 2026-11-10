@@ -6,5 +6,6 @@ memory/*.db
 memory/*.log
 benchmarks/results/*.db
 benchmarks/results/*.exe
+benchmarks/verification/*.exe
 
 test_results.txt
