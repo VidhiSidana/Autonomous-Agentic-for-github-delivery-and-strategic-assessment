@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from agent.orchestrator import AgentOrchestrator
+from agent.planner import AgentPlanner
 from memory.memory import EngineeringMemory
 from memory.session_manager import SessionManager
 
@@ -34,6 +35,25 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(len(result.evidence_bundle.items) > 0)
         item = result.evidence_bundle.items[0]
         self.assertIn(item.tool_name, ("find_callers", "search_graph", "trace_path (inbound)"))
+
+    def test_architecture_tool_does_not_preempt_function_inventory(self):
+        plan = AgentPlanner().plan("Find functions in this codebase")
+        self.assertFalse(
+            self.orchestrator._should_use_architecture_tool(
+                plan, plan.raw_query.lower()
+            )
+        )
+
+    def test_architecture_tool_does_not_preempt_module_dependencies(self):
+        plan = AgentPlanner().plan(
+            "Which modules does agent/main.py depend on?"
+        )
+        self.assertEqual(plan.file_path, "agent/main.py")
+        self.assertFalse(
+            self.orchestrator._should_use_architecture_tool(
+                plan, plan.raw_query.lower()
+            )
+        )
 
     async def test_memory_save_and_retrieve_flow(self):
         # 1. Save memory
