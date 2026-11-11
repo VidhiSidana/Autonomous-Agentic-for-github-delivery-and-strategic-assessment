@@ -5,7 +5,7 @@
 **Milestone:** Month 3 (Milestone 2 Delivery)  
 **Report Date:** 2026-11-11  
 **Repository Branch:** `milestone2-hardening` (Milestone 2 hardening and validation branch; `main` has not been modified by this work)  
-**Historical benchmark environment:** macOS Apple Silicon, Python 3.14.2 (for the benchmark results recorded below). **Current targeted regression environment:** Windows PowerShell, Python 3.11 virtual environment.  
+**Final acceptance environment:** Windows PowerShell, Python 3.11 virtual environment, on `milestone2-hardening`.  
 
 ---
 
@@ -27,31 +27,31 @@ All Milestone 2 components have been implemented and integrated. Current hardeni
 
 ## 2. Test Suite & Verification Results
 
-### 2.1 Current Milestone 2 Hardening-Branch Validation (2026-11-11)
+### 2.1 Final Milestone 2 Hardening-Branch Validation (2026-11-11)
 
-The following targeted suites have been run by the project team on the
-`milestone2-hardening` branch in the Windows Python 3.11 virtual environment.
-These are separate test invocations; their counts must not be added together
-as a unique-test total because suites may overlap.
+Final acceptance validation was completed on the `milestone2-hardening` branch
+in the Windows Python 3.11 virtual environment.
 
 | Validation area | Command / scope | Reported result |
 |---|---|---:|
-| C1 function-discovery routing | Two targeted orchestrator integration tests, including function inventory and module dependencies | 2 passed |
-| Security policy | `tests.test_policy` | 12 passed, 2 skipped |
-| Session and memory | `tests.test_memory tests.test_unified_memory_layer` | 14 passed |
-| Orchestrator integration | `tests.test_orchestrator` | 9 passed |
-| Binary analysis and imports | `tests.test_binary_analysis tests.test_module_imports` | 10 passed, 1 skipped |
-| Unauthorized binary-path enforcement | `test_unauthorized_binary_path_is_rejected_before_mcp_call` | 1 passed |
+| Ground-truth benchmark | `python benchmarks/benchmark_runner.py` | **17/17 passed (100.0%)** |
+| Complete unit-test discovery | `python -m unittest discover -s tests -p "test_*.py" -t .` | **114 tests; OK; 3 skipped** |
+| Benchmark policy matcher regression | Two focused tests for case-insensitive policy matching and response-text matching | **2/2 passed** |
+| Cross-process memory persistence | Included in the ground-truth benchmark report | **Passed; content, status, session, and record ID verified** |
 
-**Current targeted result:** All reported tests passed; three tests were skipped
-across the two suites that reported skips. No failure was reported in these
-runs. This is a targeted validation snapshot, not a claim that every test in
-the repository has been rerun on the current branch.
+The final benchmark report recorded `total_tasks: 17`,
+`passed_tasks: 17`, and `success_rate: "100.0%"`. All benchmark task
+categories passed: code analysis (C1-C4), binary analysis (B1-B6), memory
+(M1-M3), multi-tool execution (MT1), and REA integration (REA1-REA3).
 
-The 17-task benchmark runner has **not** been rerun after the latest hardening
-changes. Its historical 17/17 result remains historical evidence and does not
-independently verify the current branch. This is the outstanding acceptance
-gate before describing Milestone 2 as fully validated and closed.
+The complete unit-test discovery finished with `Ran 114 tests in 600.384s`
+and `OK (skipped=3)`. There were no reported failures or errors. The three
+skipped tests are reported separately and are not counted as passed tests.
+The two focused policy-matcher regression tests also passed.
+
+**Acceptance result:** The documented Milestone 2 benchmark and full
+unit-test acceptance gates have both been satisfied on
+`milestone2-hardening`.
 
 ### 2.2 Historical Milestone 2 Baseline Test Snapshot
 
@@ -143,14 +143,24 @@ PYTHONPATH=. python3 benchmarks/e2e_eval.py
 ```
 
 
-## 6. Final Milestone 2 Acceptance Gate
+## 6. Final Milestone 2 Acceptance
 
-**Implementation:** The Milestone 2 feature set is implemented, integrated, documented, and covered by the targeted regression runs recorded in Section 2.1.
+<badge>**ACCEPTANCE GATES PASSED**</badge>
 
-**Acceptance still required on `milestone2-hardening`:**
+**Implementation:** The Milestone 2 feature set is implemented, integrated,
+documented, and covered by regression tests.
 
-1. Run `python benchmarks/benchmark_runner.py` with the project's local Ollama model and configured MCP servers available.
-2. Confirm the generated `benchmarks/results/benchmark_report.json` records `total_tasks: 17`, `passed_tasks: 17`, and `success_rate: "100.0%"`.
-3. Run `python -m unittest discover -s tests -p "test_*.py" -t .` and confirm there are no failures or errors. Skips must be reported separately, not counted as passes.
+**Final acceptance evidence on `milestone2-hardening` (2026-11-11):**
 
-Until these current-branch checks are complete, the accurate status is **Milestone 2 implementation complete; final acceptance validation pending**. Do not label the historical benchmark figures as a fresh validation of this branch.
+1. `python benchmarks/benchmark_runner.py` — **17/17 tasks passed (100.0%)**.
+2. `python -m unittest discover -s tests -p "test_*.py" -t .` —
+   **114 tests ran; OK (skipped=3)**, with no failures or errors.
+3. Policy matcher regression tests — **2/2 passed**.
+4. Cross-process persistence — **passed**, with record identity, content,
+   verification status, and session association checked.
+
+**Final status: Milestone 2 implementation and acceptance validation complete
+on `milestone2-hardening`.** The `main` branch was not modified as part of
+this milestone-hardening work. Historical evaluation figures elsewhere in
+this report remain explicitly identified as historical and are not
+substituted for the current-branch acceptance results.
