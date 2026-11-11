@@ -227,10 +227,51 @@ class ContextBudgetManager:
         )
         system_prompt = system_instructions or default_system
 
+        # Enforce the model's total prompt budget after reserving system
+        # instructions and the user-query framing. Evidence is already ordered
+        # by verification priority, so prefix truncation retains the strongest
+        # available items first.
+        query_prefix = "User query: "
+        query_suffix = "\\n\\nAnswer the query strictly based on the evidence above."
+        fixed_chars = len(system_prompt) + len(query_prefix) + len(query_suffix)
+        available_chars = max(
+            0,
+            self.budget["max_prompt_tokens"] * 4 - fixed_chars,
+        )
+
+        query_text = query
+        query_and_evidence = query_prefix + query_text + "\\n\\n" + evidence_text
+        if len(query_and_evidence) + len(query_suffix) > available_chars + len(query_prefix) + len(query_text) + len("\\n\\n") + len(evidence_text):
+            # The fixed portion is already accounted for above; trim evidence
+            # first, then the query only if the query itself cannot fit.
+            evidence_allowance = max(
+                0,
+                available_chars - len(query_text) - len("\\n\\n"),
+            )
+            if len(evidence_text) > evidence_allowance:
+                evidence_text = evidence_text[:evidence_allowance]
+                dropped_log.append(
+                    "Truncated evidence to satisfy the total model prompt-token budget"
+                )
+
+        remaining_chars = max(
+            0,
+            self.budget["max_prompt_tokens"] * 4
+            - len(system_prompt)
+            - len(query_prefix)
+            - len(query_suffix)
+            - len(evidence_text)
+            - len("\\n\\n"),
+        )
+        if len(query_text) > remaining_chars:
+            query_text = query_text[:remaining_chars]
+            dropped_log.append(
+                "Truncated user query to satisfy the total model prompt-token budget"
+            )
+
         user_prompt = (
-            f"User query: {query}\n\n"
-            f"{evidence_text}\n\n"
-            "Answer the query strictly based on the evidence above."
+            f"{query_prefix}{query_text}\\n\\n"
+            f"{evidence_text}{query_suffix}"
         )
 
         total_est = estimate_tokens(system_prompt) + estimate_tokens(user_prompt)
