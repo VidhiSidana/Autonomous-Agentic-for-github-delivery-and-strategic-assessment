@@ -16,10 +16,31 @@ from pathlib import Path
 from benchmarks.benchmark_runner import (
     run_benchmarks,
     run_cross_process_persistence_test,
+    _contains_expected_policy_result,
 )
 
 
 class TestBenchmarkRunner(unittest.TestCase):
+
+    def test_policy_result_matching_is_case_insensitive(self):
+        """Policy wording such as 'Access denied' must satisfy 'Denied'."""
+        class Evidence:
+            detail = "Access denied: path is outside the approved directory."
+            summary = "Binary analysis denied by policy."
+
+        self.assertTrue(
+            _contains_expected_policy_result(
+                "Denied", [Evidence()], "The requested operation was blocked."
+            )
+        )
+
+    def test_policy_result_matching_checks_response_text(self):
+        """Policy outcomes may be surfaced in the user-facing response."""
+        self.assertTrue(
+            _contains_expected_policy_result(
+                "Denied", [], "Access denied by security policy."
+            )
+        )
 
     def test_cross_process_persistence_isolated(self):
         """Verify cross-process persistence works cleanly on a temporary DB."""
