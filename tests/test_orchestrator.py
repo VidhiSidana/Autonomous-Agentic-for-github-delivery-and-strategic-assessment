@@ -51,6 +51,19 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(len(res2.evidence_bundle.items) > 0)
         self.assertIn("auth_service.py", res2.evidence_bundle.items[0].detail)
 
+    async def test_unlabelled_memory_save_requires_confirmation(self):
+        result = await self.orchestrator.process_query(
+            "Remember this finding: the payment service may use a retry queue."
+        )
+        self.assertEqual(result.category, "memory")
+
+        facts = self.memory.retrieve_memory()
+        proposals = self.memory.get_pending_proposals()
+
+        self.assertEqual(len(facts), 0)
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["verification_status"], "PROPOSED")
+
     async def test_binary_analysis_clarification_on_missing_path(self):
         result = await self.orchestrator.process_query("Disassemble this binary executable.")
         self.assertEqual(result.category, "binary_analysis")
