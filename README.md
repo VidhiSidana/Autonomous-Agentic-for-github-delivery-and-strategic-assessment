@@ -334,11 +334,32 @@ pip install -r requirements.txt
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-### 7.1 Latest Verified Test Results
+### 7.1 Current Hardening-Branch Validation
 
-The latest complete standard test run reported:
+The following targeted test runs were reported on the `milestone2-hardening`
+branch in the Windows Python 3.11 virtual environment on 2026-11-11:
 
-| Metric | Result |
+| Validation area | Scope | Result |
+|---|---|---:|
+| C1/C3 code-analysis routing | Two targeted orchestrator integration tests | 2 passed |
+| Security policy | `tests.test_policy` | 12 passed, 2 skipped |
+| Session and memory | `tests.test_memory tests.test_unified_memory_layer` | 14 passed |
+| Orchestrator integration | `tests.test_orchestrator` | 9 passed |
+| Binary analysis and imports | `tests.test_binary_analysis tests.test_module_imports` | 10 passed, 1 skipped |
+
+All reported targeted tests passed; three tests were skipped across the two
+suites that reported skips. These invocations may overlap and must not be
+summed as a unique-test total. This is not a fresh full-repository test run.
+
+The full 17-task benchmark and complete test discovery have **not** been rerun
+after the latest hardening changes. The historical results below are retained
+for traceability and are not current-branch verification.
+
+### 7.2 Historical Complete Test Snapshot
+
+An earlier complete standard test run reported:
+
+| Metric | Historical result |
 |---|---:|
 | Total tests | 86 |
 | Passed | 82 |
@@ -347,11 +368,10 @@ The latest complete standard test run reported:
 | Errors | 0 |
 | Execution time | 170.406 seconds |
 
-**Result: All executed tests passed.**
+The four skipped tests were not counted as passed tests. This historical
+snapshot must not be presented as a fresh run of the current branch.
 
-The four skipped tests are not counted as passed tests.
-
-### 7.2 Test Coverage
+### 7.3 Test Coverage
 
 The test suite covers:
 
@@ -367,7 +387,7 @@ The test suite covers:
 - Cross-process memory persistence.
 - Session capture and confirmation workflows.
 
-### 7.3 Run Individual Test Modules
+### 7.4 Run Individual Test Modules
 
 MCP client tests:
 
