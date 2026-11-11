@@ -109,6 +109,47 @@ class TestMCPClient(unittest.IsolatedAsyncioTestCase):
         self.assertIn("denied by policy", result.error_message.lower())
         mock_connect.assert_not_awaited()
 
+    async def test_binary_denial_is_audited_with_session_id(self):
+        with patch(
+            "agent.mcp_client.authorize_binary_path",
+            return_value=(False, "outside allowlist"),
+        ), patch("agent.mcp_client.write_audit_event") as audit, patch.object(
+            self.manager,
+            "_ensure_connected",
+            new_callable=AsyncMock,
+        ) as mock_connect:
+            result = await self.manager.call_tool(
+                "binary",
+                "analyze_binary",
+                {"binary_path": "C:/outside/sample.exe"},
+                session_id="session-security-1",
+            )
+
+        self.assertFalse(result.success)
+        mock_connect.assert_not_awaited()
+        audit.assert_called_once()
+        self.assertEqual(audit.call_args.kwargs["session_id"], "session-security-1")
+        self.assertFalse(audit.call_args.kwargs["authorized"])
+        self.assertEqual(audit.call_args.kwargs["result_status"], "DENIED")
+
+    async def test_rea_policy_receives_session_id(self):
+        with patch(
+            "agent.mcp_client.authorize_rea_tool_call",
+            return_value=(False, "denied"),
+        ) as policy, patch.object(
+            self.manager,
+            "_ensure_connected",
+            new_callable=AsyncMock,
+        ):
+            await self.manager.call_tool(
+                "rea",
+                "open_binary",
+                {"path": "C:/outside/sample.exe"},
+                session_id="session-rea-2",
+            )
+
+        self.assertEqual(policy.call_args.kwargs["session_id"], "session-rea-2")
+
     async def test_unauthorized_rea_call_is_rejected_before_connection(self):
         with patch(
             "agent.mcp_client.authorize_rea_tool_call",
