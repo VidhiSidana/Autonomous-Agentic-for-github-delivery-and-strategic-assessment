@@ -582,6 +582,28 @@ class AgentOrchestrator:
 
         return True, args, ""
 
+    @staticmethod
+    def _should_use_architecture_tool(plan: QueryPlan, query_lower: str) -> bool:
+        """Avoid substituting a broad architecture summary for precise AST queries."""
+        if plan.function_name:
+            return False
+
+        module_terms = (
+            "import", "imports", "module", "depend", "dependencies",
+        )
+        if plan.file_path and any(term in query_lower for term in module_terms):
+            return False
+
+        function_inventory_terms = (
+            "function", "functions", "list functions", "function discovery",
+        )
+        if not plan.file_path and any(
+            term in query_lower for term in function_inventory_terms
+        ):
+            return False
+
+        return True
+
     # ---------------------------------------------------------
     # Code analysis
     # ---------------------------------------------------------
@@ -977,7 +999,13 @@ class AgentOrchestrator:
                     )
                 )
 
-                if not wants_class_outline and not plan.function_name:
+                if (
+                    not wants_class_outline
+                    and self._should_use_architecture_tool(
+                        plan,
+                        query_lower,
+                    )
+                ):
                     matched_arch = self._find_compatible_tool(
                         tools,
                         "architecture",
