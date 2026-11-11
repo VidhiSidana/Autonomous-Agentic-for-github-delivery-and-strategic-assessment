@@ -203,9 +203,33 @@ def filter_available_tools_for_category(
     to the active category subset to keep the prompt budget low.
     """
     allowed_names = set(t["name"] for t in get_tools_for_category(category))
-    # Also allow standard prefix matches (e.g. ast_, code_)
+
+    # Code Graph MCP tools used by the code-analysis orchestrator.
+    # Keep these separate from the compact AST planner tool list.
+    if category == "code_analysis":
+        allowed_names.update({
+            "search_graph",
+            "trace_path",
+            "get_architecture",
+        })
+
+    # Also allow standard prefix matches (e.g. ast_, code_).
+        # Allow exact names and server-prefixed versions of allowed tools.
+        # Allow exact names and server-prefixed versions of allowed tools.
+        # Allow exact names and server-prefixed versions of allowed tools.
+        # Allow exact names and server-prefixed versions of allowed tools.
     filtered = {}
+
     for tool_name, schema in available_tools.items():
-        if tool_name in allowed_names or any(a in tool_name for a in allowed_names):
+        if tool_name in allowed_names:
             filtered[tool_name] = schema
-    return filtered or available_tools
+            continue
+
+        if any(
+            tool_name.endswith("_" + name)
+            for name in allowed_names
+        ):
+            filtered[tool_name] = schema
+
+    # Fail closed: never expose every server tool when no category match exists.
+    return filtered

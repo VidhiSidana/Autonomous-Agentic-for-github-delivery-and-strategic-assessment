@@ -3,8 +3,9 @@ Tests for MCPClientManager.
 """
 
 import unittest
-from agent.mcp_client import MCPClientManager
+from unittest.mock import AsyncMock, patch
 
+from agent.mcp_client import MCPClientManager
 
 class TestMCPClient(unittest.IsolatedAsyncioTestCase):
 
@@ -68,9 +69,67 @@ class TestMCPClient(unittest.IsolatedAsyncioTestCase):
 
         # 3. Binary analysis server (query status/disassembly rejection)
         b_res = await self.manager.call_tool("binary", "analyze_binary", {"binary_path": "/invalid/path.exe"})
-        self.assertIn("Access Denied", b_res.text)
+        self.assertFalse(b_res.success)
+        self.assertTrue(b_res.is_error)
+        self.assertIn("denied by policy", b_res.error_message.lower())
 
+    async def test_binary_call_without_path_is_rejected_before_connection(self):
+        with patch.object(
+            self.manager,
+            "_ensure_connected",
+            new_callable=AsyncMock,
+        ) as mock_connect:
 
+            result = await self.manager.call_tool(
+                "binary",
+                "analyze_binary",
+                {},
+            )
+
+        self.assertFalse(result.success)
+        self.assertTrue(result.is_error)
+        self.assertIn("binary_path is required", result.error_message)
+        mock_connect.assert_not_awaited()
+
+    async def test_unauthorized_binary_path_is_rejected_before_connection(self):
+        with patch.object(
+            self.manager,
+            "_ensure_connected",
+            new_callable=AsyncMock,
+        ) as mock_connect:
+
+            result = await self.manager.call_tool(
+                "binary",
+                "analyze_binary",
+                {"binary_path": "/invalid/path.exe"},
+            )
+
+        self.assertFalse(result.success)
+        self.assertTrue(result.is_error)
+        self.assertIn("denied by policy", result.error_message.lower())
+        mock_connect.assert_not_awaited()
+
+    async def test_unauthorized_rea_call_is_rejected_before_connection(self):
+        with patch(
+            "agent.mcp_client.authorize_rea_tool_call",
+            return_value=(False, "Access Denied by Policy: test rejection"),
+        ):
+            with patch.object(
+                self.manager,
+                "_ensure_connected",
+                new_callable=AsyncMock,
+            ) as mock_connect:
+
+                result = await self.manager.call_tool(
+                    "rea",
+                    "decompile",
+                    {"binary_path": "/invalid/sample.exe"},
+                )
+
+        self.assertFalse(result.success)
+        self.assertTrue(result.is_error)
+        self.assertIn("Access Denied", result.error_message)
+        mock_connect.assert_not_awaited()
 if __name__ == "__main__":
     unittest.main()
 

@@ -26,9 +26,12 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 # Allow running standalone
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config.settings import MCP_CONFIG_PATH, PROJECT_ROOT
+from agent.policy import (
+    authorize_binary_path,
+    authorize_rea_tool_call,
+)
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Result type
@@ -298,6 +301,44 @@ class MCPClientManager:
         """
         arguments = arguments or {}
 
+        # Centralized security enforcement before connecting to an MCP server.
+        if server_name == "binary":
+            binary_path = arguments.get("binary_path")
+
+            if not isinstance(binary_path, str) or not binary_path.strip():
+                return ToolResult(
+                    success=False,
+                    is_error=True,
+                    error_message=(
+                        "Binary analysis denied by policy: "
+                        "a valid binary_path is required."
+                    ),
+                )
+
+            allowed, reason = authorize_binary_path(binary_path)
+
+            if not allowed:
+                return ToolResult(
+                    success=False,
+                    is_error=True,
+                    error_message=(
+                        f"Binary analysis denied by policy: {reason}"
+                    ),
+                )
+
+        elif server_name == "rea":
+            allowed, reason = authorize_rea_tool_call(
+                tool_name,
+                arguments,
+            )
+
+            if not allowed:
+                return ToolResult(
+                    success=False,
+                    is_error=True,
+                    error_message=reason,
+                )
+                # Establish or reuse the MCP session.
         try:
             session = await self._ensure_connected(server_name)
         except (ValueError, RuntimeError) as exc:
@@ -305,6 +346,7 @@ class MCPClientManager:
                 success=False,
                 error_message=str(exc),
             )
+
 
         # Dynamic schema discovery & argument validation
         if server_name not in self._tool_schemas:

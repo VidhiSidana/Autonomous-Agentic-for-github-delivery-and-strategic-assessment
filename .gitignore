@@ -9,3 +9,13 @@ benchmarks/results/*.exe
 benchmarks/verification/*.exe
 
 test_results.txt
+
+# Generated Code Graph index
+.codebase-memory/
+
+# Temporary backups
+*.backup
+
+# Generated benchmark/debug artifacts
+benchmarks/debug_*/
+benchmarks/final_results/

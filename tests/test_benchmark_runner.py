@@ -1,3 +1,4 @@
+
 """
 tests/test_benchmark_runner.py
 
@@ -12,7 +13,10 @@ import os
 import unittest
 from pathlib import Path
 
-from benchmarks.benchmark_runner import run_benchmarks, run_cross_process_persistence_test
+from benchmarks.benchmark_runner import (
+    run_benchmarks,
+    run_cross_process_persistence_test,
+)
 
 
 class TestBenchmarkRunner(unittest.TestCase):
@@ -22,6 +26,7 @@ class TestBenchmarkRunner(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             temp_db = Path(tmp_dir) / "test_cross_proc.db"
             result = run_cross_process_persistence_test(temp_db)
+
             self.assertTrue(result["success"])
             self.assertEqual(result["process_a_exit"], 0)
             self.assertEqual(result["process_b_exit"], 0)
@@ -34,36 +39,30 @@ class TestBenchmarkRunner(unittest.TestCase):
 
     def test_cross_process_persistence_handles_subprocess_failure_cleanly(self):
         """Verify subprocess failure does not raise an unhandled exception."""
-        # Using a directory as db_path will cause SQLite / process to report failure cleanly
         with tempfile.TemporaryDirectory() as tmp_dir:
-            bad_db = Path(tmp_dir)  # is a directory, not a file
+            bad_db = Path(tmp_dir)
             result = run_cross_process_persistence_test(bad_db)
+
             self.assertIsInstance(result, dict)
             self.assertFalse(result["success"])
             self.assertTrue(len(result["reasons"]) > 0)
+
     @unittest.skipUnless(
-    os.getenv("RUN_FULL_BENCHMARK") == "1",
-    "Full benchmark integration test; set RUN_FULL_BENCHMARK=1 to run."
+        os.getenv("RUN_FULL_BENCHMARK") == "1",
+        "Full benchmark integration test; set RUN_FULL_BENCHMARK=1 to run."
     )
     def test_run_benchmarks_returns_summary(self):
-        """Verify run_benchmarks() returns the structured summary dict."""
+        """Verify the complete benchmark suite and report."""
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir)
             summary = asyncio.run(run_benchmarks(output_dir=out_dir))
 
             self.assertIsInstance(summary, dict)
-            self.assertIn("total_tasks", summary)
-            self.assertIn("passed_tasks", summary)
-            self.assertIn("success_rate", summary)
-            self.assertIn("results", summary)
-            self.assertIn("cross_process_persistence", summary)
-
             self.assertEqual(summary["total_tasks"], 17)
             self.assertEqual(summary["passed_tasks"], 17)
             self.assertEqual(summary["success_rate"], "100.0%")
             self.assertTrue(summary["cross_process_persistence"]["success"])
 
-            # Verify report file was written
             report_file = out_dir / "benchmark_report.json"
             self.assertTrue(report_file.exists())
 

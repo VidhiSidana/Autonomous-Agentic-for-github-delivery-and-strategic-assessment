@@ -1,40 +1,51 @@
 {
-  "_comment": "MCP server registry for the Samsung PRISM Unified Engineering Agent.",
-  "_note": "Use ${PYTHON} as a placeholder for sys.executable in commands.",
+    "_comment":  "MCP server registry for the Samsung PRISM Unified Engineering Agent.",
+    "_note":  "Use ${PYTHON} as a placeholder for sys.executable in commands.",
+    "servers":  {
+                    "test":  {
+                                 "description":  "Toy MCP server for smoke-testing MCP plumbing",
+                                 "command":  "${PYTHON}",
+                                 "args":  [
+                                              "mcp_server/test_server.py"
+                                          ],
+                                 "enabled":  true
+                             },
+                    "code_fallback":  {
+                                          "description":  "AST-based Python code analysis (fallback when codebase-memory-mcp is unavailable)",
+                                          "command":  "${PYTHON}",
+                                          "args":  [
+                                                       "code_analysis/code_server.py"
+                                                   ],
+                                          "enabled":  true
+                                      },
+                    "binary":  {
+                                   "description":  "PE/Capstone binary analysis server",
+                                   "command":  "${PYTHON}",
+                                   "args":  [
+                                                "binary_analysis/binary_server.py"
+                                            ],
+                                   "enabled":  true
+                               },
+                    "rea":  {
+                                "description":  "Reverse Engineer Anything (REA) open-source MCP server (morluto/rea) for multi-engine binary decompilation",
+                                "command":  "npx",
+                                "args":  [
+                                             "-y",
+                                             "rea-agents",
+                                             "mcp"
+                                         ],
+                                "env":  {
+                                            "REA_MCP_INPUT_SCHEMA_PROFILE":  "compact"
+                                        },
+                                "enabled":  true
+                            },
+                    "code_graph":  {
+                                       "description":  "codebase-memory-mcp: full Tree-sitter code knowledge graph",
+                                       "command":  "codebase-memory-mcp",
+                                       "args":  [
 
-  "servers": {
-    "test": {
-      "description": "Toy MCP server for smoke-testing MCP plumbing",
-      "command": "${PYTHON}",
-      "args": ["mcp_server/test_server.py"],
-      "enabled": true
-    },
-    "code_fallback": {
-      "description": "AST-based Python code analysis (fallback when codebase-memory-mcp is unavailable)",
-      "command": "${PYTHON}",
-      "args": ["code_analysis/code_server.py"],
-      "enabled": true
-    },
-    "binary": {
-      "description": "PE/Capstone binary analysis server",
-      "command": "${PYTHON}",
-      "args": ["binary_analysis/binary_server.py"],
-      "enabled": true
-    },
-    "rea": {
-      "description": "Reverse Engineer Anything (REA) open-source MCP server (morluto/rea) for multi-engine binary decompilation",
-      "command": "npx",
-      "args": ["-y", "rea-agents", "mcp"],
-      "env": {
-        "REA_MCP_INPUT_SCHEMA_PROFILE": "compact"
-      },
-      "enabled": true
-    },
-    "code_graph": {
-      "description": "codebase-memory-mcp: full Tree-sitter code knowledge graph",
-      "command": "codebase-memory-mcp",
-      "args": [],
-      "enabled": true
-    }
-  }
+                                                ],
+                                       "enabled":  true
+                                   }
+                }
 }

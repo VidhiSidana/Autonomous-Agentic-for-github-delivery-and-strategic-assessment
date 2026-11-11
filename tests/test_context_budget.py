@@ -11,10 +11,12 @@ Covers:
 import unittest
 from agent.context_budget import ContextBudgetManager, MODEL_BUDGETS, estimate_tokens
 from agent.evidence import EvidenceBundle, EvidenceItem, EvidenceKind
+from agent.orchestrator import AgentOrchestrator
 from agent.tool_router import (
     ROUTER_TOOL_SCHEMAS,
     build_tool_selection_prompt,
     get_tools_for_category,
+    filter_available_tools_for_category,
 )
 
 
@@ -51,6 +53,64 @@ class TestContextBudgetAndToolRouter(unittest.TestCase):
         self.assertIn("save_finding", mem_names)
         self.assertIn("search_memory", mem_names)
         self.assertNotIn("analyze_binary", mem_names)
+
+    def test_runtime_filter_allows_code_graph_tools(self):
+        available = {
+            "search_graph": {"name": "search_graph"},
+            "trace_path": {"name": "trace_path"},
+            "get_architecture": {"name": "get_architecture"},
+            "get_file_outline": {"name": "get_file_outline"},
+            "index_repository": {"name": "index_repository"},
+            "delete_project": {"name": "delete_project"},
+            "analyze_binary": {"name": "analyze_binary"},
+        }
+
+        filtered = filter_available_tools_for_category(
+            "code_analysis", available
+        )
+
+        self.assertIn("search_graph", filtered)
+        self.assertIn("trace_path", filtered)
+        self.assertIn("get_architecture", filtered)
+        self.assertIn("get_file_outline", filtered)
+        self.assertNotIn("index_repository", filtered)
+        self.assertNotIn("delete_project", filtered)
+        self.assertNotIn("analyze_binary", filtered)
+
+    def test_runtime_filter_fails_closed_for_unknown_category(self):
+        available = {
+            "search_graph": {"name": "search_graph"},
+            "delete_project": {"name": "delete_project"},
+        }
+
+        filtered = filter_available_tools_for_category(
+            "unknown_category", available
+        )
+
+        self.assertEqual(filtered, {})
+
+    def test_code_graph_symbol_argument_maps_to_name_pattern(self):
+        schema = {
+            "properties": {
+                "project": {"type": "string"},
+                "query": {"type": "string"},
+                "name_pattern": {"type": "string"},
+            },
+            "required": ["project"],
+        }
+
+        orchestrator = object.__new__(AgentOrchestrator)
+        valid, args, error = orchestrator._build_and_validate_tool_args(
+            "search_graph",
+            schema,
+            project_name="sample-project",
+            symbol_or_query="process_query",
+        )
+
+        self.assertTrue(valid, error)
+        self.assertEqual(args["project"], "sample-project")
+        self.assertEqual(args["name_pattern"], "process_query")
+        self.assertNotIn("query", args)
 
     def test_compact_tool_selection_prompt(self):
         code_prompt = build_tool_selection_prompt("code_analysis")
