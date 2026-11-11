@@ -5,9 +5,11 @@ Tests for AgentOrchestrator and end-to-end routing.
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
+from agent.evidence import EvidenceBundle
 from agent.orchestrator import AgentOrchestrator
-from agent.planner import AgentPlanner
+from agent.planner import AgentPlanner, QueryCategory, QueryPlan
 from memory.memory import EngineeringMemory
 from memory.session_manager import SessionManager
 
@@ -121,6 +123,35 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.category, "binary_analysis")
         self.assertTrue(result.clarification_needed)
         self.assertIn("path to the binary", result.clarification_question.lower())
+
+    async def test_unauthorized_binary_path_is_rejected_before_mcp_call(self):
+        """A denied binary path must never reach an MCP analysis tool."""
+        plan = QueryPlan(
+            category=QueryCategory.BINARY_ANALYSIS,
+            raw_query="Disassemble an unauthorized executable",
+            binary_path=str(Path(self.temp_dir.name) / "outside" / "sample.exe"),
+            binary_operation="disassemble",
+        )
+        bundle = EvidenceBundle(query=plan.raw_query)
+
+        with patch(
+            "agent.orchestrator.authorize_binary_path",
+            return_value=(False, "Path is outside configured allowlist."),
+        ), patch.object(
+            self.orchestrator.mcp,
+            "call_tool",
+            new_callable=AsyncMock,
+        ) as mock_call:
+            await self.orchestrator._handle_binary_analysis(plan, bundle)
+
+        mock_call.assert_not_awaited()
+        self.assertTrue(
+            any(
+                "denied by policy" in limitation.lower()
+                for limitation in bundle.limitations
+            ),
+            bundle.limitations,
+        )
 
     def test_dynamic_tool_matching_and_schema_validation(self):
         """Verify dynamic tool intent matching and argument validation."""
