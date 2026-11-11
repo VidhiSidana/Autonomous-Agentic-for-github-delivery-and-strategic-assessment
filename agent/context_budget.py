@@ -143,7 +143,7 @@ class ContextBudgetManager:
                 removed = len(detail) - max_item_chars
                 detail = detail[:max_item_chars]
                 dropped_log.append(
-                    f"Dropped detail content (truncated) in item #{index} ({item.source}) by {removed} chars"
+                    f"Truncated detail in item #{index} ({item.source}) by {removed} chars; Dropped detail content to fit evidence budget"
                 )
             if detail:
                 item_lines.append(f"Detail:\n{detail}")
