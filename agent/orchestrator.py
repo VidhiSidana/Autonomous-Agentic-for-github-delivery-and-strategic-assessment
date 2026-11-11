@@ -257,7 +257,8 @@ class AgentOrchestrator:
         if operation == "save":
             title = plan.memory_title or plan.raw_query[:50]
             content = plan.memory_content or plan.raw_query
-            status = plan.memory_verification_status or "VERIFIED"
+            # Never promote an unlabelled user assertion to a verified fact.
+            status = plan.memory_verification_status or "PROPOSED"
 
             save_result = self.memory.save_memory(
                 title=title,
