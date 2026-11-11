@@ -3,9 +3,9 @@
 **Project Title:** Unified Local-LLM Engineering Agent for Strategic Code & Binary Assessment  
 **Partner:** Samsung PRISM Worklet  
 **Milestone:** Month 3 (Milestone 2 Delivery)  
-**Report Date:** 2026-11-10  
-**Repository Branch:** `main`  
-**Host Environment:** macOS Apple Silicon (Local Development Workstation, Python 3.14.2)  
+**Report Date:** 2026-11-11  
+**Repository Branch:** `milestone2-hardening` (Milestone 2 hardening and validation branch; `main` has not been modified by this work)  
+**Historical benchmark environment:** macOS Apple Silicon, Python 3.14.2 (for the benchmark results recorded below). **Current targeted regression environment:** Windows PowerShell, Python 3.11 virtual environment.  
 
 ---
 
@@ -27,7 +27,35 @@ All components have been built, integrated, and verified against empirical test 
 
 ## 2. Test Suite & Verification Results
 
-All unit tests and benchmark suites execute cleanly without warnings or failures:
+### 2.1 Current Milestone 2 Hardening-Branch Validation (2026-11-11)
+
+The following targeted suites have been run by the project team on the
+`milestone2-hardening` branch in the Windows Python 3.11 virtual environment.
+These are separate test invocations; their counts must not be added together
+as a unique-test total because suites may overlap.
+
+| Validation area | Command / scope | Reported result |
+|---|---|---:|
+| C1 function-discovery routing | Two targeted orchestrator integration tests, including function inventory and module dependencies | 2 passed |
+| Security policy | `tests.test_policy` | 12 passed, 2 skipped |
+| Session and memory | `tests.test_memory tests.test_unified_memory_layer` | 14 passed |
+| Orchestrator integration | `tests.test_orchestrator` | 9 passed |
+| Binary analysis and imports | `tests.test_binary_analysis tests.test_module_imports` | 10 passed, 1 skipped |
+
+**Current targeted result:** All reported tests passed; three tests were skipped
+across the two suites that reported skips. No failure was reported in these
+runs. This is a targeted validation snapshot, not a claim that every test in
+the repository has been rerun on the current branch.
+
+The expensive 17-task benchmark runner has **not** been rerun after the latest
+hardening changes. Its historical results below remain historical evidence
+and do not independently verify the current branch.
+
+### 2.2 Historical Milestone 2 Baseline Test Snapshot
+
+The following counts and commands are retained from the original milestone
+evaluation environment. They are not a fresh run of the current hardening
+branch:
 
 ```bash
 # Unit Test Discovery
