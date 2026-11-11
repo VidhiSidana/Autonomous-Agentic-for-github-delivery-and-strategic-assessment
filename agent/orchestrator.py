@@ -34,6 +34,7 @@ from agent.evidence import (
 from agent.llm import LocalLLM
 from agent.mcp_client import MCPClientManager
 from agent.planner import AgentPlanner, QueryCategory, QueryPlan
+from agent.policy import authorize_binary_path
 from memory.memory import EngineeringMemory
 from memory.session_manager import SessionManager
 
