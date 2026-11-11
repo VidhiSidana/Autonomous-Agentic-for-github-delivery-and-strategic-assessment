@@ -407,11 +407,13 @@ Run the 17-task ground-truth benchmark:
 python benchmarks/benchmark_runner.py
 ```
 
-**Latest verified results:**
+**Historical benchmark artifact (not rerun after the latest hardening changes):**
 
 - **Tasks passed:** 17/17.
 - **Success rate:** 100%.
-- **Average elapsed time:** 0.1237 seconds per task, as recorded in the benchmark report.
+- **Average elapsed time:** 0.1237 seconds per task, as recorded in that benchmark report.
+
+These figures describe the committed historical benchmark run; they are not a fresh verification of the current `milestone2-hardening` branch.
 - **Cross-process persistence:** Verified successfully.
 - **Coverage:** Code analysis, PE architecture, binary sections, imports and exports, disassembly, engineering memory, multi-tool execution, REA integration, and fallback behavior.
 
@@ -456,7 +458,7 @@ Run the 22-task end-to-end evaluation comparing the baseline (grep/file-read app
 python benchmarks/e2e_eval.py
 ```
 
-**Latest verified results:**
+**Historical summary previously recorded in this README (superseded by the artifact reconciliation below):**
 
 | Evaluation metric | Qwen 2.5 1.5B | Llama 3.1 8B |
 |---|---:|---:|
@@ -469,9 +471,8 @@ python benchmarks/e2e_eval.py
 
 **Interpretation and limitations:**
 
-- The Full Agent achieved 21/22 tasks for both evaluated models.
-- Both models passed all 17 ground-truth tasks and all 3 real-repository tasks.
-- One of the two multi-session resume scenarios failed: recovery of a previous binary finding was unsuccessful.
+- The table above is an older summary and should not be treated as the latest result.
+- The timestamped 2026-11-10 Qwen artifact records 22/22 tasks and 2/2 multi-session resume scenarios. These are historical artifact results, not a fresh run of the current hardening branch.
 - In the false-hypothesis evaluation, one of three tested claims was incorrectly asserted. Evidence-grounding therefore still requires improvement.
 - A simple grep or file-read baseline can be faster for trivial single-file searches because the Full Agent adds planning, tool execution, evidence processing, and response synthesis overhead.
 
@@ -489,7 +490,7 @@ benchmarks/verification/e2e_run.txt
 docs/evaluation_report.md
 ```
 
-**Evaluation artifact reconciliation (2026-11-11):** The committed JSON report and execution log are timestamped 2026-11-10 and record Qwen 2.5 1.5B at 22/22 tasks and 2/2 resume scenarios. A previous summary in this README records 21/22 and 1/2. These figures conflict; until a new run is completed and its JSON, text log, and documentation are generated together, treat the E2E score as **provisional** and cite the timestamped raw artifacts rather than calling either figure the latest verified result. The false-hypothesis suite also has a scoring correction in progress; historical 1/3 results must not be compared with results produced by the corrected scorer without rerunning the same cases.
+**Evaluation artifact reconciliation (2026-11-11):** The committed JSON report and execution log are timestamped 2026-11-10 and record Qwen 2.5 1.5B at 22/22 tasks and 2/2 resume scenarios. A previous README summary records 21/22 and 1/2. The timestamped artifacts are the traceable historical evidence; neither result is a fresh verification of the current hardening branch. Treat the E2E score as **historical and provisional for current-branch status** until a new run is completed and its JSON, text log, and documentation are generated together. The false-hypothesis suite's corrected scorer also requires its own rerun; historical 1/3 results must not be compared with corrected-scorer results.
 
 ### 8.4 Genuine LLM Tool-Calling & Evidence Synthesis Evaluation
 
@@ -531,7 +532,7 @@ Mistral Nemo 12B was not available for this evaluation.
 | Curated Markdown Memory | M2 | IMPLEMENTED AND TESTED | SQLite/Markdown synchronization, YAML frontmatter, deduplication, stale detection, and secret redaction |
 | Dynamic Tool Router | M2 | IMPLEMENTED AND TESTED | Category-relevant tool filtering and compact tool contexts; 45.8% token reduction on Qwen 2.5 1.5B in the recorded evaluation |
 | Context Budget Manager | M2 | IMPLEMENTED AND TESTED | Model-specific token budgets, priority-based compaction, and dropped-component audit logging |
-| End-to-End Evaluation | M2 | IMPLEMENTED AND TESTED | 22 evaluation tasks; 21/22 Full Agent success for both tested models |
+| End-to-End Evaluation | M2 | IMPLEMENTED; HISTORICAL EVALUATION | Timestamped Qwen artifact records 22/22; not rerun after current hardening changes |
 | Zero-Egress Network Monitoring | M2 | IMPLEMENTED AND TESTED | Socket-level monitoring reported no non-local connections within its stated monitoring scope |
 
 ---
@@ -568,7 +569,7 @@ docs/security.md
 - MCP asynchronous session cleanup warnings have appeared during some test scenarios and remain under investigation.
 - Analysis results depend on the available tools, input files, and configuration.
 - External reverse-engineering integration may require additional dependencies or prerequisites.
-- The evaluated multi-session resume workflow did not pass every scenario.
+- Historical E2E summaries conflicted (21/22 vs. 22/22); the timestamped artifact records 2/2 resume scenarios, but the benchmark has not been rerun after current hardening changes.
 - False-hypothesis evaluation identified a case requiring improved evidence verification.
 - Further benchmarking is needed across larger engineering projects.
 
