@@ -360,11 +360,16 @@ async def run_benchmarks(
                     reasons.append("Expected clarification_needed=True, got False")
 
                 if task.get("expected_policy_result"):
-                    pol_target = task.get("expected_policy_result")
-                    found_policy = any(pol_target in it.detail or pol_target in it.summary for it in orch_result.evidence_bundle.items) or pol_target in orch_result.response_text
+                    pol_target = str(task.get("expected_policy_result", "")).casefold()
+                    policy_text = " ".join(
+                        part
+                        for it in orch_result.evidence_bundle.items
+                        for part in (it.detail or "", it.summary or "")
+                    ) + " " + (orch_result.response_text or "")
+                    found_policy = bool(pol_target) and pol_target in policy_text.casefold()
                     if not found_policy:
                         passed = False
-                        reasons.append(f"Expected policy result '{pol_target}' not found")
+                        reasons.append(f"Expected policy result '{task.get('expected_policy_result')}' not found")
 
                 if task.get("sub_categories"):
                     for sub in task["sub_categories"]:
