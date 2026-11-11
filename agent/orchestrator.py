@@ -335,6 +335,7 @@ class AgentOrchestrator:
                 "code_graph",
                 "list_projects",
                 {},
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             if result.success and result.text:
@@ -352,6 +353,7 @@ class AgentOrchestrator:
                 "code_graph",
                 "index_repository",
                 {"repo_path": target_dir},
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             if index_result.success and index_result.text:
@@ -656,6 +658,7 @@ class AgentOrchestrator:
                                 "code_graph",
                                 search_tool,
                                 search_args,
+                                session_id=self.session_mgr.current_session_id or "unknown",
                             )
 
                             if (
@@ -902,6 +905,7 @@ class AgentOrchestrator:
                                                     "code_graph",
                                                     trace_tool,
                                                     trace_args,
+                                                    session_id=self.session_mgr.current_session_id or "unknown",
                                                 )
                                             )
 
@@ -995,6 +999,7 @@ class AgentOrchestrator:
                                 "code_graph",
                                 architecture_tool,
                                 args,
+                                session_id=self.session_mgr.current_session_id or "unknown",
                             )
 
                             if result.success and not result.is_error:
@@ -1104,6 +1109,7 @@ class AgentOrchestrator:
                 server_name,
                 tool_name,
                 args,
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             item = normalise_code_result(
@@ -1189,6 +1195,7 @@ class AgentOrchestrator:
             "binary",
             tool_name,
             args,
+            session_id=self.session_mgr.current_session_id or "unknown",
         )
 
         item = normalise_binary_result(
