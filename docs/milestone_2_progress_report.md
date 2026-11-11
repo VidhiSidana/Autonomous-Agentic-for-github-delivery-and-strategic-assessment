@@ -145,7 +145,7 @@ PYTHONPATH=. python3 benchmarks/e2e_eval.py
 
 ## 6. Final Milestone 2 Acceptance
 
-<badge>**ACCEPTANCE GATES PASSED**</badge>
+**ACCEPTANCE GATES: PASSED**
 
 **Implementation:** The Milestone 2 feature set is implemented, integrated,
 documented, and covered by regression tests.
