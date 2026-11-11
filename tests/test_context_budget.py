@@ -199,6 +199,24 @@ class TestContextBudgetAndToolRouter(unittest.TestCase):
         self.assertIn("Verified function definition", compacted)
         self.assertTrue(any("Dropped detail" in item for item in dropped))
 
+    def test_total_prompt_estimate_respects_model_budget(self):
+        mgr = ContextBudgetManager("qwen2.5:1.5b")
+        bundle = EvidenceBundle(query="Q" * 20000)
+        bundle.add(EvidenceItem(
+            kind=EvidenceKind.VERIFIED,
+            source="test.source",
+            summary="S" * 2000,
+            detail="D" * 8000,
+        ))
+
+        ctx = mgr.build_grounded_prompts("Q" * 20000, bundle)
+
+        self.assertLessEqual(
+            ctx.total_estimated_tokens,
+            mgr.budget["max_prompt_tokens"],
+        )
+        self.assertTrue(any("Truncated" in item for item in ctx.dropped_log))
+
     def test_guardrails_in_grounded_prompts(self):
         mgr = ContextBudgetManager("qwen2.5:1.5b")
         bundle = EvidenceBundle(query="Check for vulnerabilities")
