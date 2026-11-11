@@ -88,85 +88,119 @@ class ContextBudgetManager:
         bundle: EvidenceBundle,
     ) -> tuple[str, list[str]]:
         """
-        Compact an EvidenceBundle strictly according to priority:
-        1. Keep verified evidence items and their critical locations (file, line, symbol).
-        2. Truncate long tool text to max_item_detail_chars.
-        3. If still over budget, retain titles/summaries and drop detail blocks.
-        4. Log any truncated or dropped components.
+        Compact evidence without exceeding the configured character budget.
+        Verified evidence is prioritized, but even its brief representation is
+        omitted when it cannot fit; the budget is a hard ceiling.
         """
         dropped_log: list[str] = []
         max_item_chars = self.budget["max_item_detail_chars"]
         max_total_chars = self.budget["max_evidence_chars"]
+        lines: list[str] = []
+        used_chars = 0
 
-        lines: list[str] = ["=== EVIDENCE FROM ANALYSIS TOOLS ==="]
-        running_chars = 0
-
-        # Sort items: VERIFIED first, then HYPOTHESIS, then LIMITATION
         sorted_items = sorted(
             bundle.items,
-            key=lambda x: 0 if x.kind == EvidenceKind.VERIFIED else (1 if x.kind == EvidenceKind.HYPOTHESIS else 2),
+            key=lambda item: (
+                0 if item.kind == EvidenceKind.VERIFIED
+                else 1 if item.kind == EvidenceKind.HYPOTHESIS
+                else 2
+            ),
         )
 
-        for i, item in enumerate(sorted_items, 1):
-            item_lines = []
-            header = f"[{item.kind.value} #{i}]"
-            if item.kind == EvidenceKind.HYPOTHESIS:
-                header = f"[{item.kind.value} #{i} - UNVERIFIED HYPOTHESIS, NOT AN ESTABLISHED FACT]"
-            item_lines.append(header)
-            item_lines.append(f"Source : {item.source}")
+        def append_block(block: str) -> bool:
+            nonlocal used_chars
+            separator = 1 if lines else 0
+            cost = len(block) + separator
+            if used_chars + cost > max_total_chars:
+                return False
+            lines.append(block)
+            used_chars += cost
+            return True
 
+        for index, item in enumerate(sorted_items, 1):
+            header = f"[{item.kind.value} #{index}]"
+            if item.kind == EvidenceKind.HYPOTHESIS:
+                header += " - UNVERIFIED HYPOTHESIS, NOT AN ESTABLISHED FACT"
+
+            item_lines = [
+                header,
+                f"Source: {item.source}",
+            ]
             if item.file_path:
-                loc = str(item.file_path)
+                location = str(item.file_path)
                 if item.line_number:
-                    loc += f":{item.line_number}"
-                item_lines.append(f"Location: {loc}")
+                    location += f":{item.line_number}"
+                item_lines.append(f"Location: {location}")
             if item.function_name:
-                item_lines.append(f"Symbol : {item.function_name}")
+                item_lines.append(f"Symbol: {item.function_name}")
             if item.binary_address:
                 item_lines.append(f"Address: {item.binary_address}")
             if item.summary:
                 item_lines.append(f"Summary: {item.summary}")
 
-            # Truncate detail if over item cap
-            if item.detail:
-                detail_text = item.detail
-                if len(detail_text) > max_item_chars:
-                    dropped_len = len(detail_text) - max_item_chars
-                    detail_text = detail_text[:max_item_chars] + f"\n...[truncated {dropped_len} chars by context budget]"
-                    dropped_log.append(f"Truncated detail in item #{i} ({item.source}) by {dropped_len} chars")
-                item_lines.append(f"Detail :\n{detail_text}")
+            detail = item.detail or ""
+            if detail and len(detail) > max_item_chars:
+                removed = len(detail) - max_item_chars
+                detail = detail[:max_item_chars]
+                dropped_log.append(
+                    f"Truncated detail in item #{index} ({item.source}) by {removed} chars"
+                )
+            if detail:
+                item_lines.append(f"Detail:\n{detail}")
 
-            block_text = "\n".join(item_lines) + "\n"
+            full_block = "\n".join(item_lines)
+            if append_block(full_block):
+                continue
 
-            # Check total evidence budget
-            if running_chars + len(block_text) > max_total_chars:
-                if item.kind == EvidenceKind.VERIFIED:
-                    # For verified items, keep location and summary but drop detail
-                    brief_lines = [
-                        header,
-                        f"Source : {item.source}",
-                        f"Summary: {item.summary}",
-                    ]
-                    if item.file_path:
-                        brief_lines.append(f"Location: {item.file_path}")
-                    brief_block = "\n".join(brief_lines) + "\n"
-                    lines.append(brief_block)
-                    dropped_log.append(f"Dropped full detail for verified item #{i} due to total evidence budget")
-                    running_chars += len(brief_block)
-                else:
-                    dropped_log.append(f"Dropped lower-priority item #{i} ({item.kind.value}) due to context budget")
+            # Retry verified evidence without its detail, retaining provenance
+            # and location where possible. It still must fit the hard ceiling.
+            if item.kind == EvidenceKind.VERIFIED:
+                brief_lines = [
+                    header,
+                    f"Source: {item.source}",
+                ]
+                if item.file_path:
+                    location = str(item.file_path)
+                    if item.line_number:
+                        location += f":{item.line_number}"
+                    brief_lines.append(f"Location: {location}")
+                if item.function_name:
+                    brief_lines.append(f"Symbol: {item.function_name}")
+                if item.summary:
+                    brief_lines.append(f"Summary: {item.summary}")
+                if append_block("\n".join(brief_lines)):
+                    dropped_log.append(
+                        f"Dropped detail for verified item #{index} due to total evidence budget"
+                    )
                     continue
-            else:
-                lines.append(block_text)
-                running_chars += len(block_text)
+
+            dropped_log.append(
+                f"Dropped item #{index} ({item.kind.value}) due to total evidence budget"
+            )
 
         if bundle.limitations:
-            lines.append("=== KNOWN LIMITATIONS ===")
-            for lim in bundle.limitations:
-                lines.append(f"  - {lim}")
+            limitation_lines = ["=== KNOWN LIMITATIONS ==="]
+            for limitation in bundle.limitations:
+                candidate = "\n".join(limitation_lines + [f"- {limitation}"])
+                # Reserve the closing marker and never exceed the configured cap.
+                closing = "=== END OF EVIDENCE ==="
+                candidate_full = candidate + "\n" + closing
+                if len(candidate_full) > max_total_chars:
+                    dropped_log.append("Omitted limitation text due to evidence budget")
+                    continue
+                limitation_lines.append(f"- {limitation}")
+            if len(limitation_lines) > 1:
+                append_block("\n".join(limitation_lines))
 
-        lines.append("=== END OF EVIDENCE ===")
-        return "\n".join(lines), dropped_log
+        closing = "=== END OF EVIDENCE ==="
+        if append_block(closing):
+            return "\n".join(lines), dropped_log
+
+        # A tiny configured budget may not fit any content plus the marker.
+        # Return a bounded marker rather than silently exceeding the limit.
+        if max_total_chars >= len(closing):
+            return closing, dropped_log
+        return closing[:max_total_chars], dropped_log
 
     def build_grounded_prompts(
         self,
