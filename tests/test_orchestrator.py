@@ -55,6 +55,38 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
             )
         )
 
+    async def test_function_inventory_uses_ast_fallback(self):
+        result = await self.orchestrator.process_query(
+            "Find functions in this codebase"
+        )
+        self.assertEqual(result.category, "code_analysis")
+        self.assertTrue(
+            any(
+                "find_functions" in (item.tool_name or "")
+                for item in result.evidence_bundle.items
+            ),
+            [
+                (item.tool_name, item.source, item.summary)
+                for item in result.evidence_bundle.items
+            ],
+        )
+
+    async def test_module_dependencies_use_ast_fallback(self):
+        result = await self.orchestrator.process_query(
+            "Which modules does agent/main.py depend on?"
+        )
+        self.assertEqual(result.category, "code_analysis")
+        self.assertTrue(
+            any(
+                "find_module_relationships" in (item.tool_name or "")
+                for item in result.evidence_bundle.items
+            ),
+            [
+                (item.tool_name, item.source, item.summary)
+                for item in result.evidence_bundle.items
+            ],
+        )
+
     async def test_memory_save_and_retrieve_flow(self):
         # 1. Save memory
         res1 = await self.orchestrator.process_query(
