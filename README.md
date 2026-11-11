@@ -489,6 +489,8 @@ benchmarks/verification/e2e_run.txt
 docs/evaluation_report.md
 ```
 
+**Evaluation artifact reconciliation (2026-11-11):** The committed JSON report and execution log are timestamped 2026-11-10 and record Qwen 2.5 1.5B at 22/22 tasks and 2/2 resume scenarios. A previous summary in this README records 21/22 and 1/2. These figures conflict; until a new run is completed and its JSON, text log, and documentation are generated together, treat the E2E score as **provisional** and cite the timestamped raw artifacts rather than calling either figure the latest verified result. The false-hypothesis suite also has a scoring correction in progress; historical 1/3 results must not be compared with results produced by the corrected scorer without rerunning the same cases.
+
 ### 8.4 Genuine LLM Tool-Calling & Evidence Synthesis Evaluation
 
 A separate model evaluation tested 16 tool-calling tasks and 3 evidence-synthesis cases per model.
