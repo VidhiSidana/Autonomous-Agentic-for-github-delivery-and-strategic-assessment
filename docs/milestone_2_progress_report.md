@@ -13,14 +13,14 @@
 
 Milestone 2 focuses on establishing the **Unified Memory Layer**, the **Engineer Confirmation Flow**, **Context Budget Management with Dynamic Tool Routing**, and **End-to-End Evaluation against the Baseline under Zero-Egress Network Isolation**.
 
-All components have been built, integrated, and verified against empirical test suites without fabricated numbers or simulated metrics.
+All Milestone 2 components have been implemented and integrated. Current hardening-branch regression evidence is recorded below. Final acceptance remains conditional on rerunning the 17-task ground-truth benchmark on this branch; historical benchmark results are not substituted for that run.
 
 | Deliverable | Description | Status | Evidence & Artifacts |
 | :--- | :--- | :---: | :--- |
 | **Task B1** | **Engineer Confirmation Flow**<br>Evidence grounding; lifecycle `PROPOSED` -> `CONFIRMED` / `REJECTED`; CLI commands (`/pending`, `/confirm`, `/reject`); provenance tracking (`evidence_refs`, timestamps, session ID, user); retrieval priority rules. | **DONE** | [`memory/memory.py`](../memory/memory.py)<br>[`agent/main.py`](../agent/main.py)<br>[`tests/test_confirmation_flow.py`](../tests/test_confirmation_flow.py) (5 tests passed) |
 | **Task B2** | **Unified Memory Layer**<br>Automatic session hooks (`on_query`, `on_tool_result`, `on_session_end`); `session_events` audit table; curated Markdown memory in `memory/curated/` with frontmatter; two-way lossless sync; dual-layer deduplication (hash + Jaccard); stale detection; secret redaction; local LLM summarization with deterministic extractive fallback; resume digest. | **DONE** | [`memory/session_manager.py`](../memory/session_manager.py)<br>[`memory/curated_memory.py`](../memory/curated_memory.py)<br>[`tests/test_unified_memory_layer.py`](../tests/test_unified_memory_layer.py) (8 tests passed) |
 | **Task B3** | **Context Budgets, Prompts & Tool Schemas**<br>Dynamic category tool router (`agent/tool_router.py`) with compact schemas (4-8 tools per category, REA compact subset); context budget manager (`agent/context_budget.py`) with priority compaction and audit logging; prompt guardrails (refusal on missing facts, rejection of false premises). | **DONE** | [`agent/tool_router.py`](../agent/tool_router.py)<br>[`agent/context_budget.py`](../agent/context_budget.py)<br>[`benchmarks/results/context_budget_report.json`](../benchmarks/results/context_budget_report.json)<br>[`tests/test_context_budget.py`](../tests/test_context_budget.py) (5 tests passed) |
-| **Task B4** | **End-to-End Evaluation vs Baseline**<br>Evaluation framework (`benchmarks/e2e_eval.py`) comparing Baseline (LLM tool loop with grep/file read) vs Full Agent across 22 tasks (17 ground truth + 3 real code on Bottle + 2 multi-session resume) + 3 false-hypothesis tasks; Zero-Egress Network Isolation check (`ZeroEgressMonitor`). | **DONE** | [`benchmarks/e2e_eval.py`](../benchmarks/e2e_eval.py)<br>[`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)<br>[`benchmarks/verification/e2e_run.txt`](../benchmarks/verification/e2e_run.txt)<br>[`docs/evaluation_report.md`](evaluation_report.md) |
+| **Task B4** | **End-to-End Evaluation vs Baseline**<br>Evaluation framework (`benchmarks/e2e_eval.py`) comparing Baseline (LLM tool loop with grep/file read) vs Full Agent across 22 tasks (17 ground truth + 3 real code on Bottle + 2 multi-session resume) + 3 false-hypothesis tasks; Zero-Egress Network Isolation check (`ZeroEgressMonitor`). | **IMPLEMENTED; historical evaluation available** | [`benchmarks/e2e_eval.py`](../benchmarks/e2e_eval.py)<br>[`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)<br>[`benchmarks/verification/e2e_run.txt`](../benchmarks/verification/e2e_run.txt)<br>[`docs/evaluation_report.md`](evaluation_report.md) |
 | **Task B5** | **Documentation & Verification Reconciliation**<br>Architecture diagram updated; completion report generated; README updated; test suite verified. | **DONE** | [`docs/architecture.md`](architecture.md)<br>[`README.md`](../README.md) |
 
 ---
@@ -47,9 +47,10 @@ across the two suites that reported skips. No failure was reported in these
 runs. This is a targeted validation snapshot, not a claim that every test in
 the repository has been rerun on the current branch.
 
-The expensive 17-task benchmark runner has **not** been rerun after the latest
-hardening changes. Its historical results below remain historical evidence
-and do not independently verify the current branch.
+The 17-task benchmark runner has **not** been rerun after the latest hardening
+changes. Its historical 17/17 result remains historical evidence and does not
+independently verify the current branch. This is the outstanding acceptance
+gate before describing Milestone 2 as fully validated and closed.
 
 ### 2.2 Historical Milestone 2 Baseline Test Snapshot
 
@@ -67,7 +68,11 @@ PYTHONPATH=. python3 benchmarks/benchmark_runner.py
 # Result: 17/17 Passed (100.0%)
 ```
 
-### Test Count Breakdown by Module
+### Historical Test Count Breakdown by Module
+
+The module-level figures below are a historical inventory, not a single
+consistent aggregate run. They are retained for coverage traceability and
+must not be summed or treated as current-branch results.
 
 | Test Module | Coverage Area | Test Count | Result |
 | :--- | :--- | :---: | :---: |
@@ -84,7 +89,6 @@ PYTHONPATH=. python3 benchmarks/benchmark_runner.py
 | `tests/test_orchestrator.py` | Multi-tool orchestration, memory anchoring, verified finding auto-save | 4 | **PASS** |
 | `tests/test_benchmark_runner.py` | PE fixture generation, cross-process persistence validation | 3 | **PASS** |
 | `tests/test_module_imports.py` | Module imports across Python versions, SessionManager annotations, Python 3.11 check | 3 | **PASS** |
-| **Total** | **Comprehensive Regression & Milestone 2 Suite** | **87** | **86 PASS, 1 SKIPPED** |
 
 ---
 
@@ -124,11 +128,11 @@ Empirically measured using `benchmarks/e2e_eval.py` across 22 tasks:
 Any reviewer or engineer can independently replicate all results using the exact commands below:
 
 ```bash
-# 1. Run all 87 unit tests (86 pass, 1 skipped)
-PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py" -t .
+# 1. Run the complete unit-test discovery on the current branch
+python -m unittest discover -s tests -p "test_*.py" -t .
 
-# 2. Run the 17 ground-truth benchmark tasks
-PYTHONPATH=. python3 benchmarks/benchmark_runner.py
+# 2. Run the 17 ground-truth benchmark tasks (requires local Ollama and configured MCP tools)
+python benchmarks/benchmark_runner.py
 
 # 3. Run the Context Budget & Dynamic Tool Router benchmark
 PYTHONPATH=. python3 benchmarks/benchmark_context_budget.py
@@ -137,3 +141,15 @@ PYTHONPATH=. python3 benchmarks/benchmark_context_budget.py
 PYTHONPATH=. python3 benchmarks/e2e_eval.py
 ```
 
+
+## 6. Final Milestone 2 Acceptance Gate
+
+**Implementation:** The Milestone 2 feature set is implemented, integrated, documented, and covered by the targeted regression runs recorded in Section 2.1.
+
+**Acceptance still required on `milestone2-hardening`:**
+
+1. Run `python benchmarks/benchmark_runner.py` with the project's local Ollama model and configured MCP servers available.
+2. Confirm the generated `benchmarks/results/benchmark_report.json` records `total_tasks: 17`, `passed_tasks: 17`, and `success_rate: "100.0%"`.
+3. Run `python -m unittest discover -s tests -p "test_*.py" -t .` and confirm there are no failures or errors. Skips must be reported separately, not counted as passes.
+
+Until these current-branch checks are complete, the accurate status is **Milestone 2 implementation complete; final acceptance validation pending**. Do not label the historical benchmark figures as a fresh validation of this branch.
