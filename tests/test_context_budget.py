@@ -158,6 +158,47 @@ class TestContextBudgetAndToolRouter(unittest.TestCase):
         # Much shorter than raw 5000 chars
         self.assertLess(len(compacted_text), 2000)
 
+    def test_evidence_compaction_never_exceeds_hard_character_budget(self):
+        mgr = ContextBudgetManager("qwen2.5:1.5b")
+        bundle = EvidenceBundle(query="large evidence")
+        for index in range(20):
+            bundle.add(EvidenceItem(
+                kind=EvidenceKind.VERIFIED if index < 5 else EvidenceKind.HYPOTHESIS,
+                source=f"tool_{index}",
+                summary="S" * 250,
+                file_path=f"src/module_{index}.py",
+                line_number=index + 1,
+                detail="D" * 3000,
+            ))
+        bundle.limitations.extend(["L" * 500 for _ in range(20)])
+
+        compacted, dropped = mgr.compact_evidence_bundle(bundle)
+
+        self.assertLessEqual(
+            len(compacted),
+            mgr.budget["max_evidence_chars"],
+        )
+        self.assertTrue(dropped)
+
+    def test_evidence_budget_preserves_verified_provenance_when_possible(self):
+        mgr = ContextBudgetManager("qwen2.5:1.5b")
+        bundle = EvidenceBundle(query="small evidence")
+        bundle.add(EvidenceItem(
+            kind=EvidenceKind.VERIFIED,
+            source="ast.find_function",
+            summary="Verified function definition",
+            file_path="agent/main.py",
+            line_number=42,
+            detail="X" * 5000,
+        ))
+
+        compacted, dropped = mgr.compact_evidence_bundle(bundle)
+
+        self.assertIn("ast.find_function", compacted)
+        self.assertIn("agent/main.py:42", compacted)
+        self.assertIn("Verified function definition", compacted)
+        self.assertTrue(any("Dropped detail" in item for item in dropped))
+
     def test_guardrails_in_grounded_prompts(self):
         mgr = ContextBudgetManager("qwen2.5:1.5b")
         bundle = EvidenceBundle(query="Check for vulnerabilities")
