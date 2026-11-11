@@ -88,6 +88,41 @@ class TestConfirmationFlow(unittest.TestCase):
         pending = self.memory.get_pending_proposals()
         self.assertEqual(len(pending), 0)
 
+    def test_rejected_finding_cannot_be_confirmed_again(self):
+        proposal = self.memory.propose_finding(
+            title="Rejected security hypothesis",
+            content="This claim was disproved.",
+        )
+        memory_id = proposal["id"]
+        rejected = self.memory.reject_finding(
+            memory_id,
+            reason="Evidence disproved the claim.",
+        )
+        self.assertTrue(rejected["updated"])
+
+        confirmation = self.memory.confirm_finding(memory_id)
+
+        self.assertFalse(confirmation["updated"])
+        self.assertIn("cannot be confirmed", confirmation["message"])
+        row = self.memory.get_memory_by_id(memory_id)
+        self.assertEqual(row["verification_status"], STATUS_REJECTED)
+
+    def test_confirmation_rejects_invalid_target_status(self):
+        proposal = self.memory.propose_finding(
+            title="Candidate finding",
+            content="Needs engineer review.",
+        )
+
+        result = self.memory.confirm_finding(
+            proposal["id"],
+            target_status=STATUS_REJECTED,
+        )
+
+        self.assertFalse(result["updated"])
+        self.assertIn("Invalid confirmation target", result["message"])
+        row = self.memory.get_memory_by_id(proposal["id"])
+        self.assertEqual(row["verification_status"], STATUS_PROPOSED)
+
     def test_reject_finding_sets_reason_and_excludes_from_facts(self):
         prop = self.memory.propose_finding(
             title="False lead on memory corruption",
