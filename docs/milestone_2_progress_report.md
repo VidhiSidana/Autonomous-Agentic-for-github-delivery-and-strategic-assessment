@@ -41,6 +41,7 @@ as a unique-test total because suites may overlap.
 | Session and memory | `tests.test_memory tests.test_unified_memory_layer` | 14 passed |
 | Orchestrator integration | `tests.test_orchestrator` | 9 passed |
 | Binary analysis and imports | `tests.test_binary_analysis tests.test_module_imports` | 10 passed, 1 skipped |
+| Unauthorized binary-path enforcement | `test_unauthorized_binary_path_is_rejected_before_mcp_call` | 1 passed |
 
 **Current targeted result:** All reported tests passed; three tests were skipped
 across the two suites that reported skips. No failure was reported in these
