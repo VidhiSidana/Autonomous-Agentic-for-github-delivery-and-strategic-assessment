@@ -29,6 +29,7 @@ from config.settings import MCP_CONFIG_PATH, PROJECT_ROOT
 from agent.policy import (
     authorize_binary_path,
     authorize_rea_tool_call,
+    write_audit_event,
 )
 
 logger = logging.getLogger(__name__)
@@ -292,6 +293,7 @@ class MCPClientManager:
         server_name: str,
         tool_name: str,
         arguments: Optional[dict] = None,
+        session_id: str = "",
     ) -> ToolResult:
         """
         Call *tool_name* on *server_name* with *arguments*.
@@ -302,43 +304,55 @@ class MCPClientManager:
         arguments = arguments or {}
 
         # Centralized security enforcement before connecting to an MCP server.
+        # Audit both allowed and denied sensitive operations with the active session ID.
         if server_name == "binary":
             binary_path = arguments.get("binary_path")
 
             if not isinstance(binary_path, str) or not binary_path.strip():
+                reason = "a valid binary_path is required."
+                write_audit_event(
+                    operation=f"binary_{tool_name}",
+                    target_path="",
+                    authorized=False,
+                    result_status="DENIED",
+                    session_id=session_id,
+                    extra=reason,
+                )
                 return ToolResult(
                     success=False,
                     is_error=True,
-                    error_message=(
-                        "Binary analysis denied by policy: "
-                        "a valid binary_path is required."
-                    ),
+                    error_message=f"Binary analysis denied by policy: {reason}",
                 )
 
             allowed, reason = authorize_binary_path(binary_path)
-
+            write_audit_event(
+                operation=f"binary_{tool_name}",
+                target_path=binary_path,
+                authorized=allowed,
+                result_status="AUTHORIZED" if allowed else "DENIED",
+                session_id=session_id,
+                extra=reason,
+            )
             if not allowed:
                 return ToolResult(
                     success=False,
                     is_error=True,
-                    error_message=(
-                        f"Binary analysis denied by policy: {reason}"
-                    ),
+                    error_message=f"Binary analysis denied by policy: {reason}",
                 )
 
         elif server_name == "rea":
             allowed, reason = authorize_rea_tool_call(
                 tool_name,
                 arguments,
+                session_id=session_id,
             )
-
             if not allowed:
                 return ToolResult(
                     success=False,
                     is_error=True,
                     error_message=reason,
                 )
-                # Establish or reuse the MCP session.
+
         try:
             session = await self._ensure_connected(server_name)
         except (ValueError, RuntimeError) as exc:
@@ -379,6 +393,17 @@ class MCPClientManager:
 
         combined_text = "\n".join(texts)
         is_error = bool(getattr(raw, "is_error", False))
+
+        if server_name in {"binary", "rea"}:
+            audit_path = arguments.get("binary_path") or arguments.get("path") or arguments.get("file_path") or arguments.get("target") or ""
+            write_audit_event(
+                operation=f"{server_name}_{tool_name}",
+                target_path=str(audit_path),
+                authorized=True,
+                result_status="ERROR" if is_error else "SUCCESS",
+                session_id=session_id,
+                extra=combined_text[:256] if is_error else "MCP operation completed",
+            )
 
         return ToolResult(
             success=not is_error,

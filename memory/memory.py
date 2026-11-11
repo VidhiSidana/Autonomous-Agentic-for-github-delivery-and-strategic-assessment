@@ -269,22 +269,52 @@ class EngineeringMemory:
         target_status: str = STATUS_CONFIRMED,
     ) -> dict[str, Any]:
         """
-        Engineer confirmation flow:
-        Promotes a PROPOSED or HYPOTHESIS finding to CONFIRMED (or VERIFIED).
-        Records who confirmed it and when (UTC).
+        Promote only a PROPOSED or HYPOTHESIS finding to CONFIRMED/VERIFIED.
+        Rejected findings cannot be silently resurrected by confirmation.
         """
+        allowed_targets = {STATUS_CONFIRMED, STATUS_VERIFIED}
+        if target_status not in allowed_targets:
+            return {
+                "updated": False,
+                "message": (
+                    f"Invalid confirmation target '{target_status}'. "
+                    f"Allowed: {sorted(allowed_targets)}."
+                ),
+            }
+
         now = _now_utc()
         with self._connection() as conn:
             cursor = conn.execute(
                 """
                 UPDATE findings
                 SET verification_status = ?, confirmed_by = ?, confirmed_at = ?, updated_at = ?
-                WHERE id = ?
+                WHERE id = ? AND verification_status IN (?, ?)
                 """,
-                (target_status, confirmed_by, now, now, memory_id),
+                (
+                    target_status,
+                    confirmed_by,
+                    now,
+                    now,
+                    memory_id,
+                    STATUS_PROPOSED,
+                    STATUS_HYPOTHESIS,
+                ),
             )
             if cursor.rowcount == 0:
-                return {"updated": False, "message": f"No memory found with id={memory_id}."}
+                existing = conn.execute(
+                    "SELECT verification_status FROM findings WHERE id = ?",
+                    (memory_id,),
+                ).fetchone()
+                if existing is None:
+                    message = f"No memory found with id={memory_id}."
+                else:
+                    message = (
+                        f"Finding id={memory_id} cannot be confirmed from "
+                        f"status '{existing['verification_status']}'. "
+                        "Only PROPOSED or HYPOTHESIS findings can be confirmed."
+                    )
+                return {"updated": False, "message": message}
+
         return {
             "updated": True,
             "id": memory_id,

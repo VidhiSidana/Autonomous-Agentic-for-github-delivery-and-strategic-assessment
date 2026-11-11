@@ -5,8 +5,11 @@ Tests for AgentOrchestrator and end-to-end routing.
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
+from agent.evidence import EvidenceBundle
 from agent.orchestrator import AgentOrchestrator
+from agent.planner import AgentPlanner, QueryCategory, QueryPlan
 from memory.memory import EngineeringMemory
 from memory.session_manager import SessionManager
 
@@ -35,6 +38,57 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         item = result.evidence_bundle.items[0]
         self.assertIn(item.tool_name, ("find_callers", "search_graph", "trace_path (inbound)"))
 
+    def test_architecture_tool_does_not_preempt_function_inventory(self):
+        plan = AgentPlanner().plan("Find functions in this codebase")
+        self.assertFalse(
+            self.orchestrator._should_use_architecture_tool(
+                plan, plan.raw_query.lower()
+            )
+        )
+
+    def test_architecture_tool_does_not_preempt_module_dependencies(self):
+        plan = AgentPlanner().plan(
+            "Which modules does agent/main.py depend on?"
+        )
+        self.assertEqual(plan.file_path, "agent/main.py")
+        self.assertFalse(
+            self.orchestrator._should_use_architecture_tool(
+                plan, plan.raw_query.lower()
+            )
+        )
+
+    async def test_function_inventory_uses_ast_fallback(self):
+        result = await self.orchestrator.process_query(
+            "Find functions in this codebase"
+        )
+        self.assertEqual(result.category, "code_analysis")
+        self.assertTrue(
+            any(
+                "find_functions" in (item.tool_name or "")
+                for item in result.evidence_bundle.items
+            ),
+            [
+                (item.tool_name, item.source, item.summary)
+                for item in result.evidence_bundle.items
+            ],
+        )
+
+    async def test_module_dependencies_use_ast_fallback(self):
+        result = await self.orchestrator.process_query(
+            "Which modules does agent/main.py depend on?"
+        )
+        self.assertEqual(result.category, "code_analysis")
+        self.assertTrue(
+            any(
+                "find_module_relationships" in (item.tool_name or "")
+                for item in result.evidence_bundle.items
+            ),
+            [
+                (item.tool_name, item.source, item.summary)
+                for item in result.evidence_bundle.items
+            ],
+        )
+
     async def test_memory_save_and_retrieve_flow(self):
         # 1. Save memory
         res1 = await self.orchestrator.process_query(
@@ -51,11 +105,53 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(len(res2.evidence_bundle.items) > 0)
         self.assertIn("auth_service.py", res2.evidence_bundle.items[0].detail)
 
+    async def test_unlabelled_memory_save_requires_confirmation(self):
+        result = await self.orchestrator.process_query(
+            "Remember this finding: the payment service may use a retry queue."
+        )
+        self.assertEqual(result.category, "memory")
+
+        facts = self.memory.retrieve_memory()
+        proposals = self.memory.get_pending_proposals()
+
+        self.assertEqual(len(facts), 0)
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["verification_status"], "PROPOSED")
+
     async def test_binary_analysis_clarification_on_missing_path(self):
         result = await self.orchestrator.process_query("Disassemble this binary executable.")
         self.assertEqual(result.category, "binary_analysis")
         self.assertTrue(result.clarification_needed)
         self.assertIn("path to the binary", result.clarification_question.lower())
+
+    async def test_unauthorized_binary_path_is_rejected_before_mcp_call(self):
+        """A denied binary path must never reach an MCP analysis tool."""
+        plan = QueryPlan(
+            category=QueryCategory.BINARY_ANALYSIS,
+            raw_query="Disassemble an unauthorized executable",
+            binary_path=str(Path(self.temp_dir.name) / "outside" / "sample.exe"),
+            binary_operation="disassemble",
+        )
+        bundle = EvidenceBundle(query=plan.raw_query)
+
+        with patch(
+            "agent.orchestrator.authorize_binary_path",
+            return_value=(False, "Path is outside configured allowlist."),
+        ), patch.object(
+            self.orchestrator.mcp,
+            "call_tool",
+            new_callable=AsyncMock,
+        ) as mock_call:
+            await self.orchestrator._handle_binary_analysis(plan, bundle)
+
+        mock_call.assert_not_awaited()
+        self.assertTrue(
+            any(
+                "denied by policy" in limitation.lower()
+                for limitation in bundle.limitations
+            ),
+            bundle.limitations,
+        )
 
     def test_dynamic_tool_matching_and_schema_validation(self):
         """Verify dynamic tool intent matching and argument validation."""

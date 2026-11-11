@@ -240,18 +240,14 @@ def write_audit_event(
     """
     Append a structured audit record for a binary-analysis request.
 
-    Fields written (CSV):
-      timestamp_utc, session_id, operation, target_path,
-      authorized, result_status, extra
+    Audit failures are logged and never silently converted into authorization.
+    Callers should still enforce the policy decision independently.
     """
-    audit_path = _get_audit_log_path()
-
-    # Ensure parent directory exists
-    audit_path.parent.mkdir(parents=True, exist_ok=True)
-
-    write_header = not audit_path.exists() or audit_path.stat().st_size == 0
-
     try:
+        audit_path = _get_audit_log_path()
+        audit_path.parent.mkdir(parents=True, exist_ok=True)
+        write_header = not audit_path.exists() or audit_path.stat().st_size == 0
+
         with open(audit_path, "a", newline="", encoding="utf-8") as fh:
             writer = csv.writer(fh)
             if write_header:
@@ -268,12 +264,13 @@ def write_audit_event(
                 datetime.now(timezone.utc).isoformat(),
                 session_id or "unknown",
                 operation,
-                # Do NOT log the full binary content — only the path
                 str(target_path),
                 "yes" if authorized else "no",
                 result_status,
-                redact_secrets(extra)[:256],  # cap extra info length
+                redact_secrets(extra)[:256],
             ])
     except OSError as exc:
         logger.error("Failed to write audit event: %s", exc)
+    except Exception:
+        logger.exception("Unexpected audit logging failure")
 

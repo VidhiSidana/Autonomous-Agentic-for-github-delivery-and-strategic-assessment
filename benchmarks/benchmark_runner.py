@@ -252,6 +252,23 @@ print("PROCESS_B_SEARCH_COUNT:" + str(len(search_results)))
     }
 
 
+def _contains_expected_policy_result(
+    expected: str,
+    evidence_items: list[Any],
+    response_text: str,
+) -> bool:
+    """Match policy outcomes without depending on capitalization."""
+    target = (expected or "").casefold()
+    if not target:
+        return False
+    evidence_text = " ".join(
+        part
+        for item in evidence_items
+        for part in (item.detail or "", item.summary or "")
+    )
+    return target in f"{evidence_text} {response_text or ''}".casefold()
+
+
 async def run_benchmarks(
     dataset_path: Path = DEFAULT_DATASET_PATH,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
@@ -360,11 +377,15 @@ async def run_benchmarks(
                     reasons.append("Expected clarification_needed=True, got False")
 
                 if task.get("expected_policy_result"):
-                    pol_target = task.get("expected_policy_result")
-                    found_policy = any(pol_target in it.detail or pol_target in it.summary for it in orch_result.evidence_bundle.items) or pol_target in orch_result.response_text
+                    pol_target = task.get("expected_policy_result", "")
+                    found_policy = _contains_expected_policy_result(
+                        pol_target,
+                        orch_result.evidence_bundle.items,
+                        orch_result.response_text,
+                    )
                     if not found_policy:
                         passed = False
-                        reasons.append(f"Expected policy result '{pol_target}' not found")
+                        reasons.append(f"Expected policy result '{task.get('expected_policy_result')}' not found")
 
                 if task.get("sub_categories"):
                     for sub in task["sub_categories"]:

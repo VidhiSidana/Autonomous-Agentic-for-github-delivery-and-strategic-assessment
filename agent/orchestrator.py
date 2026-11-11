@@ -34,6 +34,7 @@ from agent.evidence import (
 from agent.llm import LocalLLM
 from agent.mcp_client import MCPClientManager
 from agent.planner import AgentPlanner, QueryCategory, QueryPlan
+from agent.policy import authorize_binary_path
 from memory.memory import EngineeringMemory
 from memory.session_manager import SessionManager
 
@@ -257,7 +258,8 @@ class AgentOrchestrator:
         if operation == "save":
             title = plan.memory_title or plan.raw_query[:50]
             content = plan.memory_content or plan.raw_query
-            status = plan.memory_verification_status or "VERIFIED"
+            # Never promote an unlabelled user assertion to a verified fact.
+            status = plan.memory_verification_status or "PROPOSED"
 
             save_result = self.memory.save_memory(
                 title=title,
@@ -335,6 +337,7 @@ class AgentOrchestrator:
                 "code_graph",
                 "list_projects",
                 {},
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             if result.success and result.text:
@@ -352,6 +355,7 @@ class AgentOrchestrator:
                 "code_graph",
                 "index_repository",
                 {"repo_path": target_dir},
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             if index_result.success and index_result.text:
@@ -578,6 +582,28 @@ class AgentOrchestrator:
 
         return True, args, ""
 
+    @staticmethod
+    def _should_use_architecture_tool(plan: QueryPlan, query_lower: str) -> bool:
+        """Avoid substituting a broad architecture summary for precise AST queries."""
+        if plan.function_name:
+            return False
+
+        module_terms = (
+            "import", "imports", "module", "depend", "dependencies",
+        )
+        if plan.file_path and any(term in query_lower for term in module_terms):
+            return False
+
+        function_inventory_terms = (
+            "function", "functions", "list functions", "function discovery",
+        )
+        if not plan.file_path and any(
+            term in query_lower for term in function_inventory_terms
+        ):
+            return False
+
+        return True
+
     # ---------------------------------------------------------
     # Code analysis
     # ---------------------------------------------------------
@@ -656,6 +682,7 @@ class AgentOrchestrator:
                                 "code_graph",
                                 search_tool,
                                 search_args,
+                                session_id=self.session_mgr.current_session_id or "unknown",
                             )
 
                             if (
@@ -902,6 +929,7 @@ class AgentOrchestrator:
                                                     "code_graph",
                                                     trace_tool,
                                                     trace_args,
+                                                    session_id=self.session_mgr.current_session_id or "unknown",
                                                 )
                                             )
 
@@ -971,7 +999,13 @@ class AgentOrchestrator:
                     )
                 )
 
-                if not wants_class_outline and not plan.function_name:
+                if (
+                    not wants_class_outline
+                    and self._should_use_architecture_tool(
+                        plan,
+                        query_lower,
+                    )
+                ):
                     matched_arch = self._find_compatible_tool(
                         tools,
                         "architecture",
@@ -995,6 +1029,7 @@ class AgentOrchestrator:
                                 "code_graph",
                                 architecture_tool,
                                 args,
+                                session_id=self.session_mgr.current_session_id or "unknown",
                             )
 
                             if result.success and not result.is_error:
@@ -1104,6 +1139,7 @@ class AgentOrchestrator:
                 server_name,
                 tool_name,
                 args,
+                session_id=self.session_mgr.current_session_id or "unknown",
             )
 
             item = normalise_code_result(
@@ -1189,6 +1225,7 @@ class AgentOrchestrator:
             "binary",
             tool_name,
             args,
+            session_id=self.session_mgr.current_session_id or "unknown",
         )
 
         item = normalise_binary_result(
