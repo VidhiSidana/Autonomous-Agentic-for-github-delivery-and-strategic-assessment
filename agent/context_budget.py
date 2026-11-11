@@ -229,48 +229,45 @@ class ContextBudgetManager:
 
         # Enforce the model's total prompt budget after reserving system
         # instructions and the user-query framing. Evidence is already ordered
-        # by verification priority, so prefix truncation retains the strongest
-        # available items first.
+        # by verification priority, so prefix truncation retains stronger items.
         query_prefix = "User query: "
-        query_suffix = "\\n\\nAnswer the query strictly based on the evidence above."
-        fixed_chars = len(system_prompt) + len(query_prefix) + len(query_suffix)
-        available_chars = max(
-            0,
-            self.budget["max_prompt_tokens"] * 4 - fixed_chars,
-        )
-
+        query_suffix = "\n\nAnswer the query strictly based on the evidence above."
+        separator = "\n\n"
+        max_chars = self.budget["max_prompt_tokens"] * 4
         query_text = query
-        query_and_evidence = query_prefix + query_text + "\\n\\n" + evidence_text
-        if len(query_and_evidence) + len(query_suffix) > available_chars + len(query_prefix) + len(query_text) + len("\\n\\n") + len(evidence_text):
-            # The fixed portion is already accounted for above; trim evidence
-            # first, then the query only if the query itself cannot fit.
-            evidence_allowance = max(
-                0,
-                available_chars - len(query_text) - len("\\n\\n"),
-            )
-            if len(evidence_text) > evidence_allowance:
-                evidence_text = evidence_text[:evidence_allowance]
-                dropped_log.append(
-                    "Truncated evidence to satisfy the total model prompt-token budget"
-                )
 
-        remaining_chars = max(
+        evidence_allowance = max(
             0,
-            self.budget["max_prompt_tokens"] * 4
+            max_chars
             - len(system_prompt)
             - len(query_prefix)
-            - len(query_suffix)
-            - len(evidence_text)
-            - len("\\n\\n"),
+            - len(query_text)
+            - len(separator)
+            - len(query_suffix),
         )
-        if len(query_text) > remaining_chars:
-            query_text = query_text[:remaining_chars]
+        if len(evidence_text) > evidence_allowance:
+            evidence_text = evidence_text[:evidence_allowance]
+            dropped_log.append(
+                "Truncated evidence to satisfy the total model prompt-token budget"
+            )
+
+        query_allowance = max(
+            0,
+            max_chars
+            - len(system_prompt)
+            - len(query_prefix)
+            - len(separator)
+            - len(evidence_text)
+            - len(query_suffix),
+        )
+        if len(query_text) > query_allowance:
+            query_text = query_text[:query_allowance]
             dropped_log.append(
                 "Truncated user query to satisfy the total model prompt-token budget"
             )
 
         user_prompt = (
-            f"{query_prefix}{query_text}\\n\\n"
+            f"{query_prefix}{query_text}{separator}"
             f"{evidence_text}{query_suffix}"
         )
 
