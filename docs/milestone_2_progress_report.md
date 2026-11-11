@@ -4,7 +4,7 @@
 **Partner:** Samsung PRISM Worklet  
 **Milestone:** Month 3 (Milestone 2 Delivery)  
 **Report Date:** 2026-11-11  
-**Repository Branch:** `milestone2-hardening` (Milestone 2 hardening and validation branch; `main` has not been modified by this work)  
+**Repository Branch:** `main` (Milestone 2 hardening and validation merged from `milestone2-hardening`)  
 **Final acceptance environment:** Windows PowerShell, Python 3.11 virtual environment, on `milestone2-hardening`.  
 
 ---
@@ -160,7 +160,9 @@ documented, and covered by regression tests.
    verification status, and session association checked.
 
 **Final status: Milestone 2 implementation and acceptance validation complete
-on `milestone2-hardening`.** The `main` branch was not modified as part of
-this milestone-hardening work. Historical evaluation figures elsewhere in
-this report remain explicitly identified as historical and are not
-substituted for the current-branch acceptance results.
+on `milestone2-hardening`, and the validated work has since been merged into
+`main` (merge commit `4f68c46b20fca07da09df9ef12664eaef23f5155`).** The
+acceptance tests were executed on `milestone2-hardening` before the merge;
+GitHub `main` now contains that validated implementation. Historical
+evaluation figures elsewhere in this report remain explicitly identified as
+historical and are not substituted for the current-branch acceptance results.
