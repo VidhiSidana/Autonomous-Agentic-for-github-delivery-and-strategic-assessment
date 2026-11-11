@@ -9,6 +9,23 @@
 
 ---
 
+## Evaluation Artifact Reconciliation — 2026-11-11
+
+The committed `benchmarks/results/e2e_report.json` and
+`benchmarks/verification/e2e_run.txt` are timestamped
+2026-11-10 20:47:51 UTC. Those artifacts record Qwen 2.5 1.5B at 22/22
+overall tasks and 2/2 multi-session resume scenarios. The README has also
+contained a 21/22 and 1/2 summary. Because the repository contains conflicting
+summaries, this report treats the timestamped JSON and execution log as the
+reproducible historical evidence, not as proof of the latest code state.
+
+The false-hypothesis scorer has been updated to distinguish explicit negation
+from affirmative claims. Historical false-hypothesis scores (including 1/3)
+were produced by the previous lexical scorer and must not be compared with
+scores from the corrected scorer. Re-run only the three false-hypothesis
+cases to establish a corrected result; a full 22-task E2E run is not required
+for that specific scorer check.
+
 ## 1. Executive Summary
 
 Milestone 2 introduced and evaluated the Unified Memory Layer, Engineer Confirmation Flow, Dynamic Tool Router, Context Budget Management, and cross-session engineering memory retrieval.
