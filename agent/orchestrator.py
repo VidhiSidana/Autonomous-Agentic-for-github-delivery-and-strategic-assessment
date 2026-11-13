@@ -1481,7 +1481,7 @@ class AgentOrchestrator:
         # Do this before generic token validation or LLM prompting: compact local
         # models can otherwise omit or corrupt exact PE metadata values.
         binary_match = re.search(
-            r"([A-Za-z0-9_.-]+\\.(?:exe|dll))",
+            r"([A-Za-z0-9_.-]+\.(?:exe|dll))",
             user_query,
             re.IGNORECASE,
         )
@@ -1499,7 +1499,7 @@ class AgentOrchestrator:
 
                 detail_text = item.detail or ""
                 if not re.search(
-                    r"\\bCategory:\\s*binary_finding\\b",
+                    r"\bCategory:\s*binary_finding\b",
                     detail_text,
                     re.IGNORECASE,
                 ):
@@ -1533,7 +1533,7 @@ class AgentOrchestrator:
                     continue
 
                 record_match = re.fullmatch(
-                    r"engineering_memory\\[id=(\\d+)\\]",
+                    r"engineering_memory\[id=(\d+)\]",
                     item.source,
                 )
                 if not record_match:
@@ -1601,7 +1601,7 @@ class AgentOrchestrator:
                     ],
                 ])
 
-            return "\\n".join(answer_lines)
+            return "\n".join(answer_lines)
 
         # Evidence validation.
         if plan.category in (
