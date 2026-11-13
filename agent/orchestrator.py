@@ -273,7 +273,7 @@ class AgentOrchestrator:
 
         # Executable/DLL memory lookups must not mix unrelated findings.
         binary_match = re.search(
-            r"([A-Za-z0-9_.-]+\\.(?:exe|dll))",
+            r"([A-Za-z0-9_.-]+\.(?:exe|dll))",
             plan.raw_query,
             re.IGNORECASE,
         )
