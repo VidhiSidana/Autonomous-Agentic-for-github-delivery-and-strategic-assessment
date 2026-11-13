@@ -52,13 +52,14 @@ The following results were reported from the Milestone 2 local validation enviro
 
 | Validation | Recorded result | Qualification |
 |---|---:|---|
-| Ground-truth benchmark | 17/17 passed (100.0%) | Final local run reported by project contributor; committed JSON artifact requires refresh from that exact run |
+| Ground-truth benchmark | 17/17 passed (100.0%) | Committed artifact timestamp: 2026-11-11T13:07:50.443800+00:00; average elapsed time 23.6802 seconds |
 | Full unit-test discovery | 114 tests, OK, 3 skipped | Contributor-reported run; skipped tests are not counted as passed |
-| Policy matcher regression | 2/2 passed | Contributor-reported focused regression run |
-| Cross-process memory persistence | Passed | Included in the recorded benchmark validation |
-| GitHub integration | Merged to `main` | Merge commit `4f68c46b20fca07da09df9ef12664eaef23f5155` |
+| Binary-memory regression tests | 2/2 passed | Focused local run on 2026-11-13 after PR #5 was merged |
+| Live cross-session binary-memory retrieval | Passed | New session retrieved verified record 8 with all seven requested fields |
+| Cross-process memory persistence | Passed | Benchmark artifact records process A/B success, record identity/content/status/session verification |
+| GitHub integration | Merged to `main` | PRs #1–#5 merged; latest benchmark update committed to `main` |
 
-The committed `benchmarks/results/benchmark_report.json` was inspected during closure planning and contained a timestamp of 2026-11-10. It must not be described as the later final local run. The committed E2E JSON/log were also timestamped 2026-11-10. They are historical evaluation evidence, not a fresh execution of the latest closure branch.
+The committed ground-truth benchmark artifact is refreshed and records 17/17 tasks (100.0%), timestamped 2026-11-11T13:07:50.443800+00:00. It is the 17-task ground-truth benchmark, separate from the 22-task E2E evaluation. The committed E2E JSON/log remain timestamped 2026-11-10 and are historical evidence, not a fresh execution after the latest hardening changes.
 
 The historical E2E report records Qwen 2.5 1.5B at 22/22 overall tasks and 2/2 multi-session scenarios. It also records one incorrect assertion among three false-hypothesis checks. The evaluation documentation notes a later scorer correction; a corrected result must be recorded only after running the relevant cases with the corrected scorer.
 
@@ -71,10 +72,12 @@ The zero-egress monitor guards Python-process socket connection calls. It is not
 | Milestone 2 implementation and integration | Complete; merged to `main` |
 | Source-based CLI launch path | Documented in README |
 | Internal Ollama endpoint deployment guide | Prepared in [deployment guide](internal_llm_deployment.md); target-environment validation pending |
-| Live multi-session demonstration | Runbook prepared; live recording/evidence pending |
-| Benchmark artifact reconciliation | Pending actual latest report file |
+| Live multi-session demonstration | Executed on 2026-11-13; transcript/session IDs recorded in [demo runbook](demo_runbook.md); screenshots/recording still pending |
+| Benchmark artifact reconciliation | Ground-truth 17-task JSON refreshed and committed; separate 22-task E2E artifacts remain historical |
 | E2E artifact reconciliation | Pending fresh run if required by acceptance owner |
 | Closure ownership and acceptance checklist | Prepared in [closure execution plan](closure_execution_plan.md) |
+| Clean-environment installation | Pending independent clean-environment verification |
+| Internal endpoint deployment acceptance | Guide prepared; target endpoint validation pending |
 | Presentation and final sign-off | Pending contributor/reviewer completion |
 
 The current repository documents a source-based CLI. It should not be represented as a standalone installer, packaged executable or IDE extension unless such a distribution is separately built and tested.
@@ -111,16 +114,18 @@ See [Closure Execution Plan](closure_execution_plan.md) for the detailed checkli
 
 ## 9. Closure exit criteria
 
-The worklet is ready for final closure sign-off when:
+Current evidence-based status:
 
-1. A clean-environment CLI setup and launch is demonstrated.
-2. Code analysis, authorised static binary analysis and persistent memory are shown.
-3. A finding is retrieved from a distinct later session, with provenance/status recorded.
-4. Evaluation files match their actual run timestamps and logs.
-5. The internal endpoint guide is reviewed against the target environment.
-6. The final presentation and report are reviewed by both contributors.
-7. The approved final artifacts are merged into `main`.
+- [ ] Clean-environment CLI setup and launch independently demonstrated.
+- [x] Code comprehension, authorised static binary analysis and persistent memory capabilities implemented and exercised.
+- [x] Verified binary finding retrieved from a distinct later session; record ID, status and requested metadata recorded in the demo runbook.
+- [x] Ground-truth 17-task benchmark JSON refreshed and committed with its artifact timestamp; E2E artifacts remain explicitly historical.
+- [ ] Internal endpoint guide reviewed and validated against the target organisation's actual endpoint.
+- [ ] Final presentation and report reviewed by both contributors.
+- [x] Implementation, closure documentation and refreshed benchmark artifact merged into `main`.
+
+Screenshots/recording and clean-machine deployment evidence are still required for a fully reproducible handover.
 
 ## 10. Conclusion
 
-Milestone 2 implementation and reported local validation are complete, and the implementation has been merged into the repository's `main` branch. The remaining Month 4 closure work is focused on reproducibility, demonstration evidence, evaluation-artifact consistency, deployment guidance and formal handover. Final sign-off should follow completion of the outstanding checklist items rather than treating documentation preparation alone as proof that those activities have been executed.
+Milestone 2 implementation is merged into `main`. The committed ground-truth benchmark records 17/17 tasks passed (100.0%). On 2026-11-13, the focused binary-memory regression tests passed 2/2, and a live new CLI session retrieved verified binary-memory record 8 from the earlier session with the exact stored machine type, architecture, entry point RVA, image base, section count, section name and record ID. Remaining Month 4 work is clean-environment reproducibility, screenshots/recording, target-endpoint validation, E2E artifact refresh if required by the acceptance owner, and formal contributor/reviewer sign-off.
