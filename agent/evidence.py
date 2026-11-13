@@ -620,6 +620,7 @@ def normalise_memory_result(
                 source=f"engineering_memory[id={mem_id}]",
                 summary=f"[{status}] {title}",
                 detail=(
+                    f"Memory record ID: {mem_id}\n"
                     f"{content}\n"
                     f"(Saved: {created}, Category: {category})"
                 ),
@@ -657,6 +658,10 @@ def build_llm_prompt(
         "Do not repeat duplicate function names. "
         "Do not confuse separate functions merely because they share "
         "the same short name. "
+        "For persistent-memory questions, copy memory record IDs and "
+        "stored numeric or hexadecimal values exactly from the evidence. "
+        "Never invent or substitute a memory record ID. "
+        "If a requested field is absent, say it is not present. "
         "Label answer sections as FINDINGS, LIMITATIONS, and SOURCES."
     )
 
