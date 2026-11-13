@@ -124,6 +124,33 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.clarification_needed)
         self.assertIn("path to the binary", result.clarification_question.lower())
 
+    async def test_binary_path_override_resolves_clarification(self):
+        """A supplied CLI path override must clear stale planner clarification."""
+        binary_path = str(
+            Path(self.temp_dir.name) / "sample_authorized.exe"
+        )
+
+        with patch.object(
+            self.orchestrator,
+            "_handle_binary_analysis",
+            new_callable=AsyncMock,
+        ) as mock_binary, patch.object(
+            self.orchestrator,
+            "_generate_response",
+            new_callable=AsyncMock,
+            return_value="Static binary analysis response.",
+        ):
+            result = await self.orchestrator.process_query(
+                "Disassemble this binary executable.",
+                overrides={"binary_path": binary_path},
+            )
+
+        self.assertEqual(result.category, "binary_analysis")
+        self.assertFalse(result.clarification_needed)
+        self.assertIsNone(result.clarification_question)
+        self.assertEqual(result.plan.binary_path, binary_path)
+        mock_binary.assert_awaited_once()
+
     async def test_unauthorized_binary_path_is_rejected_before_mcp_call(self):
         """A denied binary path must never reach an MCP analysis tool."""
         plan = QueryPlan(
