@@ -388,6 +388,7 @@ class EngineeringMemory:
         session_id: Optional[str] = None,
         include_stale: bool = False,
         include_proposed: bool = False,
+        category: Optional[str] = None,
     ) -> list[sqlite3.Row]:
         """
         Retrieve memory entries, ordered by confirmation priority (CONFIRMED/VERIFIED first),
@@ -473,6 +474,10 @@ class EngineeringMemory:
             params.append(verification_status)
         elif not include_proposed:
             where += " AND verification_status NOT IN ('PROPOSED', 'REJECTED')"
+
+        if category:
+            where += " AND category = ?"
+            params.append(category)
 
         order_clause = (
             "ORDER BY CASE verification_status "
