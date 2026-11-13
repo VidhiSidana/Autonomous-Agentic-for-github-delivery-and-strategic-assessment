@@ -62,6 +62,29 @@ class TestUnifiedEngineeringMemory(unittest.TestCase):
 
         self.assertGreaterEqual(len(results), 1)
 
+    def test_search_memory_filters_by_category(self):
+        self.memory.save_memory(
+            title="Binary metadata",
+            content="sample_authorized.exe machine 0x8664",
+            category="binary_finding",
+            verification_status="VERIFIED",
+        )
+        self.memory.save_memory(
+            title="Unrelated code result",
+            content="sample_authorized.exe appears in a code search",
+            category="technical_finding",
+            verification_status="VERIFIED",
+        )
+
+        results = self.memory.search_memory(
+            "sample_authorized.exe",
+            category="binary_finding",
+        )
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["category"], "binary_finding")
+        self.assertEqual(results[0]["title"], "Binary metadata")
+
     def test_verification_status(self):
         result = self.memory.save_memory(
             title="Possible bug",
