@@ -388,7 +388,6 @@ class EngineeringMemory:
         session_id: Optional[str] = None,
         include_stale: bool = False,
         include_proposed: bool = False,
-        category: Optional[str] = None,
     ) -> list[sqlite3.Row]:
         """
         Retrieve memory entries, ordered by confirmation priority (CONFIRMED/VERIFIED first),
@@ -448,6 +447,7 @@ class EngineeringMemory:
         keyword: str,
         verification_status: Optional[str] = None,
         include_proposed: bool = False,
+        category: Optional[str] = None,
     ) -> list[sqlite3.Row]:
         """
         Search findings by keyword in title and content.
