@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-11-10T17:10:55.131384+00:00",
+  "timestamp_utc": "2026-11-11T13:07:50.443800+00:00",
   "suite_name": "Samsung PRISM Milestone 1 Ground Truth Evaluation",
   "total_tasks": 17,
   "passed_tasks": 17,
   "success_rate": "100.0%",
-  "average_elapsed_seconds": 0.1237,
+  "average_elapsed_seconds": 23.6802,
   "cross_process_persistence": {
     "success": true,
     "process_a_exit": 0,
     "process_b_exit": 0,
-    "record_id": 9,
-    "session_id": "session_88fc064a",
+    "record_id": 10,
+    "session_id": "session_177b0e9c",
     "id_matched": true,
     "content_verified": true,
     "status_verified": true,
@@ -24,7 +24,7 @@
       "category": "code_analysis",
       "description": "Function discovery across repository",
       "passed": true,
-      "elapsed_seconds": 1.0127,
+      "elapsed_seconds": 44.8821,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -34,8 +34,8 @@
       "category": "code_analysis",
       "description": "Caller identification for process_query",
       "passed": true,
-      "elapsed_seconds": 0.172,
-      "evidence_count": 1,
+      "elapsed_seconds": 13.3748,
+      "evidence_count": 3,
       "limitations_count": 0,
       "reasons": []
     },
@@ -44,8 +44,8 @@
       "category": "code_analysis",
       "description": "Module dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.009,
-      "evidence_count": 2,
+      "elapsed_seconds": 22.7191,
+      "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
     },
@@ -54,8 +54,8 @@
       "category": "code_analysis",
       "description": "Code architecture and class outline understanding",
       "passed": true,
-      "elapsed_seconds": 0.1405,
-      "evidence_count": 4,
+      "elapsed_seconds": 60.3853,
+      "evidence_count": 5,
       "limitations_count": 0,
       "reasons": []
     },
@@ -64,9 +64,9 @@
       "category": "binary_analysis",
       "description": "Binary analysis path policy enforcement",
       "passed": true,
-      "elapsed_seconds": 0.3669,
-      "evidence_count": 1,
-      "limitations_count": 0,
+      "elapsed_seconds": 0.0345,
+      "evidence_count": 0,
+      "limitations_count": 1,
       "reasons": []
     },
     {
@@ -74,7 +74,7 @@
       "category": "binary_analysis",
       "description": "Missing binary path triggers clarification",
       "passed": true,
-      "elapsed_seconds": 0.0004,
+      "elapsed_seconds": 0.0074,
       "evidence_count": 0,
       "limitations_count": 1,
       "reasons": []
@@ -84,8 +84,8 @@
       "category": "binary_analysis",
       "description": "Binary metadata and PE architecture extraction",
       "passed": true,
-      "elapsed_seconds": 0.091,
-      "evidence_count": 6,
+      "elapsed_seconds": 31.1242,
+      "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
     },
@@ -94,8 +94,8 @@
       "category": "binary_analysis",
       "description": "PE section header and memory boundary inspection",
       "passed": true,
-      "elapsed_seconds": 0.0452,
-      "evidence_count": 6,
+      "elapsed_seconds": 24.6567,
+      "evidence_count": 2,
       "limitations_count": 0,
       "reasons": []
     },
@@ -104,8 +104,8 @@
       "category": "binary_analysis",
       "description": "Binary imports and external symbol dependency extraction",
       "passed": true,
-      "elapsed_seconds": 0.0176,
-      "evidence_count": 6,
+      "elapsed_seconds": 8.5447,
+      "evidence_count": 2,
       "limitations_count": 0,
       "reasons": []
     },
@@ -114,8 +114,8 @@
       "category": "binary_analysis",
       "description": "Capstone machine code instruction disassembly",
       "passed": true,
-      "elapsed_seconds": 0.0308,
-      "evidence_count": 7,
+      "elapsed_seconds": 32.6187,
+      "evidence_count": 3,
       "limitations_count": 0,
       "reasons": []
     },
@@ -124,7 +124,7 @@
       "category": "memory",
       "description": "Persist engineering finding",
       "passed": true,
-      "elapsed_seconds": 0.0014,
+      "elapsed_seconds": 14.849,
       "evidence_count": 1,
       "limitations_count": 0,
       "reasons": []
@@ -134,7 +134,7 @@
       "category": "memory",
       "description": "Cross-session retrieval of verified finding",
       "passed": true,
-      "elapsed_seconds": 0.0016,
+      "elapsed_seconds": 8.2365,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": [],
@@ -142,8 +142,8 @@
         "success": true,
         "process_a_exit": 0,
         "process_b_exit": 0,
-        "record_id": 9,
-        "session_id": "session_88fc064a",
+        "record_id": 10,
+        "session_id": "session_177b0e9c",
         "id_matched": true,
         "content_verified": true,
         "status_verified": true,
@@ -157,7 +157,7 @@
       "category": "memory",
       "description": "Multi-session persistence retrieval across engineering iterations",
       "passed": true,
-      "elapsed_seconds": 0.001,
+      "elapsed_seconds": 25.6255,
       "evidence_count": 2,
       "limitations_count": 0,
       "reasons": []
@@ -167,8 +167,8 @@
       "category": "multi_tool",
       "description": "Multi-tool cross-domain query",
       "passed": true,
-      "elapsed_seconds": 0.1471,
-      "evidence_count": 18,
+      "elapsed_seconds": 37.3745,
+      "evidence_count": 15,
       "limitations_count": 0,
       "reasons": [],
       "multi_tool_execution": {
@@ -181,7 +181,7 @@
           "tool": "find_binary_functions",
           "success": true,
           "source": "binary.find_binary_functions",
-          "file": "benchmarks/results/sample_authorized.exe"
+          "file": "benchmarks\\results\\sample_authorized.exe"
         }
       }
     },
@@ -190,8 +190,8 @@
       "category": "binary_analysis",
       "description": "REA engine availability and prerequisite status check on authorized binary",
       "passed": true,
-      "elapsed_seconds": 0.0175,
-      "evidence_count": 9,
+      "elapsed_seconds": 17.463,
+      "evidence_count": 5,
       "limitations_count": 0,
       "reasons": []
     },
@@ -200,8 +200,8 @@
       "category": "binary_analysis",
       "description": "Binary function analysis via REA integration with export fallback comparison",
       "passed": true,
-      "elapsed_seconds": 0.0241,
-      "evidence_count": 10,
+      "elapsed_seconds": 36.291,
+      "evidence_count": 6,
       "limitations_count": 0,
       "reasons": []
     },
@@ -210,8 +210,8 @@
       "category": "binary_analysis",
       "description": "Entry point instruction disassembly comparing REA integration with Capstone fallback",
       "passed": true,
-      "elapsed_seconds": 0.0245,
-      "evidence_count": 10,
+      "elapsed_seconds": 24.3763,
+      "evidence_count": 6,
       "limitations_count": 0,
       "reasons": []
     }
