@@ -1,4 +1,4 @@
-
+﻿
 """
 Consolidated Agent Orchestrator for the Samsung PRISM Unified Engineering Agent.
 
@@ -446,6 +446,12 @@ class AgentOrchestrator:
                 or {}
             )
 
+            # Prefer exact Code Graph file retrieval tools.
+            if intent == "file_outline" and name_lower == "get_file_outline":
+                return name, schema
+
+            if intent == "code_snippet" and name_lower == "get_code_snippet":
+                return name, schema
             # Prefer the exact Code Graph tracing tool.
             if (
                 intent in ("trace_callers", "trace_callees")
@@ -565,6 +571,9 @@ class AgentOrchestrator:
         props = schema.get("properties", {})
         required = schema.get("required", [])
         args: dict[str, Any] = {}
+
+        if "qualified_name" in props and symbol_or_query:
+            args["qualified_name"] = symbol_or_query
 
         for key in (
             "project",
@@ -1026,6 +1035,329 @@ class AgentOrchestrator:
                                 else:
                                     graph_used = True
 
+                # Retrieve an exact file outline and bounded source snippets.
+                file_retrieval_requested = (
+                    bool(plan.file_path)
+                    and any(
+                        phrase in query_lower
+                        for phrase in (
+                            "outline",
+                            "source",
+                            "implementation",
+                            "responsibilities",
+                            "explain",
+                            "contents",
+                            "inside",
+                            "inspect",
+                            "read",
+                            "what does",
+                            "how does",
+                        )
+                    )
+                    and not any(
+                        phrase in query_lower
+                        for phrase in (
+                            "imports",
+                            "dependencies",
+                            "module relationships",
+                            "caller",
+                            "callee",
+                            "callers",
+                            "callees",
+                            "change impact",
+                            "call graph",
+                            "trace callers",
+                            "trace callees",
+                        )
+                    )
+                )
+
+                if file_retrieval_requested:
+                    repository_root = Path(target_dir).resolve()
+                    requested_path = Path(plan.file_path)
+
+                    try:
+                        if requested_path.is_absolute():
+                            resolved_file = requested_path.resolve()
+                            relative_file = resolved_file.relative_to(
+                                repository_root
+                            )
+                        else:
+                            resolved_file = (
+                                repository_root / requested_path
+                            ).resolve()
+                            relative_file = resolved_file.relative_to(
+                                repository_root
+                            )
+
+                        if not resolved_file.is_file():
+                            raise ValueError(
+                                "Requested source file does not exist."
+                            )
+
+                        relative_file_text = relative_file.as_posix()
+
+                    except (ValueError, OSError) as exc:
+                        bundle.add_limitation(
+                            "Code Graph file retrieval rejected the "
+                            f"requested path: {exc}"
+                        )
+
+                    else:
+                        matched_outline = self._find_compatible_tool(
+                            tools,
+                            "file_outline",
+                        )
+
+                        if matched_outline:
+                            outline_tool, outline_schema = matched_outline
+
+                            valid, outline_args, error = (
+                                self._build_and_validate_tool_args(
+                                    tool_name=outline_tool,
+                                    schema=outline_schema,
+                                    project_name=project_name,
+                                    file_path=relative_file_text,
+                                )
+                            )
+
+                            if valid:
+                                if "format" in outline_schema.get(
+                                    "properties", {}
+                                ):
+                                    outline_args["format"] = "json"
+
+                                outline_result = await self.mcp.call_tool(
+                                    "code_graph",
+                                    outline_tool,
+                                    outline_args,
+                                    session_id=(
+                                        self.session_mgr.current_session_id
+                                        or "unknown"
+                                    ),
+                                )
+
+                                if (
+                                    outline_result.success
+                                    and not outline_result.is_error
+                                ):
+                                    outline_item = normalise_code_result(
+                                        outline_tool,
+                                        "code_graph",
+                                        outline_result.text,
+                                        outline_result.is_error,
+                                    )
+                                    outline_item.file_path = (
+                                        relative_file_text
+                                    )
+                                    bundle.add(outline_item)
+
+                                    graph_used = (
+                                        outline_item.kind
+                                        == EvidenceKind.VERIFIED
+                                    )
+
+                                    wants_source = any(
+                                        phrase in query_lower
+                                        for phrase in (
+                                            "source",
+                                            "implementation",
+                                            "responsibilities",
+                                            "explain",
+                                            "what does",
+                                            "how does",
+                                            "inside",
+                                        )
+                                    )
+
+                                    if wants_source and graph_used:
+                                        try:
+                                            outline_data = json.loads(
+                                                outline_result.text
+                                            )
+                                            rows = outline_data.get(
+                                                "rows", []
+                                            )
+
+                                            if not isinstance(rows, list):
+                                                rows = []
+
+                                            candidates = []
+
+                                            for row in rows:
+                                                if (
+                                                    not isinstance(
+                                                        row, (list, tuple)
+                                                    )
+                                                    or len(row) < 4
+                                                ):
+                                                    continue
+
+                                                symbol_name = str(
+                                                    row[0]
+                                                ).strip()
+                                                symbol_label = str(
+                                                    row[1]
+                                                ).strip().lower()
+                                                qualified_name = str(
+                                                    row[3]
+                                                ).strip()
+
+                                                if (
+                                                    not qualified_name
+                                                    or symbol_label
+                                                    not in (
+                                                        "class",
+                                                        "function",
+                                                        "async function",
+                                                        "method",
+                                                    )
+                                                ):
+                                                    continue
+
+                                                if (
+                                                    plan.function_name
+                                                    and symbol_name.casefold()
+                                                    != plan.function_name.rsplit(
+                                                        ".", 1
+                                                    )[-1].casefold()
+                                                ):
+                                                    continue
+
+                                                candidates.append(
+                                                    qualified_name
+                                                )
+
+                                            candidates = list(
+                                                dict.fromkeys(candidates)
+                                            )[:3]
+
+                                            matched_snippet = (
+                                                self._find_compatible_tool(
+                                                    tools,
+                                                    "code_snippet",
+                                                )
+                                            )
+
+                                            if (
+                                                matched_snippet
+                                                and candidates
+                                            ):
+                                                snippet_tool, snippet_schema = (
+                                                    matched_snippet
+                                                )
+
+                                                for qualified_name in candidates:
+                                                    valid, snippet_args, error = (
+                                                        self._build_and_validate_tool_args(
+                                                            tool_name=snippet_tool,
+                                                            schema=snippet_schema,
+                                                            project_name=project_name,
+                                                            symbol_or_query=qualified_name,
+                                                        )
+                                                    )
+
+                                                    if not valid:
+                                                        bundle.add_limitation(
+                                                            "Code snippet "
+                                                            "validation failed: "
+                                                            f"{error}"
+                                                        )
+                                                        continue
+
+                                                    snippet_props = (
+                                                        snippet_schema.get(
+                                                            "properties", {}
+                                                        )
+                                                    )
+
+                                                    if "source_mode" in snippet_props:
+                                                        snippet_args[
+                                                            "source_mode"
+                                                        ] = "auto"
+
+                                                    if "member_limit" in snippet_props:
+                                                        snippet_args[
+                                                            "member_limit"
+                                                        ] = 20
+
+                                                    if "max_output_tokens" in snippet_props:
+                                                        snippet_args[
+                                                            "max_output_tokens"
+                                                        ] = 3000
+
+                                                    snippet_result = (
+                                                        await self.mcp.call_tool(
+                                                            "code_graph",
+                                                            snippet_tool,
+                                                            snippet_args,
+                                                            session_id=(
+                                                                self.session_mgr.current_session_id
+                                                                or "unknown"
+                                                            ),
+                                                        )
+                                                    )
+
+                                                    if (
+                                                        not snippet_result.success
+                                                        or snippet_result.is_error
+                                                    ):
+                                                        bundle.add_limitation(
+                                                            "Code Graph source "
+                                                            "retrieval failed for "
+                                                            f"{qualified_name}: "
+                                                            f"{snippet_result.text}"
+                                                        )
+                                                        continue
+
+                                                    snippet_item = (
+                                                        normalise_code_result(
+                                                            snippet_tool,
+                                                            "code_graph",
+                                                            snippet_result.text,
+                                                            snippet_result.is_error,
+                                                        )
+                                                    )
+                                                    snippet_item.file_path = (
+                                                        relative_file_text
+                                                    )
+                                                    snippet_item.function_name = (
+                                                        qualified_name
+                                                    )
+                                                    bundle.add(snippet_item)
+
+                                                    if (
+                                                        snippet_item.kind
+                                                        == EvidenceKind.VERIFIED
+                                                    ):
+                                                        graph_used = True
+
+                                        except (
+                                            json.JSONDecodeError,
+                                            AttributeError,
+                                            TypeError,
+                                        ):
+                                            logger.debug(
+                                                "Could not parse Code Graph "
+                                                "file outline response.",
+                                                exc_info=True,
+                                            )
+
+                                else:
+                                    bundle.add_limitation(
+                                        "Code Graph file outline failed: "
+                                        f"{outline_result.text}"
+                                    )
+                            else:
+                                bundle.add_limitation(
+                                    "Code Graph file outline validation "
+                                    f"failed: {error}"
+                                )
+                        else:
+                            bundle.add_limitation(
+                                "Code Graph file-outline tool was not "
+                                "available."
+                            )
                 # Class/method outline queries use local AST analysis.
                 wants_class_outline = any(
                     phrase in query_lower
@@ -2055,4 +2387,3 @@ class AgentOrchestrator:
         """Clean up MCP connections."""
 
         await self.mcp.close_all()
-

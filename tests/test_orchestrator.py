@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests for AgentOrchestrator and end-to-end routing.
 """
 
@@ -241,6 +241,201 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertIn("missing required", err_msg.lower())
 
 
+    async def test_file_outline_and_source_snippet_use_code_graph(self):
+        """A file explanation retrieves its outline and source snippets."""
+        import json
+        from agent.mcp_client import ToolResult
+
+        repo = Path(self.temp_dir.name)
+        source_file = repo / "agent" / "sample.py"
+        source_file.parent.mkdir(parents=True)
+        source_file.write_text(
+            "class SampleService:\n    def run(self):\n        return True\n",
+            encoding="utf-8",
+        )
+
+        tools = {
+            "get_file_outline": {
+                "description": "Get symbols and outline for a source file",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "file_path": {"type": "string"},
+                        "format": {"type": "string"},
+                    },
+                    "required": ["project", "file_path"],
+                },
+            },
+            "get_code_snippet": {
+                "description": "Retrieve source code for a qualified symbol",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "qualified_name": {"type": "string"},
+                        "source_mode": {"type": "string"},
+                        "member_limit": {"type": "integer"},
+                        "max_output_tokens": {"type": "integer"},
+                    },
+                    "required": ["project", "qualified_name"],
+                },
+            },
+        }
+
+        outline_text = json.dumps({
+            "file_path": "agent/sample.py",
+            "cols": ["name", "label", "lines", "qn"],
+            "rows": [
+                [
+                    "SampleService",
+                    "Class",
+                    "1-3",
+                    "agent.sample.SampleService",
+                ]
+            ],
+            "total": 1,
+            "returned": 1,
+        })
+
+        snippet_text = json.dumps({
+            "qualified_name": "agent.sample.SampleService",
+            "code": "class SampleService:\n    def run(self):\n        return True",
+        })
+
+        calls = []
+
+        async def fake_call_tool(server, name, args, session_id):
+            calls.append((server, name, args))
+
+            if name == "get_file_outline":
+                return ToolResult(success=True, text=outline_text)
+
+            if name == "get_code_snippet":
+                return ToolResult(success=True, text=snippet_text)
+
+            self.fail(f"Unexpected MCP tool call: {name}")
+
+        plan = QueryPlan(
+            category=QueryCategory.CODE_ANALYSIS,
+            raw_query="Explain the responsibilities in agent/sample.py",
+            file_path="agent/sample.py",
+            repository_path=str(repo),
+        )
+        bundle = EvidenceBundle(query=plan.raw_query)
+
+        with patch.object(
+            self.orchestrator,
+            "_resolve_code_graph_project",
+            new_callable=AsyncMock,
+            return_value="test-project",
+        ), patch.object(
+            self.orchestrator.mcp,
+            "list_tools_with_schemas",
+            new_callable=AsyncMock,
+            return_value=tools,
+        ), patch.object(
+            self.orchestrator.mcp,
+            "call_tool",
+            new_callable=AsyncMock,
+            side_effect=fake_call_tool,
+        ):
+            await self.orchestrator._handle_code_analysis(plan, bundle)
+
+        called_names = [call[1] for call in calls]
+
+        self.assertIn("get_file_outline", called_names)
+        self.assertIn("get_code_snippet", called_names)
+
+        verified_items = [
+            item for item in bundle.items
+            if item.kind.value == "VERIFIED"
+        ]
+
+        self.assertTrue(
+            any(item.tool_name == "get_file_outline" for item in verified_items)
+        )
+        self.assertTrue(
+            any(item.tool_name == "get_code_snippet" for item in verified_items)
+        )
+
+        snippet_call = next(
+            call for call in calls
+            if call[1] == "get_code_snippet"
+        )
+        self.assertEqual(
+            snippet_call[2]["qualified_name"],
+            "agent.sample.SampleService",
+        )
+
+    async def test_file_retrieval_rejects_path_outside_repository(self):
+        """A traversal path must never reach Code Graph file tools."""
+        repo = Path(self.temp_dir.name)
+
+        tools = {
+            "get_file_outline": {
+                "description": "Get symbols and outline for a source file",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "file_path": {"type": "string"},
+                        "format": {"type": "string"},
+                    },
+                    "required": ["project", "file_path"],
+                },
+            },
+            "get_code_snippet": {
+                "description": "Retrieve source code for a qualified symbol",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "project": {"type": "string"},
+                        "qualified_name": {"type": "string"},
+                    },
+                    "required": ["project", "qualified_name"],
+                },
+            },
+        }
+
+        plan = QueryPlan(
+            category=QueryCategory.CODE_ANALYSIS,
+            raw_query="Show the outline and source for ../outside.py",
+            file_path="../outside.py",
+            repository_path=str(repo),
+        )
+        bundle = EvidenceBundle(query=plan.raw_query)
+
+        with patch.object(
+            self.orchestrator,
+            "_resolve_code_graph_project",
+            new_callable=AsyncMock,
+            return_value="test-project",
+        ), patch.object(
+            self.orchestrator.mcp,
+            "list_tools_with_schemas",
+            new_callable=AsyncMock,
+            return_value=tools,
+        ), patch.object(
+            self.orchestrator.mcp,
+            "call_tool",
+            new_callable=AsyncMock,
+        ) as mock_call:
+            await self.orchestrator._handle_code_analysis(plan, bundle)
+
+        file_tool_calls = [
+            call for call in mock_call.await_args_list
+            if call.args[1] in ("get_file_outline", "get_code_snippet")
+        ]
+
+        self.assertEqual(file_tool_calls, [])
+        self.assertTrue(
+            any(
+                "file retrieval rejected" in limitation.lower()
+                for limitation in bundle.limitations
+            ),
+            bundle.limitations,
+        )
+
 if __name__ == "__main__":
     unittest.main()
-

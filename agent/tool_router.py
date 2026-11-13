@@ -1,4 +1,4 @@
-"""
+﻿"""
 Dynamic Tool Router for the Samsung PRISM Unified Engineering Agent.
 
 Provides:
@@ -211,6 +211,8 @@ def filter_available_tools_for_category(
             "search_graph",
             "trace_path",
             "get_architecture",
+            "get_file_outline",
+            "get_code_snippet",
         })
 
     # Also allow standard prefix matches (e.g. ast_, code_).
