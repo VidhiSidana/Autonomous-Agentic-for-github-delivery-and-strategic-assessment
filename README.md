@@ -359,9 +359,7 @@ The focused policy-matcher regression tests passed 2/2. Cross-process
 persistence was also verified by the benchmark, including record identity,
 content, verification status, and session association.
 
-**Milestone 2 acceptance validation is complete on
-`milestone2-hardening`.** The `main` branch was not modified by this
-hardening work.
+**Milestone 2 acceptance validation was completed on `milestone2-hardening` and the hardening work was subsequently merged into `main`.** The merge commit is `4f68c46b20fca07da09df9ef12664eaef23f5155`.
 
 ### 7.2 Historical Complete Test Snapshot
 
@@ -638,3 +636,21 @@ Developed for **Samsung PRISM**:
 **Primary Language:** Python
 **LLM Runtime:** Ollama
 **Tool Integration Protocol:** Model Context Protocol (MCP)
+
+---
+
+## 10. Month 4 Closure & Handover
+
+The Milestone 2 implementation has been merged into `main`. Month 4 closure focuses on a reproducible setup, live multi-session demonstration, deployment guidance, evaluation-artifact reconciliation and final handover.
+
+| Closure resource | Purpose |
+|---|---|
+| [Milestone 2 Closure Report](docs/milestone_2_closure_report.md) | Final scope, recorded validation, limitations and closure exit criteria |
+| [Closure Execution Plan](docs/closure_execution_plan.md) | 70/30 ownership split and acceptance checklist |
+| [Live Demo Runbook](docs/demo_runbook.md) | Step-by-step code, binary and cross-session memory demonstration |
+| [Internal LLM Deployment Guide](docs/internal_llm_deployment.md) | Ollama endpoint setup, security boundaries and deployment acceptance record |
+| [Architecture](docs/architecture.md) | System components and data flow |
+| [Security Specification](docs/security.md) | Local-first operation and binary-analysis guardrails |
+| [Evaluation Report](docs/evaluation_report.md) | Benchmark methodology, historical results and evidence limitations |
+
+**Evidence status:** The user-reported final ground-truth benchmark was 17/17 (100.0%) and full unit-test discovery was 114 tests, OK, with 3 skipped. The committed benchmark JSON and E2E logs were older artifacts at the time of closure preparation; do not treat them as the latest run. Refresh them only from the actual output of a new run. The live demonstration and deployment acceptance record must likewise be completed from actual execution.
