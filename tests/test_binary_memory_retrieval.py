@@ -91,9 +91,9 @@ class TestBinaryMemoryRetrieval(unittest.TestCase):
         saved = self.memory.save_memory(
             title="Verified binary metadata",
             content=(
-                "Finding: Binary analysis succeeded.\\n"
-                "Source: binary.analyze_binary\\n"
-                "Details:\\n"
+                "Finding: Binary analysis succeeded.\n"
+                "Source: binary.analyze_binary\n"
+                "Details:\n"
                 + json.dumps(metadata, indent=2)
             ),
             category="binary_finding",
