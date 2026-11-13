@@ -109,6 +109,22 @@ class AgentOrchestrator:
             if hasattr(plan, key) and value is not None:
                 setattr(plan, key, value)
 
+        # A CLI clarification is answered in a second turn by supplying
+        # the missing parameter as an override. Clear the planner's stale
+        # clarification state once the required value is present.
+        if (
+            plan.category == QueryCategory.BINARY_ANALYSIS
+            and overrides.get("binary_path")
+        ):
+            plan.clarification_needed = False
+            plan.clarification_question = None
+        elif (
+            plan.category == QueryCategory.CODE_ANALYSIS
+            and overrides.get("function_name")
+        ):
+            plan.clarification_needed = False
+            plan.clarification_question = None
+
         if plan.clarification_needed:
             bundle = EvidenceBundle(query=user_query)
             bundle.add_limitation(
