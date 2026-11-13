@@ -1477,6 +1477,132 @@ class AgentOrchestrator:
         Other queries use compacted evidence-grounded prompts.
         """
 
+        # Binary-memory lookups use the verified stored record directly.
+        # Do this before generic token validation or LLM prompting: compact local
+        # models can otherwise omit or corrupt exact PE metadata values.
+        binary_match = re.search(
+            r"([A-Za-z0-9_.-]+\\.(?:exe|dll))",
+            user_query,
+            re.IGNORECASE,
+        )
+
+        if (
+            binary_match
+            and plan.category == QueryCategory.MEMORY
+        ):
+            requested_binary = binary_match.group(1).casefold()
+            matching_record = None
+
+            for item in bundle.verified_items:
+                if not item.source.startswith("engineering_memory[id="):
+                    continue
+
+                detail_text = item.detail or ""
+                if not re.search(
+                    r"\\bCategory:\\s*binary_finding\\b",
+                    detail_text,
+                    re.IGNORECASE,
+                ):
+                    continue
+
+                details_marker = detail_text.find("Details:")
+                if details_marker < 0:
+                    continue
+
+                json_text = detail_text[
+                    details_marker + len("Details:"):
+                ].lstrip()
+
+                try:
+                    metadata, _ = json.JSONDecoder().raw_decode(json_text)
+                except (json.JSONDecodeError, TypeError):
+                    logger.warning(
+                        "Skipping malformed binary-memory record %s",
+                        item.source,
+                    )
+                    continue
+
+                if not isinstance(metadata, dict):
+                    continue
+
+                stored_filename = str(
+                    metadata.get("file_name") or ""
+                ).casefold()
+
+                if stored_filename != requested_binary:
+                    continue
+
+                record_match = re.fullmatch(
+                    r"engineering_memory\\[id=(\\d+)\\]",
+                    item.source,
+                )
+                if not record_match:
+                    continue
+
+                matching_record = (
+                    record_match.group(1),
+                    metadata,
+                )
+                break
+
+            if matching_record is None:
+                return (
+                    "INSUFFICIENT EVIDENCE: No verified binary_finding "
+                    f"memory record was retrieved for "
+                    f"'{binary_match.group(1)}'."
+                )
+
+            record_id, metadata = matching_record
+            sections = metadata.get("sections")
+            section_names = []
+
+            if isinstance(sections, list):
+                section_names = [
+                    str(section["name"])
+                    for section in sections
+                    if (
+                        isinstance(section, dict)
+                        and section.get("name") is not None
+                    )
+                ]
+
+            def stored_value(key):
+                value = metadata.get(key)
+                return str(value) if value is not None else "Not recorded"
+
+            answer_lines = [
+                "=== VERIFIED BINARY MEMORY FINDINGS ===",
+                f"File: {stored_value('file_name')}",
+                f"Memory record ID: {record_id}",
+                "Verification status: VERIFIED",
+                f"Machine type: {stored_value('machine')}",
+                f"Architecture: {stored_value('architecture')}",
+                f"Entry point RVA: {stored_value('entry_point_rva')}",
+                f"Image base: {stored_value('image_base')}",
+                f"Section count: {stored_value('number_of_sections')}",
+                (
+                    "Section name(s): "
+                    + (", ".join(section_names) if section_names
+                       else "Not recorded")
+                ),
+                "",
+                "=== SOURCE ===",
+                f"Persistent engineering memory record: {record_id}",
+                "Category: binary_finding",
+            ]
+
+            if bundle.limitations:
+                answer_lines.extend([
+                    "",
+                    "=== LIMITATIONS ===",
+                    *[
+                        f"- {limitation}"
+                        for limitation in bundle.limitations
+                    ],
+                ])
+
+            return "\\n".join(answer_lines)
+
         # Evidence validation.
         if plan.category in (
             QueryCategory.CODE_ANALYSIS,
