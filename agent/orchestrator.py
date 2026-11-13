@@ -271,6 +271,28 @@ class AgentOrchestrator:
 
         operation = plan.memory_operation or "retrieve"
 
+        # Executable/DLL memory lookups must not mix unrelated findings.
+        binary_match = re.search(
+            r"([A-Za-z0-9_.-]+\.(?:exe|dll))",
+            plan.raw_query,
+            re.IGNORECASE,
+        )
+        if binary_match and operation != "save":
+            binary_name = binary_match.group(1)
+            results = self.memory.search_memory(
+                binary_name,
+                category="binary_finding",
+            )
+            items = normalise_memory_result(results, keyword=binary_name)
+            for item in items:
+                bundle.add(item)
+            if not items:
+                bundle.add_limitation(
+                    "No verified binary memory findings were found "
+                    f"for '{binary_name}'."
+                )
+            return
+
         if operation == "save":
             title = plan.memory_title or plan.raw_query[:50]
             content = plan.memory_content or plan.raw_query

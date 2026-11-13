@@ -447,6 +447,7 @@ class EngineeringMemory:
         keyword: str,
         verification_status: Optional[str] = None,
         include_proposed: bool = False,
+        category: Optional[str] = None,
     ) -> list[sqlite3.Row]:
         """
         Search findings by keyword in title and content.
@@ -473,6 +474,10 @@ class EngineeringMemory:
             params.append(verification_status)
         elif not include_proposed:
             where += " AND verification_status NOT IN ('PROPOSED', 'REJECTED')"
+
+        if category:
+            where += " AND category = ?"
+            params.append(category)
 
         order_clause = (
             "ORDER BY CASE verification_status "
