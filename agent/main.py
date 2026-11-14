@@ -68,8 +68,11 @@ def print_banner(agent: UnifiedEngineeringAgent) -> None:
     print("-" * 60)
 
 
-async def cli_main() -> None:
+async def cli_main(model_override: str = None) -> None:
     agent = UnifiedEngineeringAgent()
+    if model_override:
+        agent.llm.model = model_override
+        agent.orchestrator.llm.model = model_override
     print_banner(agent)
 
     try:
@@ -152,5 +155,46 @@ async def cli_main() -> None:
         print("Agent stopped cleanly.")
 
 
+def main() -> None:
+    """Console script entry point for prism-agent."""
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="prism-agent",
+        description="Samsung PRISM Unified Local-LLM Engineering Agent for Code Comprehension, Binary Investigation, and Persistent Memory.",
+    )
+    parser.add_argument(
+        "--query", "-q",
+        type=str,
+        default=None,
+        help="Execute a single engineering query non-interactively and return result.",
+    )
+    parser.add_argument(
+        "--model", "-m",
+        type=str,
+        default=None,
+        help="Override local Ollama model tag (default: qwen2.5:1.5b; also supports phi3.5:latest, llama3.1:8b).",
+    )
+    parser.add_argument(
+        "--version", "-v",
+        action="version",
+        version="prism-agent 0.2.0 (Samsung PRISM Milestone 2)",
+    )
+    args = parser.parse_args()
+
+    if args.query:
+        agent = UnifiedEngineeringAgent()
+        if args.model:
+            agent.llm.model = args.model
+            agent.orchestrator.llm.model = args.model
+        try:
+            ans = agent.process_query(args.query)
+            print(ans)
+        finally:
+            agent.session_mgr.on_session_end(llm=agent.llm)
+            asyncio.run(agent.close())
+    else:
+        asyncio.run(cli_main(model_override=args.model))
+
+
 if __name__ == "__main__":
-    asyncio.run(cli_main())
+    main()

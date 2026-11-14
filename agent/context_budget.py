@@ -33,10 +33,10 @@ MODEL_BUDGETS: dict[str, dict[str, int]] = {
     },
     "phi3.5:latest": {
         "context_window": 8192,
-        "max_prompt_tokens": 6500,
-        "max_evidence_chars": 8000,
-        "max_item_detail_chars": 1500,
-        "max_history_turns": 4,
+        "max_prompt_tokens": 3500,
+        "max_evidence_chars": 4000,
+        "max_item_detail_chars": 800,
+        "max_history_turns": 2,
     },
     "llama3.1:8b": {
         "context_window": 16384,

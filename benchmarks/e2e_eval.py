@@ -293,11 +293,22 @@ def score_ground_truth(
 
     # C1: Function discovery
     if task_id == "C1":
-        known_funcs = ["process_query", "plan", "execute_query", "authorize_binary_path", "save_memory", "main"]
-        matched = sum(1 for f in known_funcs if f in combined)
-        if matched >= 2:
-            return True, f"Found {matched} repository functions: {known_funcs[:matched]}"
-        return False, f"Expected at least 2 repo functions, found {matched}"
+        valid_pairs = [
+            (r"\bprocess_query\b", r"\borchestrator\.py\b"),
+            (r"\bplan\b", r"\bplanner\.py\b"),
+            (r"\bauthorize_binary_path\b", r"\bpolicy\.py\b"),
+            (r"\b(execute_query|main)\b", r"\bmain\.py\b"),
+            (r"\bsave_memory\b", r"\b(orchestrator|memory)\.py\b"),
+            (r"\bdisassemble_binary\b", r"\bbinary_server\.py\b"),
+            (r"\bfind_functions\b", r"\bcode_server\.py\b"),
+        ]
+        matched_pairs = [
+            f_pat for f_pat, file_pat in valid_pairs
+            if re.search(f_pat, combined, re.IGNORECASE) and re.search(file_pat, combined, re.IGNORECASE)
+        ]
+        if len(matched_pairs) >= 2:
+            return True, f"Found {len(matched_pairs)} repository function-file associations"
+        return False, f"Expected at least 2 repo functions with file associations, found {len(matched_pairs)}"
 
     # C2: Callers of process_query
     elif task_id == "C2":
@@ -377,29 +388,59 @@ def score_ground_truth(
 
     # MT1: Cross-domain multi-tool
     elif task_id == "MT1":
-        has_code = any(w in combined for w in ["function", "code", "def ", "class"])
-        has_bin = any(w in combined for w in ["binary", ".exe", "pe", "amd64", "header"])
-        if has_code and has_bin:
-            return True, "Executed cross-domain code and binary analysis"
-        return False, "Failed to execute both code and binary analysis branches"
+        code_funcs = [
+            (r"\bprocess_query\b", r"\borchestrator\.py\b"),
+            (r"\bplan\b", r"\bplanner\.py\b"),
+            (r"\bauthorize_binary_path\b", r"\bpolicy\.py\b"),
+            (r"\b(execute_query|main)\b", r"\bmain\.py\b"),
+            (r"\bsave_memory\b", r"\b(orchestrator|memory)\.py\b"),
+            (r"\b(auth|authenticate|verify_token)\b", r"\b[\w/\\-]+\.py\b"),
+        ]
+        has_code_fact = any(
+            re.search(fn, combined, re.IGNORECASE) and re.search(fl, combined, re.IGNORECASE)
+            for fn, fl in code_funcs
+        ) or bool(
+            re.search(r"\b(def\s+\w+|function\s+[\w\.]+)\b", combined, re.IGNORECASE)
+            and re.search(r"\b[\w/\\-]+\.py\b", combined, re.IGNORECASE)
+        )
+
+        has_arch = bool(re.search(r"\b(amd64|x86_64|x64|0x8664)\b", combined, re.IGNORECASE))
+        has_sec = bool(re.search(r"\.text\b", combined, re.IGNORECASE))
+
+        if has_code_fact and has_arch and has_sec:
+            return True, "Executed cross-domain code (function+file) and binary analysis (AMD64 + .text)"
+        reasons = []
+        if not has_code_fact:
+            reasons.append("missing specific code fact (function with file)")
+        if not has_arch:
+            reasons.append("missing binary architecture (AMD64/x64)")
+        if not has_sec:
+            reasons.append("missing section (.text)")
+        return False, f"Failed multi-tool validation: {'; '.join(reasons)}"
 
     # REA1: REA status and fallback
     elif task_id == "REA1":
-        if any(w in combined for w in ["rea", "fallback_engine", "pefile", "capstone", "fallback"]):
-            return True, "Verified REA status and fallback engine"
-        return False, "Missing REA status or fallback report"
+        has_status = bool(re.search(r"\b(operational|prerequisite_blocked|pefile/capstone static fallback)\b", combined, re.IGNORECASE))
+        has_tool_fact = bool(re.search(r"\b(fallback_engine|zero_execution_guarantee|0x1000|amd64|prerequisite|node|ghidra)\b", combined, re.IGNORECASE))
+        if has_status and has_tool_fact:
+            return True, "Verified REA engine status value and tool output diagnostics"
+        return False, "Missing verified REA status value (OPERATIONAL/PREREQUISITE_BLOCKED/fallback) or tool diagnostic facts"
 
     # REA2: REA function analysis with fallback
     elif task_id == "REA2":
-        if any(w in combined for w in ["function", "export", "fallback", "pefile", "rea"]):
-            return True, "Analyzed functions via REA with fallback"
-        return False, "Failed function analysis comparison"
+        has_engine = bool(re.search(r"\b(operational|prerequisite_blocked|pefile static export fallback|pefile|capstone)\b", combined, re.IGNORECASE))
+        has_tool_fact = bool(re.search(r"\b(exported_functions|directory_entry_export|no_exports|no export table|0x1000|ordinal|address_rva)\b", combined, re.IGNORECASE))
+        if has_engine and has_tool_fact:
+            return True, "Analyzed binary functions via REA/pefile with engine status and export facts"
+        return False, "Missing verified engine status or binary export facts in function analysis"
 
     # REA3: REA decompilation with fallback
     elif task_id == "REA3":
-        if any(w in combined for w in ["nop", "ret", "decompile", "disassemble", "capstone", "fallback"]):
-            return True, "Decompiled entry point comparing REA with fallback"
-        return False, "Failed decompilation comparison"
+        has_engine = bool(re.search(r"\b(operational|prerequisite_blocked|capstone static disassembly fallback|capstone)\b", combined, re.IGNORECASE))
+        has_instruction = bool(re.search(r"\b(nop|ret|sub|mov|disassembly_base|0x1000)\b", combined, re.IGNORECASE))
+        if has_engine and has_instruction:
+            return True, "Decompiled entry point with verified engine status and disassembled machine instructions"
+        return False, "Missing verified engine status or disassembled instruction facts"
 
     # Real Code 1 (RC1): def abort in bottle.py at line 2697
     elif task_id == "RC1":
@@ -882,7 +923,7 @@ def run_e2e_evaluation() -> Dict[str, Any]:
 
     bottle_dir = PROJECT_ROOT / "benchmarks" / "repos" / "bottle"
 
-    models_to_evaluate = ["qwen2.5:1.5b", "llama3.1:8b"]
+    models_to_evaluate = ["qwen2.5:1.5b", "phi3.5:latest", "llama3.1:8b"]
     eval_reports = []
 
     def save_reports(current_reports):

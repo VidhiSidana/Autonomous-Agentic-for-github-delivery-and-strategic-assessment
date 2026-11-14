@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "PRISM: Run Unit Tests",
+      "type": "shell",
+      "command": "python -m unittest discover -s tests -p 'test_*.py' -t .",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Run Ground Truth Benchmarks (17 Tasks)",
+      "type": "shell",
+      "command": "python benchmarks/benchmark_runner.py",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Health Check & Endpoint Validation",
+      "type": "shell",
+      "command": "python scripts/check_llm_endpoint.py --model qwen2.5:1.5b",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Run Agent CLI",
+      "type": "shell",
+      "command": "prism-agent --query \"${input:query}\"",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "PRISM: Clean Environment Verification",
+      "type": "shell",
+      "command": "python scripts/clean_env_check.py",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "query",
+      "type": "promptString",
+      "description": "Engineering query to investigate"
+    }
+  ]
+}
+

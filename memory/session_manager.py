@@ -42,8 +42,15 @@ class SessionManager:
 
     def __init__(self, db_path: Optional[Path] = None) -> None:
         import sqlite3
-        self._db_path = db_path or MEMORY_DB_PATH
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
+        if db_path is None:
+            self._db_path = MEMORY_DB_PATH
+        elif isinstance(db_path, str) and db_path != ":memory:":
+            self._db_path = Path(db_path)
+        else:
+            self._db_path = db_path
+
+        if isinstance(self._db_path, Path):
+            self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._current_session_id: Optional[str] = None
         self._init_schema()
 

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prism-agent"
+version = "0.2.0"
+description = "Samsung PRISM Unified Local-LLM Engineering Agent for Code Comprehension, Binary Investigation, and Persistent Memory."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary / Samsung PRISM"}
+authors = [
+    {name = "Samsung PRISM Agent Team"}
+]
+keywords = ["llm", "agent", "engineering", "binary-analysis", "code-comprehension", "memory"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Disassemblers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "requests>=2.32.0",
+    "mcp[cli]>=2.3.0",
+    "pefile>=2024.8.26",
+    "capstone>=5.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.scripts]
+prism-agent = "agent.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent*", "code_analysis*", "binary_analysis*", "memory*", "config*", "benchmarks*"]
+exclude = ["tests*", "docs*"]
+

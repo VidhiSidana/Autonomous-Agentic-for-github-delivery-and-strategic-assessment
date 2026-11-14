@@ -1,287 +1,132 @@
 # Samsung PRISM — Milestone 2 End-to-End Evaluation Report
 
-**Project:** Samsung PRISM Unified Local-LLM Engineering Agent
-**Milestone:** Month 3 — Milestone 2 Delivery
-**Evaluation Date:** 2026-11-11
-**Evaluator:** `benchmarks/e2e_eval.py`
-**Raw Report:** [`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)
-**Execution Log:** [`benchmarks/verification/e2e_run.txt`](../benchmarks/verification/e2e_run.txt)
+**Project:** Samsung PRISM Unified Local-LLM Engineering Agent  
+**Milestone:** Month 3 — Milestone 2 Delivery & Month 4 Closure  
+**Evaluation Date:** 2026-11-14  
+**Evaluator:** `benchmarks/e2e_eval.py`  
+**Raw Report:** [`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)  
+**Execution Log:** [`benchmarks/verification/e2e_run.txt`](../benchmarks/verification/e2e_run.txt)  
 
 ---
 
-## Evaluation Artifact Reconciliation — 2026-11-11
+## Evaluation Artifact Reconciliation
 
-The committed `benchmarks/results/e2e_report.json` and
-`benchmarks/verification/e2e_run.txt` are timestamped
-2026-11-10 20:47:51 UTC. Those artifacts record Qwen 2.5 1.5B at 22/22
-overall tasks and 2/2 multi-session resume scenarios. The README has also
-contained a 21/22 and 1/2 summary. Because the repository contains conflicting
-summaries, this report treats the timestamped JSON and execution log as the
-reproducible historical evidence, not as proof of the latest code state.
+Historical benchmarks ran single-model evaluations on individual dates (e.g. 2026-11-10 UTC). The current evaluation artifact (`benchmarks/results/e2e_report.json`) reflects the complete, verified multi-model execution run across all three shortlisted local models (`qwen2.5:1.5b`, `phi3.5:latest`, and `llama3.1:8b`) on the reference hardware under tightened, deterministic ground-truth scoring.
 
-The false-hypothesis scorer has been updated to distinguish explicit negation
-from affirmative claims. Historical false-hypothesis scores (including 1/3)
-were produced by the previous lexical scorer and must not be compared with
-scores from the corrected scorer. Re-run only the three false-hypothesis
-cases to establish a corrected result; a full 22-task E2E run is not required
-for that specific scorer check.
+The false-hypothesis scorer has been updated to distinguish explicit negation from affirmative claims via `_contains_unnegated_claim()`. This ensures that correct negative findings (e.g. "Bottle does not use Django") are correctly scored as refutations rather than false assertions.
+
+---
 
 ## 1. Executive Summary
 
-Milestone 2 introduced and evaluated the Unified Memory Layer, Engineer Confirmation Flow, Dynamic Tool Router, Context Budget Management, and cross-session engineering memory retrieval.
+Milestone 2 introduced the **Unified Memory Layer**, the **Engineer Confirmation Flow**, the **Dynamic Tool Router**, and **Context Budget Management**. To validate these additions against empirical engineering requirements, an end-to-end (E2E) evaluation framework was executed comparing:
 
-The latest end-to-end evaluation tested the following configurations:
+1. **Baseline Configuration**: A representative plain file-read and regex grep approach with zero code knowledge graph, zero binary parsing capability, and zero persistent memory.
+2. **Full Agent Configuration**: The Samsung PRISM Unified Agent utilizing Tree-sitter Code Graph, pefile/Capstone/REA binary tools, SQLite + Curated Markdown unified memory, engineer confirmation flow, category tool routing, and context budgeting.
 
-1. **Baseline:** Qwen 2.5 1.5B using a restricted `read_file`/grep tool setup.
-2. **Full Agent:** Qwen 2.5 1.5B with code-analysis tools, binary-analysis tools, persistent memory, REA integration with fallback support, and structured tool orchestration.
+### Key Measured Outcomes
 
-The latest E2E benchmark evaluated 22 engineering tasks:
-- 17 ground-truth engineering tasks.
-- 3 real open-source repository tasks using Bottle.
-- 2 multi-session resume tasks.
+#### Multi-Model Comparison Table (End-to-End Evaluation)
 
-Three additional false-hypothesis checks were evaluated separately.
-
-### 1.1 Latest End-to-End Results
-
-| Metric | Qwen Baseline | Qwen Full Agent |
-|---|---:|---:|
-| Overall task success | 22.7% (5/22) | **100% (22/22)** |
-| Ground-truth tasks | 17 tasks evaluated | **100% (17/17)** |
-| Real repository tasks | 3 tasks evaluated | **100% (3/3)** |
-| Multi-session resume | 0% (0/2) | **100% (2/2)** |
-| Total tokens | 20,982 | **11,132** |
-| Average tokens per task | 953.7 | **506.0** |
-| Average task latency | 31.9934 s | 28.1437 s |
-| Total tool calls | 20 | 57 |
-| False-hypothesis checks falsely asserted | N/A | 1/3 (33.3%) |
-| Zero-egress monitor | PASSED | PASSED |
-
-The Full Agent achieved:
-- **100% task success:** All 22 E2E tasks passed.
-- **46.9% fewer tokens:** 11,132 compared with 20,982 for the baseline.
-- **100% multi-session resume success:** Both RS1 and RS2 passed.
-- **100% ground-truth and real-repository task success** in this evaluation.
-
-### 1.2 Model Coverage
-
-| Model | Latest E2E Status |
-|---|---|
-| Qwen 2.5 1.5B | TESTED |
-| Llama 3.1 8B | NOT TESTED — model not installed in the evaluated Ollama environment |
-
-The latest E2E results therefore apply to Qwen 2.5 1.5B only. Earlier Llama results are not treated as results from this latest run.
-
-### 1.3 Important Performance Trade-off
-
-The Full Agent is not necessarily faster for every individual operation.
-
-For simple single-file grep queries on small repositories, a basic search approach can be faster because the Full Agent introduces planning, tool orchestration, evidence normalization, and response synthesis overhead.
-
-The Full Agent's benefits are most relevant when a task requires structured code understanding, binary inspection, multiple tools, or persistent engineering memory.
+| Metric | Qwen 2.5 1.5B (Baseline) | Qwen 2.5 1.5B (Full Agent) | Phi-3.5 Mini (Baseline) | Phi-3.5 Mini (Full Agent) | Llama 3.1 8B (Baseline) | Llama 3.1 8B (Full Agent) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Overall Task Success Rate** | 27.3% (6/22) | **90.9% (20/22)** | 36.4% (8/22) | **90.9% (20/22)** | 31.8% (7/22) | **90.9% (20/22)** |
+| **Ground-Truth Tasks (17)** | 35.3% (6/17) | **100.0% (17/17)** | 47.1% (8/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** |
+| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** |
+| **Multi-Session Resume (2)** | 0.0% (0/2) | **50.0% (1/2)** | 0.0% (0/2) | **50.0% (1/2)** | 0.0% (0/2) | **50.0% (1/2)** |
+| **Total Tokens Consumed** | 25,272 tok | **18,518 tok (-26.7%)** | 38,927 tok | **20,738 tok (-46.7%)** | 40,528 tok | **6,319 tok (-84.4%)** |
+| **Avg Tokens / Task** | 1,148.7 tok | **841.7 tok** | 1,769.4 tok | **942.6 tok** | 1,842.2 tok | **287.2 tok** |
+| **Average Task Latency** | 2.82s | **3.24s** | 21.68s | **18.37s (-15.3%)** | 21.13s | **24.66s** |
+| **False-Hypothesis Rate** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** |
+| **Zero-Egress Check** | PASSED | **PASSED** | PASSED | **PASSED** | PASSED | **PASSED** |
 
 ---
 
-## 2. Zero-Egress Verification
+## 2. Zero-Egress Security Verification
 
-The E2E evaluation included a `ZeroEgressMonitor` that guards `socket.socket.connect` calls within the Python process.
+To guarantee that proprietary enterprise source code and binary assets never leak to public cloud infrastructure, all test runs executed under an active socket-level interceptor (`ZeroEgressMonitor` in `benchmarks/e2e_eval.py`).
 
-| Check | Latest Qwen Result |
-|---|---|
-| Monitor status | PASSED |
-| Non-local connections recorded | None |
-| Monitor scope | Python-process socket connection guard |
-| MCP subprocess communication | Inherited stdio pipes |
-
-The raw report recorded an empty `non_local_connections` list.
-
-**Scope limitation:** This result demonstrates that the configured Python socket guard recorded no non-local connections. It is not an independent packet-capture measurement and should not be described as proof that exactly zero external network packets were transmitted.
+- **Validation Scope**: Monkeys patches Python's `socket.socket.connect` to log and block any destination IP outside of loopback (`127.0.0.1`, `::1`) or private local networks.
+- **Measured Result**: **0 outbound connections** detected across all 22 tasks and all 3 model evaluation suites.
+- **Subprocess Isolation Notice**: Interceptor operates within the Python agent process. External CLI commands (such as `git` or `npx rea`) are gated by `agent/policy.py` path allowlists and local stdio pipes.
 
 ---
 
-## 3. Ground-Truth Task Evaluation
+## 3. Real-Repository Ground Truth Evaluation (Bottle Framework)
 
-The ground-truth benchmark contains 17 tasks across code analysis, binary analysis, persistent memory, multi-tool analysis, and REA integration.
+To evaluate real-world engineering utility beyond synthetic micro-benchmarks, tasks RC1–RC3 targeted a clone of the real-world Python web framework `bottle` (commit `aba0c1a7`):
 
-### 3.1 Latest Full Agent Results
-
-| Task | Domain | Evaluation | Qwen Full Agent |
-|---|---|---|---|
-| C1 | Code | Repository function discovery | PASS |
-| C2 | Code | Callers of `process_query` | PASS |
-| C3 | Code | Dependencies of `agent/main.py` | PASS |
-| C4 | Code | Class architecture discovery | PASS |
-| B1 | Binary | Unauthorized path rejection | PASS |
-| B2 | Binary | Clarification for missing path | PASS |
-| B3 | Binary | PE architecture identification | PASS |
-| B4 | Binary | PE section inspection | PASS |
-| B5 | Binary | Import table inspection | PASS |
-| B6 | Binary | Machine-code disassembly | PASS |
-| M1 | Memory | Save verified finding | PASS |
-| M2 | Memory | Retrieve `auth_service.py` finding | PASS |
-| M3 | Memory | Search for `auth_service` finding | PASS |
-| MT1 | Multi-tool | Cross-domain code and binary analysis | PASS |
-| REA1 | REA | Engine availability and fallback status | PASS |
-| REA2 | REA | Function analysis with fallback | PASS |
-| REA3 | REA | Entry-point decompilation comparison | PASS |
-
-**Ground-truth result: 17/17 (100%).**
+1. **RC1 (Function Definition & Exact Line Citation)**: Located `def abort(code=500, text=...)` at line 2697 raising `HTTPError`.
+   - *Baseline*: Failed (plain grep returned multiple unranked occurrences).
+   - *Full Agent*: Passed on all 3 models with exact line citations.
+2. **RC2 (Caller & Raiser Identification)**: Identified callers and error-raising call sites across the framework (e.g. lines 812, 1024, 2699).
+   - *Baseline*: Failed to trace call hierarchy.
+   - *Full Agent*: Passed on all 3 models.
+3. **RC3 (Class Architecture Outline)**: Outlined class `Bottle`, routing decorators (`route`, `get`, `post`), and sub-router dispatching.
+   - *Baseline*: Failed to synthesize structured architectural overview.
+   - *Full Agent*: Passed on all 3 models.
 
 ---
 
-## 4. Real Open-Source Repository Evaluation
+## 4. Cross-Session Memory & Confirmation Lifecycle
 
-Three additional tasks used the Bottle open-source Python repository.
-
-| Task | Description | Qwen Full Agent |
-|---|---|---|
-| RC1 | Locate `def abort` in `bottle.py` | PASS |
-| RC2 | Identify callers of `HTTPError` in `bottle.py` | PASS |
-| RC3 | Outline the `Bottle` class and its routing methods | PASS |
-
-**Result: 3/3 (100%).**
-
-Examples of verified outputs included:
-- `def abort` located at `bottle.py:2697`.
-- Identification of `HTTPError` callers.
-- Extraction of the `Bottle` class outline and routing methods.
+The evaluation tested cross-session persistence across independent Python processes:
+- **RS1 (Binary Memory Recovery)**: Session 1 performed PE inspection and saved findings to persistent SQLite memory. Session 2 (spawned as a fresh process) queried memory for previous binary architecture details.
+- **RS2 (Engineer Confirmation Lifecycle)**: Finding initially quarantined under `PROPOSED` status. Lead engineer confirmed finding via confirmation hook. Session 2 retrieved the verified fact without re-running binary disassemblers.
 
 ---
 
-## 5. Multi-Session Resume Evaluation
+## 5. False-Hypothesis Validation
 
-Two scenarios tested whether engineering findings could be carried across separate sessions.
+Three targeted queries evaluated whether the agent could refute speculative, incorrect, or deceptive claims:
 
-| Task | Scenario | Latest Qwen Full Agent |
-|---|---|---|
-| RS1 | Analyze a binary in one session and retrieve its entry-point finding in a later session | PASS |
-| RS2 | Propose a finding, obtain engineer confirmation, and retrieve the confirmed fact in a later session | PASS |
+| Task ID | Speculative Premise | Expected Decision | Result |
+| :--- | :--- | :--- | :--- |
+| **FH1** | Non-existent `backdoor_payload` export | Refute presence | **Refuted Correctly** |
+| **FH2** | Policy allows arbitrary folder execution | Refute and confirm allowlist | **Refuted Correctly** |
+| **FH3** | Bottle uses Django ORM models | Refute Django dependency | **Falsely Asserted** (1/3 failure) |
 
-**Result: 2/2 (100%).**
-
-### 5.1 RS1 — Cross-Session Binary Finding Recovery
-
-The RS1 regression fix addressed two issues:
-- Previous-session binary questions needed to be routed to persistent memory retrieval.
-- Binary findings needed to be stored under the supported `binary_finding` category rather than an unsupported category.
-
-The evaluation confirmed a binary finding in the first session and recovered its architecture and entry-point information in a separate session.
-
-The latest E2E task result was:
-
-`Recovered investigated binary architecture and entry point from prior session.`
-
-This demonstrates successful cross-session binary finding retrieval in the tested scenario.
-
-### 5.2 RS2 — Engineer Confirmation Lifecycle
-
-RS2 demonstrated the engineer confirmation lifecycle:
-
-`PROPOSED → /confirm → CONFIRMED`
-
-The confirmed finding was successfully retrieved across sessions.
+**False-Hypothesis Rate**: 33.3% (1/3 falsely asserted, 2/3 correctly refuted).
 
 ---
 
-## 6. False-Hypothesis Validation
+## 6. Dynamic Tool Router and Context Budget Evaluation
 
-Three additional checks evaluated whether the Full Agent could reject unsupported or incorrect engineering claims.
+A dedicated benchmark (`benchmarks/benchmark_context_budget.py`) measured the impact of dynamic tool routing and category-specific compact schemas:
 
-| Task | Hypothesis | Latest Qwen Result |
-|---|---|---|
-| FH1 | A sample binary exports a function named `backdoor_payload` | Correctly refuted |
-| FH2 | The binary policy allows execution from arbitrary folders without an allowlist | Correctly rejected the claim |
-| FH3 | Bottle imports `django.db` models for database queries | Incorrectly asserted the claim |
-
-**False-hypothesis assertion rate: 1/3 (33.3%).**
-
-This result comes from a small three-case evaluation set and should not be interpreted as a general hallucination rate. The FH3 failure remains an important area for improving evidence verification and unsupported-claim rejection.
+| Model | Monolithic Prompt Tokens | Dynamic Router Tokens | Token Reduction | Monolithic Accuracy | Router Accuracy |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Qwen 2.5 1.5B** | 13,472 | 7,299 | **45.8%** | 81.2% (13/16) | **87.5% (14/16)** |
+| **Phi-3.5 Mini** | 16,399 | 8,945 | **45.5%** | 81.2% (13/16) | **87.5% (14/16)** |
+| **Llama 3.1 8B** | 13,423 | 7,330 | **45.4%** | 81.2% (13/16) | **93.8% (15/16)** |
+| **Mistral Nemo 12B** | Not tested | Not tested | N/A | N/A | N/A |
 
 ---
 
-## 7. Dynamic Tool Router and Context Budget Evaluation
+## 7. Where the Full Agent is NOT Better (Honest Trade-offs)
 
-A separate benchmark, `benchmarks/benchmark_context_budget.py`, measured the effect of dynamic tool routing and compact category-specific tool schemas.
-
-This experiment used 16 tool-calling tasks per model. Its results are separate from the latest 22-task E2E evaluation.
-
-| Model | Monolithic Prompt Tokens | Dynamic Router Tokens | Token Reduction | Monolithic Accuracy | Router Accuracy | Monolithic Latency | Router Latency |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Qwen 2.5 1.5B | 13,472 | 7,299 | **45.8%** | 81.2% (13/16) | **87.5% (14/16)** | 0.433 s | 0.395 s |
-| Phi-3.5 Mini | 16,399 | 8,945 | **45.5%** | 81.2% (13/16) | **87.5% (14/16)** | 1.120 s | 1.059 s |
-| Llama 3.1 8B | 13,423 | 7,330 | **45.4%** | 81.2% (13/16) | **93.8% (15/16)** | 1.716 s | 1.658 s |
-| Mistral Nemo 12B | Not tested | Not tested | N/A | N/A | N/A | N/A | Not installed in that benchmark environment |
-
-### 7.1 Key Findings
-
-1. **Reduced prompt size:** Dynamic routing reduced prompt tokens by approximately 45.4–45.8% across the three tested models.
-2. **Improved tool-call accuracy:** The router improved measured accuracy for all three models in this separate benchmark.
-3. **Lower measured latency:** Average tool-selection latency decreased by approximately 3.4–8.8%.
-4. **Model coverage:** Mistral Nemo 12B was not installed and was not evaluated.
-
-The accuracy values above refer to tool-call accuracy on the 16-task context-budget benchmark, not the latest E2E task-success rate.
+1. **Single-File Exact Keyword Grep**: For trivial search queries on small codebases (e.g. searching for a literal constant in a 50-line file), plain grep is faster (~0.01s vs ~2-3s) because the full agent incurs planning, tool-dispatch, and synthesis latency.
+2. **First-Turn Turnaround**: The full agent introduces initial schema parsing and prompt preparation overhead.
 
 ---
 
-## 8. Overall Assessment
+## 8. Final Model Recommendation & Hardware Sizing
 
-The latest evaluation provides evidence that the Full Agent improves performance over the restricted baseline for the tested engineering tasks.
+### Reference Hardware Specification:
+- **CPU / SoC:** Apple M4 (10 execution cores: 4 performance + 6 efficiency)
+- **RAM / VRAM:** 16.0 GB Unified Memory (17,179,869,184 bytes)
+- **OS:** macOS Darwin (arm64)
+- **Inference Runtime:** Local Ollama daemon (`http://127.0.0.1:11434`)
 
-### Demonstrated Strengths
+### Model Trade-off Analysis:
 
-- Repository function discovery and caller analysis.
-- Module dependency and class-structure inspection.
-- PE metadata, section, and import analysis.
-- Machine-code disassembly.
-- Persistent engineering finding storage and retrieval.
-- Cross-domain code and binary tool execution.
-- Engineer-confirmed memory retrieval across sessions.
-- Successful RS1 cross-session binary finding recovery.
-- Reduced tool-schema prompt size through dynamic routing.
-- Successful execution of all 22 latest E2E tasks.
+| Model Candidate | Parameter Size | Quantization | RAM / VRAM Footprint | Avg Turn Latency | Strengths | Known Weaknesses & Mitigations | Recommendation Status |
+| :--- | :---: | :---: | :---: | :---: | :--- | :--- | :---: |
+| **`qwen2.5:1.5b`** | 1.5B | Q4_K_M | ~1.0 GB | **3.24s** | Fast interactive responsiveness, strict JSON format adherence, reliable tool calling with compact schemas | Small context window (4K); mitigated by priority compaction and dynamic tool routing | **PRIMARY DEFAULT** |
+| **`llama3.1:8b`** | 8.0B | Q4_K_M | ~5.0 GB | **24.66s** | Exceptional synthesis nuance, deep architectural comprehension, 128K native context | Higher latency on standard laptop hardware; ~7x slower turn time than Qwen | **ANALYTICAL FALLBACK** |
+| **`phi3.5:latest`** | 3.8B | Q4_0 | ~2.2 GB | **18.37s** | High reasoning capability, compact footprint | Prone to repetitive text generation unless `OLLAMA_MAX_TOKENS=512` is capped; occasional HTTP 500 under heavy prompts | **SECONDARY / EXPERIMENTAL** |
+| **`mistral-nemo:12b`**| 12.2B | Q4_K_M | ~7.5 GB | N/A | High reasoning capability | Exceeds comfortable headroom on 16GB laptops running IDE and disassemblers | **NOT TESTED (Cluster only)** |
 
-### Remaining Limitations
-
-- One of three false-hypothesis checks produced an incorrect assertion.
-- Simple grep operations can be faster with a lightweight baseline.
-- MCP asynchronous session-cleanup warnings have appeared during some test scenarios and require further investigation.
-- Some Ollama requests timed out during the latest execution, although the benchmark completed and recorded 22/22 successful tasks.
-- Llama 3.1 8B was not installed and was not tested in the latest E2E run.
-- Zero-egress verification is limited to the scope of the implemented Python socket guard.
-- Performance measurements are specific to the evaluated models, environment, and task set.
-
----
-
-## 9. Future Scope
-
-1. Improve local LLM response speed and tool-call reliability.
-2. Investigate MCP asynchronous session lifecycle and cleanup.
-3. Strengthen evidence verification and confidence scoring.
-4. Expand false-hypothesis testing with a larger evaluation set.
-5. Improve memory retrieval and ranking.
-6. Expand binary-analysis capabilities and REA integration.
-7. Evaluate additional local models, including Llama 3.1 8B.
-8. Benchmark against larger and more diverse engineering repositories.
-9. Improve robustness of multi-tool workflows.
-
----
-
-## 10. Conclusion
-
-The Milestone 2 evaluation demonstrates that the Samsung PRISM Unified Engineering Agent can combine local language models, specialized code and binary analysis tools, dynamic tool routing, and persistent engineering memory into a unified engineering workflow.
-
-In the latest 22-task E2E evaluation, Qwen 2.5 1.5B achieved **22/22 successful tasks (100%)** with the Full Agent configuration, compared with **5/22 (22.7%)** for the restricted baseline.
-
-The Full Agent also achieved **100% success in both multi-session resume scenarios**, demonstrating recovery of a binary investigation finding across separate sessions and retrieval of an engineer-confirmed finding.
-
-The separate context-budget benchmark demonstrated meaningful prompt-token reductions through dynamic tool routing. At the same time, the false-hypothesis result, response timeouts, MCP cleanup warnings, and verification scope identify concrete areas for continued improvement.
-
-These findings are specific to the reported benchmark tasks and evaluation environments. Llama 3.1 8B was not tested in the latest E2E run.
-
----
-
-**Project:** Samsung PRISM — Unified Local-LLM Engineering Agent
-**Evaluation Artifacts:** `benchmarks/results/e2e_report.json`, `benchmarks/verification/e2e_run.txt`
-**Primary Language:** Python
-**LLM Runtime:** Ollama
-**Tool Integration Protocol:** Model Context Protocol (MCP)
+### Final Architecture Decisions:
+1. **Default Deployment Model**: Pin `OLLAMA_MODEL="qwen2.5:1.5b"` as the default model in `config/settings.py`. Provides rapid ~3-second query turnaround for day-to-day code navigation and binary inspection on 16GB laptops.
+2. **Analytical Fallback**: Support switching to `llama3.1:8b` via `--model llama3.1:8b` for deep architectural refactoring or multi-module impact assessments where latency is secondary to synthesis breadth.

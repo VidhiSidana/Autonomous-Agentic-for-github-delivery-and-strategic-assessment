@@ -70,7 +70,61 @@ REA's execution requirements were verified against the npm package manifest (`pa
   - Engine status: Uninstalled on host.
 
 ### Verified Architecture Fallback
-Because Node 20.19.4 and missing JDK/Ghidra prevent native decompiler execution on this specific workstation, the agent's `REAAdapter` automatically detects these unmet prerequisites and triggers a graceful fallback to the local `pefile` + `Capstone` static analysis engine. No synthetic results are fabricated.
+Because Node (< 22.23.4) and missing Ghidra prevent native decompiler execution on this specific workstation, the agent's `REAAdapter` automatically detects these unmet prerequisites and triggers a graceful fallback to the local `pefile` + `Capstone` static analysis engine. No synthetic results are fabricated.
+
+### Step-by-Step Installation & Setup Instructions
+
+To enable full native decompilation via REA on a production or developer workstation:
+
+#### macOS Setup:
+1. **Node.js (>= 22.23.4)**:
+   ```bash
+   brew install node@22
+   # Or using nvm:
+   nvm install 22.23.4 && nvm use 22.23.4
+   node -v  # Verify >= v22.23.4
+   ```
+2. **Java Development Kit (JDK 17+)**:
+   ```bash
+   brew install openjdk@21
+   sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+   export JAVA_HOME="/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home"
+   ```
+3. **Ghidra Binary Decompiler**:
+   ```bash
+   brew install --cask ghidra
+   export GHIDRA_INSTALL_DIR="/Applications/ghidra"
+   export PATH="$GHIDRA_INSTALL_DIR:$PATH"
+   ```
+4. **REA Agents MCP Server**:
+   ```bash
+   npm install -g rea-agents
+   # Test CLI invocation:
+   npx -y rea-agents --version
+   ```
+
+#### Windows Setup:
+1. **Node.js (>= 22.23.4)**:
+   Download the official MSI installer from [nodejs.org](https://nodejs.org) or install via `winget install OpenJS.NodeJS.LTS`.
+2. **Java Development Kit (JDK 17+)**:
+   `winget install Microsoft.OpenJDK.21` and ensure `JAVA_HOME` is set in system environment variables.
+3. **Ghidra**:
+   Download Ghidra release zip from [ghidra-sre.org](https://ghidra-sre.org), extract to `C:\Tools\ghidra`, and set `GHIDRA_INSTALL_DIR=C:\Tools\ghidra`.
+4. **REA Agents MCP Server**:
+   ```powershell
+   npm install -g rea-agents
+   npx -y rea-agents --version
+   ```
+
+### Measured Integration Status Table
+
+| Subsystem / Capability | Measured Status | Evidence / Reason |
+| :--- | :--- | :--- |
+| **Path Policy Gate (`agent/policy.py`)** | **VERIFIED** | Unit tested in `tests/test_policy.py` & `tests/test_rea_policy.py`; rejects traversal, symlink escapes, unauthorized paths fail-closed. |
+| **Audit Logging (`memory/binary_audit.log`)** | **VERIFIED** | Logs every REA operation with timestamp, path, and authorization decision. |
+| **Fallback Engine (`pefile` + `Capstone`)** | **VERIFIED** | Fully operational; tested across tasks B1-B6 and REA1-REA3 in `benchmarks/benchmark_runner.py`. |
+| **MCP Server Registration (`config/mcp_servers.json`)** | **VERIFIED** | Configured with `REA_MCP_INPUT_SCHEMA_PROFILE=compact`. |
+| **Native REA Decompilation** | **NOT TESTED** | Host runtime has Node 22.20.0 (< 22.23.4 required for `node:zlib.zstdDecompress`) and Ghidra is uninstalled. |
 
 ---
 

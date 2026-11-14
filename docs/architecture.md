@@ -236,3 +236,79 @@ All operations are strictly on-premise:
 - **Local Endpoints Only:** Outbound connections are confined to `127.0.0.1:11434` (Ollama) and local UNIX pipes (stdio MCP servers).
 - **Socket Interception:** `ZeroEgressMonitor` intercepts socket initialization during evaluation and enforces immediate refusal on any non-local connection.
 - **Audit Verification:** Verified 100% compliant in `benchmarks/results/e2e_report.json`.
+
+---
+
+## 10. Developer Workflow & VS Code Tasks
+
+For seamless local development in Visual Studio Code, standard developer tasks are defined in `.vscode/tasks.json`:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "PRISM: Run Unit Tests",
+      "type": "shell",
+      "command": "python -m unittest discover -s tests -p 'test_*.py' -t .",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Run Ground Truth Benchmarks (17 Tasks)",
+      "type": "shell",
+      "command": "python benchmarks/benchmark_runner.py",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Health Check & Endpoint Validation",
+      "type": "shell",
+      "command": "python scripts/check_llm_endpoint.py --model qwen2.5:1.5b",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "PRISM: Run Agent CLI",
+      "type": "shell",
+      "command": "prism-agent --query \"${input:query}\"",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "PRISM: Clean Environment Verification",
+      "type": "shell",
+      "command": "python scripts/clean_env_check.py",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "query",
+      "type": "promptString",
+      "description": "Engineering query to investigate"
+    }
+  ]
+}
+```
+
+These tasks provide one-click execution within VS Code without exposing developer machines to cloud dependencies or external network services.

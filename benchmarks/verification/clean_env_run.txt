@@ -1,0 +1,342 @@
+=== SAMSUNG PRISM CLEAN ENVIRONMENT VERIFICATION ===
+Timestamp: 2026-11-14T15:15:18Z
+Host Python: /private/tmp/prism_venv/bin/python (3.14.2 (v3.14.2:df793163d58, Dec  5 2025, 12:18:06) [Clang 16.0.0 (clang-1600.0.26.6)])
+Project Root: /Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment
+
+[*] Step 1: Creating isolated virtual environment at /var/folders/m7/fgr_07552pj1gvtht193s_500000gn/T/prism_clean_env_e78cw4v1/test_venv...
+[PASS] Virtual environment created successfully.
+[*] Step 2: Installing package in editable mode via pip...
+[PASS] Package installed successfully in clean virtual environment.
+[*] Step 3: Verifying CLI console script entry point...
+[PASS] prism-agent returned: prism-agent 0.2.0 (Samsung PRISM Milestone 2)
+
+[*] Step 4: Running full test suite (unittest discover)...
+..s..................................[11/14/26 20:45:29] INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30170 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+[11/14/26 20:45:30] INFO     Connected to MCP server 'test'.   mcp_client.py:193
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30170 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+.                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30188 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:193
+[11/14/26 20:45:31] INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30188 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+..                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30194 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+                    INFO     Connected to MCP server 'test'.   mcp_client.py:193
+[11/14/26 20:45:32] WARNING  Executing <Task finished        base_events.py:2041
+                             name='Task-21'                                     
+                             coro=<TestMCPClient.test_call_a                    
+                             ddition_tool() done, defined at                    
+                             /Users/chintansood7/samsung                        
+                             prism/Autonomous-Agentic-for-gi                    
+                             thub-delivery-and-strategic-ass                    
+                             essment/tests/test_mcp_client.p                    
+                             y:28> result=None created at                       
+                             /Library/Frameworks/Python.fram                    
+                             ework/Versions/3.14/lib/python3                    
+                             .14/asyncio/runners.py:109>                        
+                             took 1.063 seconds                                 
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30194 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+.                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30197 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+[11/14/26 20:45:33] INFO     Connected to MCP server 'test'.   mcp_client.py:193
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30197 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+.                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30199 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+[11/14/26 20:45:34] INFO     Connected to MCP server 'test'.   mcp_client.py:193
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30199 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+.                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'test'...                                          
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30283 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+[11/14/26 20:45:35] INFO     Connected to MCP server 'test'.   mcp_client.py:193
+                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'code_fallback'...                                 
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30284 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=9 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+[11/14/26 20:45:36] INFO     Connected to MCP server           mcp_client.py:193
+                             'code_fallback'.                                   
+                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'binary'...                                        
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30285 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=11 idle bufsize=0>                              
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=12 polling>>                                    
+[11/14/26 20:45:37] INFO     Connected to MCP server 'binary'. mcp_client.py:193
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30283 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closing fd=8 idle>>                             
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'test':    mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'test'.                                            
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30284 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=9 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for            mcp_client.py:363
+                             'code_fallback': Attempted to                      
+                             exit cancel scope in a different                   
+                             task than it was entered in                        
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'code_fallback'.                                   
+[11/14/26 20:45:38] INFO     <_UnixReadPipeTransport fd=12    unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30285 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=11 closed>                            
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=12 closed>>                           
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for 'binary':  mcp_client.py:363
+                             Attempted to exit cancel scope in                  
+                             a different task than it was                       
+                             entered in                                         
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'binary'.                                          
+.........                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'code_graph'...                                    
+                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'code_graph'...                                    
+                    INFO     Connecting to MCP server          mcp_client.py:176
+                             'code_fallback'...                                 
+                    INFO     execute program                 base_events.py:1802
+                             '/private/var/folders/m7/fgr_07                    
+                             552pj1gvtht193s_500000gn/T/pris                    
+                             m_clean_env_e78cw4v1/test_venv/                    
+                             bin/python':                                       
+                             <_UnixSubprocessTransport                          
+                             pid=30291 running                                  
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+[11/14/26 20:45:39] INFO     Connected to MCP server           mcp_client.py:193
+                             'code_fallback'.                                   
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:559
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:236
+                             pid=30291 running                                  
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closing fd=8 idle>>                             
+                             exited with return code 0                          
+                    WARNING  MCP cleanup failed for            mcp_client.py:363
+                             'code_fallback': Attempted to                      
+                             exit cancel scope in a different                   
+                             task than it was entered in                        
+                    INFO     Disconnected from MCP server      mcp_client.py:372
+                             'code_fallback'.                                   
+..........................................
+----------------------------------------------------------------------
+Ran 94 tests in 11.214s
+
+OK (skipped=1)
+[PASS] Unit tests completed successfully in 14.05s.
+
+[*] Step 5: Running 17 benchmark tasks (benchmarks/benchmark_runner.py)...
+Running 17 benchmark tasks from milestone1_ground_truth.json...
+
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task C1: Function discovery across repository (2.348s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task C2: Caller identification for process_query (0.301s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task C3: Module dependency extraction (0.019s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task C4: Code architecture and class outline understanding (0.324s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task B1: Binary analysis path policy enforcement (0.776s)
+[PASS] Task B2: Missing binary path triggers clarification (0.001s)
+[PASS] Task B3: Binary metadata and PE architecture extraction (0.090s)
+[PASS] Task B4: PE section header and memory boundary inspection (0.037s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task B5: Binary imports and external symbol dependency extraction (0.013s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task B6: Capstone machine code instruction disassembly (0.048s)
+[PASS] Task M1: Persist engineering finding (0.002s)
+[PASS] Task M2: Cross-session retrieval of verified finding (0.003s)
+[PASS] Task M3: Multi-session persistence retrieval across engineering iterations (0.002s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task MT1: Multi-tool cross-domain query (0.297s)
+[Memory] Automatically saved 1 finding(s).
+[PASS] Task REA1: REA engine availability and prerequisite status check on authorized binary (0.040s)
+[PASS] Task REA2: Binary function analysis via REA integration with export fallback comparison (0.043s)
+[PASS] Task REA3: Entry point instruction disassembly comparing REA integration with Capstone fallback (0.043s)
+
+==========================================
+ Benchmark Summary: 17/17 Passed (100.0%)
+ Report saved: /Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/results/benchmark_report.json
+==========================================
+[PASS] All 17 benchmark tasks passed in 6.20s.
+
+[*] Step 6: Running multi-session persistence demonstration...
+[PASS] Successfully recovered finding ID 1 in isolated session session_bf8d118f
+
+=======================================================
+CLEAN ENVIRONMENT VERIFICATION COMPLETED SUCCESSFULLY
+=======================================================
