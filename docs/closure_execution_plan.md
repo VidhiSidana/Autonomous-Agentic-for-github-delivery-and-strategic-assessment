@@ -96,3 +96,22 @@ Closure is ready for sign-off when:
 5. The closure report and presentation are approved by the project contributors.
 
 **Status:** Closure documentation prepared. Runtime packaging, live demonstration, artifact refresh and final sign-off remain to be evidenced.
+
+
+---
+
+## 6. Final evidence reconciliation (2026-11-15)
+
+The current evidence-based status is maintained in [Final Project Closure Status](final_closure_status.md). That document supersedes any older unchecked checklist or historical run summary where they conflict with the latest committed artifacts.
+
+Key corrections from the latest committed evidence:
+
+- Ground-truth benchmark: 17/17 passed (2026-11-14).
+- Multi-model E2E: 20/22 (90.9%) for each of three models; MT1 and RS1 failed in the recorded run.
+- Cross-session resume: 50% (1/2); RS1 remains unresolved.
+- False-hypothesis evaluation: 1/3 false assertion (33.3%).
+- Clean-environment evidence: macOS / Python 3.14.2; 94 tests, 1 skipped, CLI smoke test passed. MCP cleanup warnings were present.
+- Zero-egress evidence is limited to the Python-process socket.connect monitor and is not a packet-level or infrastructure isolation certification.
+- Samsung internal GPU deployment, a genuine final demo recording, Windows/Python 3.11 clean-install validation and reviewer sign-off remain pending unless new evidence is committed.
+
+**Current closure decision:** Not ready for unconditional final sign-off. Resolve the P0 E2E reliability items and complete the P1 demonstration/platform evidence before requesting external sign-off. See `docs/final_closure_status.md` for the ordered checklist and precise claims.
