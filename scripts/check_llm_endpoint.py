@@ -15,6 +15,7 @@ import json
 import socket
 import sys
 import time
+from typing import Tuple
 import urllib.parse
 import urllib.request
 
