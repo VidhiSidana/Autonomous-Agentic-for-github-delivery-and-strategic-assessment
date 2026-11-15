@@ -2,6 +2,9 @@
 
 ### Local AI Agent for Code Comprehension, Static Binary Investigation, and Persistent Engineering Memory
 
+> [!IMPORTANT]
+> **Current project status (2026-11-15):** Core engineering implementation and the deterministic 17/17 ground-truth benchmark are complete. Final technical closure is still pending: the latest three-model E2E run is 20/22 (90.9%) per model, with MT1 and RS1 failures and one false-hypothesis false assertion out of three. Final demonstration evidence, Windows/Python 3.11 clean-install verification, Samsung internal deployment validation and reviewer sign-off also remain open. See [Final Project Closure Status](docs/final_closure_status.md) for the verified checklist and evidence limitations.
+
 ---
 
 ## 1. Project Overview
