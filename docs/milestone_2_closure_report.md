@@ -1,3 +1,19 @@
+> [!WARNING]
+> **Evidence reconciliation — 2026-11-15 (supersedes conflicting status statements below).**
+>
+> This report contains historical claims and snapshots. The latest committed evidence does **not** support unconditional final closure or a claim that all evaluation dimensions are complete:
+>
+> - The deterministic ground-truth benchmark passed **17/17** in `benchmarks/results/benchmark_report.json` (2026-11-14).
+> - The latest committed multi-model E2E run tested three models; each achieved **20/22 (90.9%)**. MT1 and RS1 failed for each model in that run.
+> - Cross-session resume was **50% (1/2)** and false-hypothesis evaluation recorded **1/3 false assertions (33.3%)**.
+> - The clean-environment log verifies editable installation and CLI smoke test on macOS/Python 3.14.2; it reports 94 tests and 1 skipped, with MCP cleanup warnings. It does not establish a clean Windows/Python 3.11 run.
+> - The zero-egress result is limited to the Python-process `socket.socket.connect` monitor described in the E2E artifact; it is not independent packet-level or infrastructure certification.
+> - Samsung internal GPU deployment, a final recorded live demonstration, and reviewer sign-off remain manual/pending unless separately evidenced.
+>
+> Therefore, the implementation is substantially complete, but **final technical closure is pending**. Use [`docs/final_closure_status.md`](final_closure_status.md) as the current source of truth for outstanding work and claim wording. The historical sections below are retained for traceability and must not override this addendum.
+
+---
+
 # Samsung PRISM — Milestone 2 & Final Technical Closure Report
 
 **Project Title:** Unified Local-LLM Engineering Agent for Strategic Code & Binary Assessment  
