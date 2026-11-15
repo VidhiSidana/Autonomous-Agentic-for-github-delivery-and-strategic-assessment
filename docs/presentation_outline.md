@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **Presentation status correction (2026-11-15):** Slide 12's historical “Milestone 2 Status: 100% COMPLETE” wording must not be used as an unconditional final-closure claim. The latest committed E2E evidence is 20/22 (90.9%) for each of three models, with MT1 and RS1 failing and 1/3 false-hypothesis assertions incorrect. The 17/17 ground-truth benchmark remains a separate passing result. Final demo evidence, Windows/Python 3.11 clean-install verification, internal Samsung deployment validation and reviewer sign-off are still pending. Update Slide 12 to say “Core implementation and deterministic benchmark complete; final E2E hardening and operational closure pending.” See [final closure status](final_closure_status.md).
+
+---
+
 # Samsung PRISM: Unified Local-LLM Engineering Agent
 ## Final Presentation & Technical Milestone 2 Closure Outline
 
