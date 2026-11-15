@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for AgentOrchestrator and end-to-end routing.
 """
 
@@ -436,6 +436,42 @@ class TestOrchestrator(unittest.IsolatedAsyncioTestCase):
             ),
             bundle.limitations,
         )
+
+    async def test_multi_tool_query_contains_architecture_and_text_section(self):
+        """
+        Regression test for MT1: Multi-tool query must execute both code and binary branches
+        and include real binary architecture (AMD64) and section (.text) in final response.
+        """
+        import os
+        import config.settings
+        from benchmarks.benchmark_runner import create_sample_pe_binary
+        from unittest.mock import MagicMock
+
+        sample_bin = Path(self.temp_dir.name) / "sample_auth.exe"
+        create_sample_pe_binary(sample_bin)
+
+        temp_path = Path(self.temp_dir.name).resolve()
+        if temp_path not in config.settings.BINARY_ALLOWED_DIRS:
+            config.settings.BINARY_ALLOWED_DIRS.append(temp_path)
+        cur_env = os.environ.get("BINARY_ALLOWED_DIRS", "")
+        os.environ["BINARY_ALLOWED_DIRS"] = f"{temp_path},{cur_env}".rstrip(",")
+
+        mock_llm = MagicMock()
+        mock_llm.model = "mock-model"
+        mock_llm.check_availability.return_value = (True, "mock online")
+        mock_llm.chat_with_metadata.return_value = (
+            "Code functions and binary inspected successfully.",
+            {"prompt_eval_count": 50, "eval_count": 25},
+        )
+        self.orchestrator.llm = mock_llm
+
+        query = f'Find functions in codebase and inspect binary "{sample_bin}"'
+        result = await self.orchestrator.process_query(query)
+
+        self.assertEqual(result.category, "multi_tool")
+        self.assertIn("AMD64", result.response_text)
+        self.assertIn(".text", result.response_text)
+        self.assertTrue(any(it.tool_name == "analyze_binary" for it in result.evidence_bundle.items))
 
 if __name__ == "__main__":
     unittest.main()

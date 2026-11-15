@@ -1,4 +1,4 @@
-﻿
+
 """
 Consolidated Agent Orchestrator for the Samsung PRISM Unified Engineering Agent.
 
@@ -893,7 +893,10 @@ class AgentOrchestrator:
                                         "called by",
                                         "that call",
                                         "calling",
-                                        "calls ",
+                                        "calls",
+                                        "call ",
+                                        "raise",
+                                        "raises",
                                     )
                                 )
 
@@ -1437,11 +1440,22 @@ class AgentOrchestrator:
                     "callers",
                     "who calls",
                     "called by",
+                    "that call",
+                    "calling",
+                    "calls",
+                    "call ",
+                    "raise",
+                    "raises",
                 )
             ):
                 tool_name = "find_callers"
+                search_dir = target_dir
+                if plan.file_path:
+                    candidate = (Path(target_dir) / Path(plan.file_path).parent).resolve()
+                    if candidate.is_dir():
+                        search_dir = str(candidate)
                 args = {
-                    "directory": target_dir,
+                    "directory": search_dir,
                     "function_name": plan.function_name,
                 }
 
@@ -2016,6 +2030,10 @@ class AgentOrchestrator:
                 "called by",
                 "that call",
                 "calling",
+                "calls",
+                "call ",
+                "raise",
+                "raises",
             )
         )
 
@@ -2335,6 +2353,45 @@ class AgentOrchestrator:
             )
 
             self._last_token_meta = metadata
+
+            # Deterministic evidence facts footer built from VERIFIED evidence
+            evidence_facts = []
+            for item in bundle.verified_items:
+                if item.source and "binary" in item.source.lower():
+                    try:
+                        detail_data = json.loads(item.detail) if item.detail else {}
+                        if isinstance(detail_data, dict):
+                            arch = detail_data.get("architecture")
+                            sections = [s.get("name") for s in detail_data.get("sections", []) if isinstance(s, dict) and s.get("name")]
+                            parts = []
+                            if arch:
+                                parts.append(f"Architecture: {arch}")
+                            if sections:
+                                parts.append(f"Sections: {', '.join(sections[:4])}")
+                            if detail_data.get("entry_point_rva"):
+                                parts.append(f"Entry Point: {detail_data.get('entry_point_rva')}")
+                            if parts:
+                                evidence_facts.append(f"- Binary ({item.file_path or 'target'}): {'; '.join(parts)}")
+                    except Exception:
+                        pass
+                elif item.source and ("code" in item.source.lower() or "find_" in item.source.lower()):
+                    if getattr(item, "function_name", None) and getattr(item, "file_path", None):
+                        evidence_facts.append(f"- Code Function: {item.function_name} in {item.file_path}")
+                    try:
+                        d = json.loads(item.detail) if item.detail else {}
+                        if isinstance(d, dict) and "items" in d and isinstance(d["items"], list):
+                            for call_item in d["items"][:5]:
+                                if isinstance(call_item, dict) and "caller" in call_item and "line" in call_item:
+                                    evidence_facts.append(
+                                        f"- Call site: {call_item.get('caller')} calls {call_item.get('callee', '')} at {call_item.get('file', '')}:{call_item.get('line')}"
+                                    )
+                    except Exception:
+                        pass
+
+            if evidence_facts:
+                footer = "\n\n=== VERIFIED EVIDENCE FACTS ===\n" + "\n".join(evidence_facts)
+                content = f"{content.rstrip()}{footer}"
+
             return content
 
         # Offline fallback.

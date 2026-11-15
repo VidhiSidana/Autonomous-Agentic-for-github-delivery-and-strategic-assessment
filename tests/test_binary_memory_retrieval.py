@@ -140,6 +140,78 @@ class TestBinaryMemoryRetrieval(unittest.TestCase):
         self.assertIn("Section name(s): .text", response)
         self.assertIn("Verification status: VERIFIED", response)
 
+    def test_cross_process_subprocess_binary_memory_recovery(self):
+        """
+        Step 2.4 regression test: Session 1 saves finding in SQLite, engineer confirms,
+        and Session 2 in an independent subprocess recovers the finding.
+        """
+        import subprocess
+        import sys
+        from benchmarks.e2e_eval import score_ground_truth
+
+        metadata = {
+            "file_name": "sample_authorized.exe",
+            "machine": "0x8664",
+            "architecture": "AMD64",
+            "entry_point_rva": "0x1000",
+            "image_base": "0x140000000",
+            "number_of_sections": 4,
+            "sections": [{"name": ".text"}, {"name": ".rdata"}],
+        }
+        saved = self.memory.save_memory(
+            title="Binary analysis via 'analyze_binary' succeeded.",
+            content=(
+                "Finding: Binary analysis succeeded.\n"
+                "Source: binary.analyze_binary\n"
+                "Details:\n" + json.dumps(metadata)
+            ),
+            category="binary_finding",
+            verification_status="PROPOSED",
+            source="binary.analyze_binary",
+            session_id="session-1",
+        )
+        conf = self.memory.confirm_finding(saved["id"], confirmed_by="lead_engineer")
+        self.assertTrue(conf["updated"])
+
+        repo_root = Path(__file__).resolve().parent.parent
+        db_file = str(Path(self.temp_dir.name) / "memory.db")
+        code = f"""
+import sys, json, asyncio
+from pathlib import Path
+sys.path.insert(0, {repr(str(repo_root))})
+from memory.memory import EngineeringMemory
+from memory.session_manager import SessionManager
+from agent.orchestrator import AgentOrchestrator
+
+async def run():
+    db = Path({repr(db_file)})
+    mem = EngineeringMemory(db_path=db)
+    sm = SessionManager(db_path=db)
+    sm.start_session()
+    orch = AgentOrchestrator(memory=mem, session_manager=sm, default_repo_dir=Path({repr(str(repo_root))}))
+    res = await orch.process_query("What binary architecture and entry point did we discover in the previous session?")
+    await orch.close()
+    out = {{
+        "response": res.response_text,
+        "evidence_count": len(res.evidence_bundle.items),
+    }}
+    print("SUBPROCESS_OUT:" + json.dumps(out))
+
+asyncio.run(run())
+"""
+        proc = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\nSTDOUT: {proc.stdout}\nSTDERR: {proc.stderr}")
+        self.assertIn("SUBPROCESS_OUT:", proc.stdout)
+        line = [ln for ln in proc.stdout.splitlines() if ln.startswith("SUBPROCESS_OUT:")][0]
+        data = json.loads(line[len("SUBPROCESS_OUT:"):])
+        self.assertTrue(data["evidence_count"] > 0)
+        passed, reason = score_ground_truth("RS1", data["response"])
+        self.assertTrue(passed, f"RS1 failed to pass ground truth scoring: {reason}")
 
 
 if __name__ == "__main__":

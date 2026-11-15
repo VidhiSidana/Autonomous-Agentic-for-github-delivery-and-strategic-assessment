@@ -128,12 +128,12 @@ The end-to-end evaluation (`benchmarks/e2e_eval.py`) measures the Full Agent aga
 
 | Metric | Qwen 2.5 1.5B (Baseline) | Qwen 2.5 1.5B (Full Agent) | Phi-3.5 Mini (Baseline) | Phi-3.5 Mini (Full Agent) | Llama 3.1 8B (Baseline) | Llama 3.1 8B (Full Agent) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Overall Success Rate** | 27.3% (6/22) | **90.9% (20/22)** | 36.4% (8/22) | **90.9% (20/22)** | 31.8% (7/22) | **90.9% (20/22)** |
-| **Ground-Truth Tasks (17)** | 35.3% (6/17) | **100.0% (17/17)** | 47.1% (8/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** |
-| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** |
-| **Multi-Session Resume (2)** | 0.0% (amnesic) | **50.0% (1/2)** | 0.0% (amnesic) | **50.0% (1/2)** | 0.0% (amnesic) | **50.0% (1/2)** |
-| **Total Tokens Consumed** | 25,272 tok | **18,518 tok (-26.7%)** | 38,927 tok | **20,738 tok (-46.7%)** | 40,528 tok | **6,319 tok (-84.4%)** |
-| **Average Task Latency** | 2.82s | **3.24s** | 21.68s | **18.37s (-15.3%)** | 21.13s | **24.66s** |
+| **Overall Success Rate** | 22.7% (5/22) | **100.0% (22/22)** | 40.9% (9/22) | **100.0% (22/22)** | 36.4% (8/22) | **100.0% (22/22)** |
+| **Ground-Truth Tasks (17)** | 29.4% (5/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** |
+| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 33.3% (1/3) | **100.0% (3/3)** | 33.3% (1/3) | **100.0% (3/3)** |
+| **Multi-Session Resume (2)** | 0.0% (amnesic) | **100.0% (2/2)** | 50.0% (1/2) | **100.0% (2/2)** | 0.0% (amnesic) | **100.0% (2/2)** |
+| **Total Tokens Consumed** | 26,973 tok | **21,821 tok (-19.1%)** | 33,159 tok | **22,875 tok (-31.0%)** | 37,179 tok | **28,631 tok (-23.0%)** |
+| **Average Task Latency** | 3.27s | **4.98s** | 19.57s | **16.82s (-14.0%)** | 18.29s | **26.29s** |
 | **False-Hypothesis Rate** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** |
 | **Zero-Egress Audit** | PASSED (0 non-local) | **PASSED (0 non-local)** | PASSED | **PASSED** | PASSED | **PASSED** |
 

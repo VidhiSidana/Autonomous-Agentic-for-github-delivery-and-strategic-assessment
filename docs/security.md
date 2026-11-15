@@ -57,7 +57,7 @@ The **Samsung PRISM Unified Engineering Agent** is architected for on-premise lo
 
 The agent can connect to external servers such as `codebase-memory-mcp`:
 * **Process Boundary:** External MCP servers run as dedicated OS processes over `stdio`.
-* **Execution Environment:** In sandbox environments, the external server executable (e.g., `/Users/<user>/.local/bin/codebase-memory-mcp`) must be present in the execution path or granted OS permissions.
+* **Execution Environment:** In sandbox environments, the external server executable (e.g., `~/.local/bin/codebase-memory-mcp` or in `$PATH`) must be present in the execution path or granted OS permissions.
 * **Resilient Fallback:** If the external MCP server is unavailable, disabled, or fails to connect, the agent emits an explicit limitation warning and falls back to its local AST-based analysis server (`code_fallback`), preserving end-to-end functionality.
 
 ---

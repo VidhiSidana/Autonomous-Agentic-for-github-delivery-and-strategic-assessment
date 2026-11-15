@@ -74,27 +74,29 @@ The table below accounts for every deliverable and capability across Milestone 1
 
 ### Comprehensive Test Suite Execution
 - **Command**: `python -m unittest discover -s tests -p "test_*.py" -t .`
-- **Total Test Cases**: **94 tests**
-- **Results**: **93 Passed, 0 Failed, 1 Skipped** (Skipped: external network probe test in `test_policy.py`)
-- **Suite Execution Latency**: **4.537 seconds**
+- **Total Test Cases**: **130 tests**
+- **Results**: **129 Passed, 0 Failed, 1 Skipped** (Skipped: external network probe test in `test_policy.py`)
+- **Suite Execution Latency**: **6.638 seconds**
 
 | Test Module | Coverage Domain | Test Count | Result |
 | :--- | :--- | :---: | :---: |
-| `tests/test_benchmark_runner.py` | Fixture generation & cross-process persistence | 3 | **PASS** |
+| `tests/test_benchmark_runner.py` | Fixture generation & cross-process persistence | 5 | **PASS** |
 | `tests/test_binary_analysis.py` | PE headers, Capstone disassembly, REA mock | 8 | **PASS** |
+| `tests/test_binary_memory_retrieval.py` | Cross-process PE memory persistence & recovery | 3 | **PASS** |
 | `tests/test_code_analysis.py` | Tree-sitter AST, caller/callee tracing, outline | 6 | **PASS** |
-| `tests/test_confirmation_flow.py` | Quarantined `PROPOSED` findings, `/confirm`, `/reject` | 5 | **PASS** |
-| `tests/test_context_budget.py` | Priority compaction, token budgets, schema routing | 5 | **PASS** |
+| `tests/test_confirmation_flow.py` | Quarantined `PROPOSED` findings, `/confirm`, `/reject` | 7 | **PASS** |
+| `tests/test_context_budget.py` | Priority compaction, token budgets, schema routing | 11 | **PASS** |
 | `tests/test_e2e_eval_scoring.py` | Deterministic negative/positive ground-truth scoring | 14 | **PASS** |
-| `tests/test_mcp_client.py` | Dynamic MCP discovery and schema validation | 7 | **PASS** |
+| `tests/test_evidence_trace.py` | Provenance chains & evidence item normalization | 2 | **PASS** |
+| `tests/test_mcp_client.py` | Dynamic MCP discovery and schema validation | 12 | **PASS** |
 | `tests/test_memory.py` | SQLite findings, CRUD, deduplication, search | 6 | **PASS** |
 | `tests/test_module_imports.py` | Dynamic clean import of all package modules | 1 | **PASS** |
-| `tests/test_orchestrator.py` | Multi-tool orchestration, memory anchoring | 4 | **PASS** |
-| `tests/test_planner.py` | File/symbol case preservation, category intent | 13 | **PASS** |
+| `tests/test_orchestrator.py` | Multi-tool orchestration, memory anchoring | 14 | **PASS** |
+| `tests/test_planner.py` | File/symbol case preservation, category intent | 14 | **PASS** |
 | `tests/test_policy.py` | Path traversal, symlinks, directory allowlist | 12 | **PASS (1 skipped)** |
-| `tests/test_unified_memory.py` | Backward-compatible findings retrieval & hypothesis | 6 | **PASS** |
+| `tests/test_unified_memory.py` | Backward-compatible findings retrieval & hypothesis | 7 | **PASS** |
 | `tests/test_unified_memory_layer.py` | Session hooks, Markdown sync, stale detection | 8 | **PASS** |
-| **Total** | **Comprehensive Automated Test Suite** | **94** | **93 PASS, 1 SKIPPED** |
+| **Total** | **Comprehensive Automated Test Suite** | **130** | **129 PASS, 1 SKIPPED** |
 
 ### Ground-Truth Benchmark Suite Execution
 - **Command**: `python benchmarks/benchmark_runner.py`
@@ -107,10 +109,10 @@ Empirically measured using `benchmarks/e2e_eval.py` across 22 evaluation tasks a
 
 | Evaluation Dimension | Qwen 2.5 1.5B (Baseline / Agent) | Phi-3.5 Mini (Baseline / Agent) | Llama 3.1 8B (Baseline / Agent) |
 | :--- | :---: | :---: | :---: |
-| **Success Rate (22 tasks)** | 27.3% vs **90.9%** (20/22) | 36.4% vs **90.9%** (20/22) | 31.8% vs **90.9%** (20/22) |
-| **Total Tokens Consumed** | 25,272 vs **18,518 (-26.7%)** | 38,927 vs **20,738 (-46.7%)** | 40,528 vs **6,319 (-84.4%)** |
-| **Average Task Latency** | 2.82s vs **3.24s** | 21.68s vs **18.37s (-15.3%)** | 21.13s vs **24.66s** |
-| **Multi-Session Resume** | 0.0% vs **50.0%** | 0.0% vs **50.0%** | 0.0% vs **50.0%** |
+| **Success Rate (22 tasks)** | 22.7% vs **100.0%** (22/22) | 40.9% vs **100.0%** (22/22) | 36.4% vs **100.0%** (22/22) |
+| **Total Tokens Consumed** | 26,973 vs **21,821 (-19.1%)** | 33,159 vs **22,875 (-31.0%)** | 37,179 vs **28,631 (-23.0%)** |
+| **Average Task Latency** | 3.27s vs **4.98s** | 19.57s vs **16.82s (-14.0%)** | 18.29s vs **26.29s** |
+| **Multi-Session Resume** | 0.0% vs **100.0%** | 50.0% vs **100.0%** | 0.0% vs **100.0%** |
 | **False-Hypothesis Handling** | 33.3% (2/3 refuted) | 33.3% (2/3 refuted) | 33.3% (2/3 refuted) |
 | **Zero-Egress Compliance** | **PASSED (0 leaks)** | **PASSED (0 leaks)** | **PASSED (0 leaks)** |
 
@@ -150,7 +152,22 @@ Based on empirical profiling on the Apple M4 (16.0 GB Unified Memory) reference 
 
 ---
 
-## 6. Closure Sign-Off & Verification Artifacts
+## 6. Closure Exit Criteria
+
+- [x] Code comprehension, authorized static binary analysis, and persistent memory capabilities implemented and exercised.
+- [x] Fail-closed policy gate, path allowlist, and zero-egress monitor verified.
+- [x] Unified memory layer with bidirectional Markdown synchronization, deduplication, and stale detection verified.
+- [x] Dynamic tool router and context budget manager reducing prompt token footprint by 45.4%–64.2%.
+- [x] Ground-truth 17-task benchmark passes 17/17 (100.0%) in deterministic test runner.
+- [x] Multi-session cross-process persistence verified across independent Python processes.
+- [x] Production packaging (`pyproject.toml`) and console CLI (`prism-agent`) verified in clean temp environment.
+- [ ] Live demo video recording and screenshots captured (**MANUAL** — pending contributor live session recording).
+- [ ] Target-environment validation against Samsung enterprise GPU cluster (**MANUAL** — pending internal network VPN/credentials).
+- [ ] Contributor and reviewer final sign-off (**MANUAL** — pending formal review).
+
+---
+
+## 7. Closure Sign-Off & Verification Artifacts
 
 All verification artifacts, reports, and code deliverables are committed directly in the repository:
 - **E2E Benchmark JSON**: [`benchmarks/results/e2e_report.json`](../benchmarks/results/e2e_report.json)

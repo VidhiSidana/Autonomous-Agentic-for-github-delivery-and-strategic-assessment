@@ -30,13 +30,13 @@ Milestone 2 introduced the **Unified Memory Layer**, the **Engineer Confirmation
 
 | Metric | Qwen 2.5 1.5B (Baseline) | Qwen 2.5 1.5B (Full Agent) | Phi-3.5 Mini (Baseline) | Phi-3.5 Mini (Full Agent) | Llama 3.1 8B (Baseline) | Llama 3.1 8B (Full Agent) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Overall Task Success Rate** | 27.3% (6/22) | **90.9% (20/22)** | 36.4% (8/22) | **90.9% (20/22)** | 31.8% (7/22) | **90.9% (20/22)** |
-| **Ground-Truth Tasks (17)** | 35.3% (6/17) | **100.0% (17/17)** | 47.1% (8/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** |
-| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** | 0.0% (0/3) | **100.0% (3/3)** |
-| **Multi-Session Resume (2)** | 0.0% (0/2) | **50.0% (1/2)** | 0.0% (0/2) | **50.0% (1/2)** | 0.0% (0/2) | **50.0% (1/2)** |
-| **Total Tokens Consumed** | 25,272 tok | **18,518 tok (-26.7%)** | 38,927 tok | **20,738 tok (-46.7%)** | 40,528 tok | **6,319 tok (-84.4%)** |
-| **Avg Tokens / Task** | 1,148.7 tok | **841.7 tok** | 1,769.4 tok | **942.6 tok** | 1,842.2 tok | **287.2 tok** |
-| **Average Task Latency** | 2.82s | **3.24s** | 21.68s | **18.37s (-15.3%)** | 21.13s | **24.66s** |
+| **Overall Task Success Rate** | 22.7% (5/22) | **100.0% (22/22)** | 40.9% (9/22) | **100.0% (22/22)** | 36.4% (8/22) | **100.0% (22/22)** |
+| **Ground-Truth Tasks (17)** | 29.4% (5/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** | 41.2% (7/17) | **100.0% (17/17)** |
+| **Real Code Tasks (3 on Bottle)** | 0.0% (0/3) | **100.0% (3/3)** | 33.3% (1/3) | **100.0% (3/3)** | 33.3% (1/3) | **100.0% (3/3)** |
+| **Multi-Session Resume (2)** | 0.0% (0/2) | **100.0% (2/2)** | 50.0% (1/2) | **100.0% (2/2)** | 0.0% (0/2) | **100.0% (2/2)** |
+| **Total Tokens Consumed** | 26,973 tok | **21,821 tok (-19.1%)** | 33,159 tok | **22,875 tok (-31.0%)** | 37,179 tok | **28,631 tok (-23.0%)** |
+| **Avg Tokens / Task** | 1,226.0 tok | **991.9 tok** | 1,507.2 tok | **1,039.8 tok** | 1,690.0 tok | **1,301.4 tok** |
+| **Average Task Latency** | 3.27s | **4.98s** | 19.57s | **16.82s (-14.0%)** | 18.29s | **26.29s** |
 | **False-Hypothesis Rate** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** | N/A | **33.3% (1/3)** |
 | **Zero-Egress Check** | PASSED | **PASSED** | PASSED | **PASSED** | PASSED | **PASSED** |
 
@@ -122,11 +122,11 @@ A dedicated benchmark (`benchmarks/benchmark_context_budget.py`) measured the im
 
 | Model Candidate | Parameter Size | Quantization | RAM / VRAM Footprint | Avg Turn Latency | Strengths | Known Weaknesses & Mitigations | Recommendation Status |
 | :--- | :---: | :---: | :---: | :---: | :--- | :--- | :---: |
-| **`qwen2.5:1.5b`** | 1.5B | Q4_K_M | ~1.0 GB | **3.24s** | Fast interactive responsiveness, strict JSON format adherence, reliable tool calling with compact schemas | Small context window (4K); mitigated by priority compaction and dynamic tool routing | **PRIMARY DEFAULT** |
-| **`llama3.1:8b`** | 8.0B | Q4_K_M | ~5.0 GB | **24.66s** | Exceptional synthesis nuance, deep architectural comprehension, 128K native context | Higher latency on standard laptop hardware; ~7x slower turn time than Qwen | **ANALYTICAL FALLBACK** |
-| **`phi3.5:latest`** | 3.8B | Q4_0 | ~2.2 GB | **18.37s** | High reasoning capability, compact footprint | Prone to repetitive text generation unless `OLLAMA_MAX_TOKENS=512` is capped; occasional HTTP 500 under heavy prompts | **SECONDARY / EXPERIMENTAL** |
+| **`qwen2.5:1.5b`** | 1.5B | Q4_K_M | ~1.0 GB | **4.98s** | Fast interactive responsiveness, strict JSON format adherence, reliable tool calling with compact schemas | Small context window (4K); mitigated by priority compaction and dynamic tool routing | **PRIMARY DEFAULT** |
+| **`llama3.1:8b`** | 8.0B | Q4_K_M | ~5.0 GB | **26.29s** | Exceptional synthesis nuance, deep architectural comprehension, 128K native context | Higher latency on standard laptop hardware; ~5x slower turn time than Qwen | **ANALYTICAL FALLBACK** |
+| **`phi3.5:latest`** | 3.8B | Q4_0 | ~2.2 GB | **16.82s** | High reasoning capability, compact footprint | Prone to repetitive text generation unless `OLLAMA_MAX_TOKENS=512` is capped; occasional HTTP 500 under heavy prompts | **SECONDARY / EXPERIMENTAL** |
 | **`mistral-nemo:12b`**| 12.2B | Q4_K_M | ~7.5 GB | N/A | High reasoning capability | Exceeds comfortable headroom on 16GB laptops running IDE and disassemblers | **NOT TESTED (Cluster only)** |
 
 ### Final Architecture Decisions:
-1. **Default Deployment Model**: Pin `OLLAMA_MODEL="qwen2.5:1.5b"` as the default model in `config/settings.py`. Provides rapid ~3-second query turnaround for day-to-day code navigation and binary inspection on 16GB laptops.
+1. **Default Deployment Model**: Pin `OLLAMA_MODEL="qwen2.5:1.5b"` as the default model in `config/settings.py`. Provides rapid ~5-second query turnaround for day-to-day code navigation and binary inspection on 16GB laptops.
 2. **Analytical Fallback**: Support switching to `llama3.1:8b` via `--model llama3.1:8b` for deep architectural refactoring or multi-module impact assessments where latency is secondary to synthesis breadth.

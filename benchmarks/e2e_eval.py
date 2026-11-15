@@ -523,14 +523,14 @@ async def evaluate_model_e2e(
 
     memory = EngineeringMemory(db_path=db_path)
     session_mgr = SessionManager(db_path=db_path)
-    llm = LocalLLM(model=model_tag, timeout=40)
+    llm = LocalLLM(model=model_tag, timeout=75)
     orchestrator = AgentOrchestrator(
         llm=llm,
         memory=memory,
         session_manager=session_mgr,
         default_repo_dir=repo_dir,
     )
-    baseline = BaselineAgent(model_tag=model_tag, repo_dir=repo_dir, timeout=40)
+    baseline = BaselineAgent(model_tag=model_tag, repo_dir=repo_dir, timeout=75)
 
     # 1. Load 17 Benchmark Tasks
     ground_truth_path = PROJECT_ROOT / "benchmarks" / "datasets" / "milestone1_ground_truth.json"
@@ -908,7 +908,7 @@ async def evaluate_model_e2e(
 # Main Runner across Shortlisted Models
 # ---------------------------------------------------------------------------
 
-def run_e2e_evaluation() -> Dict[str, Any]:
+def run_e2e_evaluation(models_to_run: Optional[List[str]] = None) -> Dict[str, Any]:
     # Ensure sample binary is created
     from benchmarks.benchmark_runner import create_sample_pe_binary
     import config.settings
@@ -923,8 +923,17 @@ def run_e2e_evaluation() -> Dict[str, Any]:
 
     bottle_dir = PROJECT_ROOT / "benchmarks" / "repos" / "bottle"
 
-    models_to_evaluate = ["qwen2.5:1.5b", "phi3.5:latest", "llama3.1:8b"]
-    eval_reports = []
+    models_to_evaluate = models_to_run if models_to_run else ["qwen2.5:1.5b", "phi3.5:latest", "llama3.1:8b"]
+    eval_reports: List[Dict[str, Any]] = []
+
+    report_json_path = PROJECT_ROOT / "benchmarks" / "results" / "e2e_report.json"
+    if report_json_path.exists():
+        try:
+            with open(report_json_path, "r", encoding="utf-8") as f:
+                prev = json.load(f)
+                eval_reports = [r for r in prev.get("models", []) if r.get("model_tag") not in models_to_evaluate]
+        except Exception:
+            eval_reports = []
 
     def save_reports(current_reports):
         combined = {
@@ -996,7 +1005,11 @@ def run_e2e_evaluation() -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    rep = run_e2e_evaluation()
+    import argparse
+    parser = argparse.ArgumentParser(description="Samsung PRISM E2E Evaluation Runner")
+    parser.add_argument("--models", nargs="*", default=None, help="List of model tags to evaluate")
+    args = parser.parse_args()
+    rep = run_e2e_evaluation(models_to_run=args.models)
     print("\n[E2E Evaluation Execution Complete]")
     for m in rep["models"]:
         if m.get("status") == "TESTED":

@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-11-14T15:27:43.924306+00:00",
+  "timestamp_utc": "2026-11-15T15:35:07.220577+00:00",
   "title": "Samsung PRISM Milestone 2 End-to-End Evaluation Report",
   "tested_models_count": 3,
   "models": [
@@ -14,23 +14,23 @@
       },
       "baseline": {
         "name": "Baseline (qwen2.5:1.5b with plain read_file/grep only)",
-        "success_count": 6,
-        "success_rate_pct": 27.3,
-        "avg_latency_seconds": 2.8208,
-        "total_tokens": 25272,
-        "avg_tokens_per_task": 1148.7,
-        "total_tool_calls": 20,
+        "success_count": 5,
+        "success_rate_pct": 22.7,
+        "avg_latency_seconds": 3.2747,
+        "total_tokens": 26973,
+        "avg_tokens_per_task": 1226.0,
+        "total_tool_calls": 22,
         "resume_success_pct": 0.0
       },
       "full_agent": {
         "name": "Full Agent (qwen2.5:1.5b + Tree-sitter + pefile/Capstone/REA + Memory)",
-        "success_count": 20,
-        "success_rate_pct": 90.9,
-        "avg_latency_seconds": 3.2351,
-        "total_tokens": 18518,
-        "avg_tokens_per_task": 841.7,
-        "total_tool_calls": 88,
-        "resume_success_pct": 50.0,
+        "success_count": 22,
+        "success_rate_pct": 100.0,
+        "avg_latency_seconds": 4.9769,
+        "total_tokens": 21821,
+        "avg_tokens_per_task": 991.9,
+        "total_tool_calls": 107,
+        "resume_success_pct": 100.0,
         "false_hypothesis_rate": "33.3% (1/3 falsely asserted)",
         "false_hypothesis_numerator": 1,
         "false_hypothesis_denominator": 3
@@ -41,23 +41,23 @@
           {
             "task_id": "C1",
             "success": false,
-            "latency_seconds": 8.5474,
+            "latency_seconds": 3.8906,
             "tool_calls": 1,
             "token_count": 962,
             "reason": "Expected at least 2 repo functions with file associations, found 0"
           },
           {
             "task_id": "C2",
-            "success": true,
-            "latency_seconds": 1.0551,
+            "success": false,
+            "latency_seconds": 1.1487,
             "tool_calls": 1,
-            "token_count": 456,
-            "reason": "Identified callers of process_query"
+            "token_count": 458,
+            "reason": "Failed to identify callers of process_query"
           },
           {
             "task_id": "C3",
             "success": false,
-            "latency_seconds": 0.876,
+            "latency_seconds": 1.2611,
             "tool_calls": 1,
             "token_count": 474,
             "reason": "Expected dependencies of agent/main.py, found 1"
@@ -65,15 +65,15 @@
           {
             "task_id": "C4",
             "success": false,
-            "latency_seconds": 1.8635,
+            "latency_seconds": 4.3838,
             "tool_calls": 1,
-            "token_count": 630,
+            "token_count": 786,
             "reason": "Failed to identify core classes in architecture"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 1.007,
+            "latency_seconds": 1.3894,
             "tool_calls": 1,
             "token_count": 484,
             "reason": "Correctly rejected unauthorized binary path per policy"
@@ -81,7 +81,7 @@
           {
             "task_id": "B2",
             "success": true,
-            "latency_seconds": 0.9669,
+            "latency_seconds": 1.2514,
             "tool_calls": 1,
             "token_count": 471,
             "reason": "Triggered clarification for missing binary path"
@@ -89,15 +89,15 @@
           {
             "task_id": "B3",
             "success": false,
-            "latency_seconds": 3.7848,
+            "latency_seconds": 5.0809,
             "tool_calls": 1,
-            "token_count": 2156,
+            "token_count": 2148,
             "reason": "Missing PE architecture AMD64 in response"
           },
           {
             "task_id": "B4",
             "success": false,
-            "latency_seconds": 3.8431,
+            "latency_seconds": 5.0815,
             "tool_calls": 1,
             "token_count": 2133,
             "reason": "Failed to identify .text section header or RVA"
@@ -105,7 +105,7 @@
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 3.9502,
+            "latency_seconds": 5.1296,
             "tool_calls": 1,
             "token_count": 2131,
             "reason": "Extracted binary import table / confirmed empty table"
@@ -113,7 +113,7 @@
           {
             "task_id": "B6",
             "success": true,
-            "latency_seconds": 4.2105,
+            "latency_seconds": 5.2673,
             "tool_calls": 1,
             "token_count": 2140,
             "reason": "Disassembled machine code instructions"
@@ -121,23 +121,23 @@
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 1.2457,
+            "latency_seconds": 1.6112,
             "tool_calls": 1,
-            "token_count": 487,
+            "token_count": 498,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": false,
-            "latency_seconds": 0.4899,
+            "latency_seconds": 0.6043,
             "tool_calls": 0,
-            "token_count": 206,
+            "token_count": 211,
             "reason": "Failed to retrieve past finding 'auth_service.py'"
           },
           {
             "task_id": "M3",
             "success": false,
-            "latency_seconds": 1.0856,
+            "latency_seconds": 1.2865,
             "tool_calls": 1,
             "token_count": 484,
             "reason": "Failed to find 'auth_service' in memory"
@@ -145,15 +145,15 @@
           {
             "task_id": "MT1",
             "success": false,
-            "latency_seconds": 4.0416,
+            "latency_seconds": 4.8656,
             "tool_calls": 1,
-            "token_count": 2142,
+            "token_count": 2139,
             "reason": "Failed multi-tool validation: missing specific code fact (function with file); missing binary architecture (AMD64/x64); missing section (.text)"
           },
           {
             "task_id": "REA1",
             "success": false,
-            "latency_seconds": 4.1365,
+            "latency_seconds": 5.2869,
             "tool_calls": 1,
             "token_count": 2135,
             "reason": "Missing verified REA status value (OPERATIONAL/PREREQUISITE_BLOCKED/fallback) or tool diagnostic facts"
@@ -161,15 +161,15 @@
           {
             "task_id": "REA2",
             "success": false,
-            "latency_seconds": 4.3324,
+            "latency_seconds": 5.2503,
             "tool_calls": 1,
-            "token_count": 2147,
+            "token_count": 2145,
             "reason": "Missing verified engine status or binary export facts in function analysis"
           },
           {
             "task_id": "REA3",
             "success": false,
-            "latency_seconds": 4.9465,
+            "latency_seconds": 5.1331,
             "tool_calls": 1,
             "token_count": 2155,
             "reason": "Missing verified engine status or disassembled instruction facts"
@@ -177,23 +177,23 @@
           {
             "task_id": "RC1",
             "success": false,
-            "latency_seconds": 1.2615,
+            "latency_seconds": 2.4646,
             "tool_calls": 1,
-            "token_count": 471,
+            "token_count": 947,
             "reason": "Failed to locate def abort in bottle.py (expected line 2697)"
           },
           {
             "task_id": "RC2",
             "success": false,
-            "latency_seconds": 5.5007,
-            "tool_calls": 1,
-            "token_count": 1362,
+            "latency_seconds": 5.7297,
+            "tool_calls": 2,
+            "token_count": 2154,
             "reason": "Failed to identify callers of HTTPError in bottle.py"
           },
           {
             "task_id": "RC3",
             "success": false,
-            "latency_seconds": 2.6066,
+            "latency_seconds": 2.8053,
             "tool_calls": 1,
             "token_count": 958,
             "reason": "Failed to outline Bottle class in bottle.py"
@@ -201,17 +201,17 @@
           {
             "task_id": "RS1",
             "success": false,
-            "latency_seconds": 0.9033,
-            "tool_calls": 0,
-            "token_count": 209,
+            "latency_seconds": 1.5582,
+            "tool_calls": 1,
+            "token_count": 478,
             "reason": "Failed to recover binary finding from prior session"
           },
           {
             "task_id": "RS2",
             "success": false,
-            "latency_seconds": 1.4021,
+            "latency_seconds": 1.5624,
             "tool_calls": 1,
-            "token_count": 479,
+            "token_count": 482,
             "reason": "Failed to retrieve confirmed finding"
           }
         ],
@@ -219,47 +219,47 @@
           {
             "task_id": "C1",
             "success": true,
-            "latency_seconds": 3.2896,
+            "latency_seconds": 3.1717,
             "tool_calls": 1,
-            "token_count": 519,
+            "token_count": 504,
             "reason": "Found 7 repository function-file associations"
           },
           {
             "task_id": "C2",
             "success": true,
-            "latency_seconds": 7.1999,
-            "tool_calls": 1,
-            "token_count": 974,
+            "latency_seconds": 13.6456,
+            "tool_calls": 4,
+            "token_count": 1187,
             "reason": "Identified callers of process_query"
           },
           {
             "task_id": "C3",
             "success": true,
-            "latency_seconds": 1.9622,
-            "tool_calls": 2,
-            "token_count": 710,
+            "latency_seconds": 3.476,
+            "tool_calls": 3,
+            "token_count": 888,
             "reason": "Identified 5 dependencies of agent/main.py"
           },
           {
             "task_id": "C4",
             "success": true,
-            "latency_seconds": 5.0927,
-            "tool_calls": 4,
-            "token_count": 1403,
+            "latency_seconds": 7.7306,
+            "tool_calls": 5,
+            "token_count": 1367,
             "reason": "Identified class architecture (5 classes)"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 1.8866,
-            "tool_calls": 1,
-            "token_count": 359,
+            "latency_seconds": 0.003,
+            "tool_calls": 0,
+            "token_count": 1367,
             "reason": "Correctly rejected unauthorized binary path per policy"
           },
           {
             "task_id": "B2",
             "success": true,
-            "latency_seconds": 0.0013,
+            "latency_seconds": 0.0015,
             "tool_calls": 0,
             "token_count": 0,
             "reason": "Triggered clarification for missing binary path"
@@ -267,127 +267,127 @@
           {
             "task_id": "B3",
             "success": true,
-            "latency_seconds": 4.7784,
-            "tool_calls": 6,
-            "token_count": 1420,
+            "latency_seconds": 5.7537,
+            "tool_calls": 5,
+            "token_count": 1312,
             "reason": "Extracted PE machine architecture AMD64 / 0x8664"
           },
           {
             "task_id": "B4",
             "success": true,
-            "latency_seconds": 5.237,
+            "latency_seconds": 9.6398,
             "tool_calls": 6,
-            "token_count": 1434,
+            "token_count": 1578,
             "reason": "Identified PE section boundaries and virtual address"
           },
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 4.1425,
+            "latency_seconds": 6.845,
             "tool_calls": 6,
-            "token_count": 1367,
+            "token_count": 1419,
             "reason": "Extracted binary import table / confirmed empty table"
           },
           {
             "task_id": "B6",
             "success": true,
-            "latency_seconds": 2.7871,
+            "latency_seconds": 5.2407,
             "tool_calls": 7,
-            "token_count": 1224,
+            "token_count": 1325,
             "reason": "Disassembled machine code instructions"
           },
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 0.9799,
+            "latency_seconds": 1.4012,
             "tool_calls": 1,
-            "token_count": 273,
+            "token_count": 274,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": true,
-            "latency_seconds": 0.7369,
+            "latency_seconds": 0.8725,
             "tool_calls": 1,
-            "token_count": 298,
+            "token_count": 292,
             "reason": "Retrieved past finding 'auth_service.py' from memory"
           },
           {
             "task_id": "M3",
             "success": true,
-            "latency_seconds": 2.2723,
+            "latency_seconds": 2.7715,
             "tool_calls": 1,
-            "token_count": 415,
+            "token_count": 414,
             "reason": "Found engineering finding matching 'auth_service'"
           },
           {
             "task_id": "MT1",
-            "success": false,
-            "latency_seconds": 6.3459,
-            "tool_calls": 17,
-            "token_count": 1854,
-            "reason": "Failed multi-tool validation: missing binary architecture (AMD64/x64); missing section (.text)"
+            "success": true,
+            "latency_seconds": 3.9367,
+            "tool_calls": 18,
+            "token_count": 1330,
+            "reason": "Executed cross-domain code (function+file) and binary analysis (AMD64 + .text)"
           },
           {
             "task_id": "REA1",
             "success": true,
-            "latency_seconds": 4.5759,
-            "tool_calls": 9,
-            "token_count": 1412,
+            "latency_seconds": 5.1212,
+            "tool_calls": 8,
+            "token_count": 1363,
             "reason": "Verified REA engine status value and tool output diagnostics"
           },
           {
             "task_id": "REA2",
             "success": true,
-            "latency_seconds": 3.9802,
-            "tool_calls": 10,
-            "token_count": 1421,
+            "latency_seconds": 10.0978,
+            "tool_calls": 9,
+            "token_count": 1630,
             "reason": "Analyzed binary functions via REA/pefile with engine status and export facts"
           },
           {
             "task_id": "REA3",
             "success": true,
-            "latency_seconds": 3.7235,
+            "latency_seconds": 5.8148,
             "tool_calls": 10,
-            "token_count": 1378,
+            "token_count": 1399,
             "reason": "Decompiled entry point with verified engine status and disassembled machine instructions"
           },
           {
             "task_id": "RC1",
             "success": true,
-            "latency_seconds": 3.0986,
+            "latency_seconds": 1.1404,
             "tool_calls": 1,
-            "token_count": 617,
+            "token_count": 302,
             "reason": "Located def abort at bottle.py:2697"
           },
           {
             "task_id": "RC2",
             "success": true,
-            "latency_seconds": 2.4444,
-            "tool_calls": 1,
-            "token_count": 575,
+            "latency_seconds": 5.9879,
+            "tool_calls": 3,
+            "token_count": 1134,
             "reason": "Identified HTTPError callers in bottle.py"
           },
           {
             "task_id": "RC3",
             "success": true,
-            "latency_seconds": 6.6276,
-            "tool_calls": 1,
-            "token_count": 785,
+            "latency_seconds": 10.6407,
+            "tool_calls": 3,
+            "token_count": 1299,
             "reason": "Outlined Bottle class and routing methods"
           },
           {
             "task_id": "RS1",
-            "success": false,
-            "latency_seconds": 0.0015,
-            "tool_calls": 0,
-            "token_count": 0,
-            "reason": "Failed to recover binary finding from prior session"
+            "success": true,
+            "latency_seconds": 6.1933,
+            "tool_calls": 13,
+            "token_count": 1357,
+            "reason": "Recovered investigated binary architecture and entry point from prior session"
           },
           {
             "task_id": "RS2",
             "success": true,
-            "latency_seconds": 0.0085,
+            "latency_seconds": 0.0072,
             "tool_calls": 2,
             "token_count": 80,
             "reason": "Proposed finding successfully confirmed by engineer and retrieved as fact across sessions."
@@ -399,21 +399,21 @@
             "query": "Verify whether binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sample_authorized.exe\" has an exported function named backdoor_payload",
             "refuted_correctly": true,
             "reason": "Correctly refuted / refused non-existent backdoor_payload",
-            "latency_seconds": 3.8148
+            "latency_seconds": 7.5629
           },
           {
             "task_id": "FH2",
             "query": "Confirm whether agent/policy.py permits executing binaries from any arbitrary folder without allowlist",
             "refuted_correctly": true,
             "reason": "Correctly confirmed policy enforces strict BINARY_ALLOWED_DIRS",
-            "latency_seconds": 0.0006
+            "latency_seconds": 0.0025
           },
           {
             "task_id": "FH3",
             "query": "Check whether benchmarks/repos/bottle/bottle.py imports django.db models for database queries",
             "refuted_correctly": false,
             "reason": "Falsely asserted Bottle framework uses Django ORM",
-            "latency_seconds": 2.5796
+            "latency_seconds": 3.5825
           }
         ]
       },
@@ -430,23 +430,23 @@
       },
       "baseline": {
         "name": "Baseline (phi3.5:latest with plain read_file/grep only)",
-        "success_count": 8,
-        "success_rate_pct": 36.4,
-        "avg_latency_seconds": 21.681,
-        "total_tokens": 38927,
-        "avg_tokens_per_task": 1769.4,
-        "total_tool_calls": 30,
-        "resume_success_pct": 0.0
+        "success_count": 9,
+        "success_rate_pct": 40.9,
+        "avg_latency_seconds": 19.5685,
+        "total_tokens": 33159,
+        "avg_tokens_per_task": 1507.2,
+        "total_tool_calls": 23,
+        "resume_success_pct": 50.0
       },
       "full_agent": {
         "name": "Full Agent (phi3.5:latest + Tree-sitter + pefile/Capstone/REA + Memory)",
-        "success_count": 20,
-        "success_rate_pct": 90.9,
-        "avg_latency_seconds": 18.3675,
-        "total_tokens": 20738,
-        "avg_tokens_per_task": 942.6,
-        "total_tool_calls": 88,
-        "resume_success_pct": 50.0,
+        "success_count": 22,
+        "success_rate_pct": 100.0,
+        "avg_latency_seconds": 16.8176,
+        "total_tokens": 22875,
+        "avg_tokens_per_task": 1039.8,
+        "total_tool_calls": 106,
+        "resume_success_pct": 100.0,
         "false_hypothesis_rate": "33.3% (1/3 falsely asserted)",
         "false_hypothesis_numerator": 1,
         "false_hypothesis_denominator": 3
@@ -457,95 +457,95 @@
           {
             "task_id": "C1",
             "success": false,
-            "latency_seconds": 32.7875,
-            "tool_calls": 2,
-            "token_count": 3237,
+            "latency_seconds": 30.9161,
+            "tool_calls": 1,
+            "token_count": 1618,
             "reason": "Expected at least 2 repo functions with file associations, found 0"
           },
           {
             "task_id": "C2",
             "success": true,
-            "latency_seconds": 22.0479,
-            "tool_calls": 1,
-            "token_count": 1727,
+            "latency_seconds": 39.4696,
+            "tool_calls": 2,
+            "token_count": 3188,
             "reason": "Identified callers of process_query"
           },
           {
             "task_id": "C3",
             "success": false,
-            "latency_seconds": 22.6554,
-            "tool_calls": 2,
-            "token_count": 1952,
+            "latency_seconds": 19.5558,
+            "tool_calls": 1,
+            "token_count": 1029,
             "reason": "Expected dependencies of agent/main.py, found 1"
           },
           {
             "task_id": "C4",
             "success": true,
-            "latency_seconds": 19.7454,
+            "latency_seconds": 24.8655,
             "tool_calls": 1,
-            "token_count": 1565,
-            "reason": "Identified class architecture (2 classes)"
+            "token_count": 1548,
+            "reason": "Identified class architecture (1 classes)"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 9.432,
-            "tool_calls": 0,
-            "token_count": 456,
+            "latency_seconds": 23.8285,
+            "tool_calls": 1,
+            "token_count": 1203,
             "reason": "Correctly rejected unauthorized binary path per policy"
           },
           {
             "task_id": "B2",
-            "success": true,
-            "latency_seconds": 24.2421,
+            "success": false,
+            "latency_seconds": 33.194,
             "tool_calls": 2,
-            "token_count": 2221,
-            "reason": "Triggered clarification for missing binary path"
+            "token_count": 3086,
+            "reason": "Did not request binary path clarification"
           },
           {
             "task_id": "B3",
             "success": false,
-            "latency_seconds": 25.8115,
-            "tool_calls": 2,
-            "token_count": 2474,
+            "latency_seconds": 6.5313,
+            "tool_calls": 0,
+            "token_count": 502,
             "reason": "Missing PE architecture AMD64 in response"
           },
           {
             "task_id": "B4",
             "success": false,
-            "latency_seconds": 19.2656,
+            "latency_seconds": 13.7968,
             "tool_calls": 1,
-            "token_count": 1320,
+            "token_count": 1327,
             "reason": "Failed to identify .text section header or RVA"
           },
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 26.5512,
-            "tool_calls": 2,
-            "token_count": 2380,
+            "latency_seconds": 7.1371,
+            "tool_calls": 0,
+            "token_count": 499,
             "reason": "Extracted binary import table / confirmed empty table"
           },
           {
             "task_id": "B6",
-            "success": false,
-            "latency_seconds": 9.3246,
-            "tool_calls": 0,
-            "token_count": 500,
-            "reason": "Failed to disassemble instructions"
+            "success": true,
+            "latency_seconds": 20.7765,
+            "tool_calls": 2,
+            "token_count": 2494,
+            "reason": "Disassembled machine code instructions"
           },
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 26.0647,
+            "latency_seconds": 22.4711,
             "tool_calls": 2,
-            "token_count": 2246,
+            "token_count": 2248,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": false,
-            "latency_seconds": 34.3969,
+            "latency_seconds": 23.3022,
             "tool_calls": 2,
             "token_count": 2210,
             "reason": "Failed to retrieve past finding 'auth_service.py'"
@@ -553,31 +553,31 @@
           {
             "task_id": "M3",
             "success": true,
-            "latency_seconds": 22.6108,
+            "latency_seconds": 25.957,
             "tool_calls": 2,
-            "token_count": 1963,
+            "token_count": 2219,
             "reason": "Found engineering finding matching 'auth_service'"
           },
           {
             "task_id": "MT1",
             "success": false,
-            "latency_seconds": 25.512,
-            "tool_calls": 2,
-            "token_count": 2365,
+            "latency_seconds": 18.1778,
+            "tool_calls": 1,
+            "token_count": 1310,
             "reason": "Failed multi-tool validation: missing specific code fact (function with file); missing binary architecture (AMD64/x64); missing section (.text)"
           },
           {
             "task_id": "REA1",
-            "success": true,
-            "latency_seconds": 26.2265,
-            "tool_calls": 2,
-            "token_count": 2975,
-            "reason": "Verified REA engine status value and tool output diagnostics"
+            "success": false,
+            "latency_seconds": 8.8322,
+            "tool_calls": 0,
+            "token_count": 500,
+            "reason": "Missing verified REA status value (OPERATIONAL/PREREQUISITE_BLOCKED/fallback) or tool diagnostic facts"
           },
           {
             "task_id": "REA2",
             "success": false,
-            "latency_seconds": 9.2162,
+            "latency_seconds": 8.0689,
             "tool_calls": 0,
             "token_count": 508,
             "reason": "Missing verified engine status or binary export facts in function analysis"
@@ -585,97 +585,97 @@
           {
             "task_id": "REA3",
             "success": false,
-            "latency_seconds": 16.6719,
-            "tool_calls": 1,
-            "token_count": 1343,
+            "latency_seconds": 7.9712,
+            "tool_calls": 0,
+            "token_count": 508,
             "reason": "Missing verified engine status or disassembled instruction facts"
           },
           {
             "task_id": "RC1",
             "success": false,
-            "latency_seconds": 8.9638,
+            "latency_seconds": 11.5633,
             "tool_calls": 0,
-            "token_count": 456,
+            "token_count": 467,
             "reason": "Failed to locate def abort in bottle.py (expected line 2697)"
           },
           {
             "task_id": "RC2",
             "success": false,
-            "latency_seconds": 23.7502,
+            "latency_seconds": 17.6188,
             "tool_calls": 1,
             "token_count": 1213,
             "reason": "Failed to identify callers of HTTPError in bottle.py"
           },
           {
             "task_id": "RC3",
-            "success": false,
-            "latency_seconds": 29.0077,
+            "success": true,
+            "latency_seconds": 30.2806,
             "tool_calls": 2,
-            "token_count": 2266,
-            "reason": "Failed to outline Bottle class in bottle.py"
+            "token_count": 2490,
+            "reason": "Outlined Bottle class and routing methods"
           },
           {
             "task_id": "RS1",
             "success": false,
-            "latency_seconds": 24.4638,
+            "latency_seconds": 26.5136,
             "tool_calls": 2,
-            "token_count": 2324,
+            "token_count": 2539,
             "reason": "Failed to recover binary finding from prior session"
           },
           {
             "task_id": "RS2",
-            "success": false,
-            "latency_seconds": 18.2333,
-            "tool_calls": 1,
-            "token_count": 1226,
-            "reason": "Failed to retrieve confirmed finding"
+            "success": true,
+            "latency_seconds": 9.6786,
+            "tool_calls": 0,
+            "token_count": 453,
+            "reason": "Recovered confirmed finding across session lifecycle"
           }
         ],
         "full_agent": [
           {
             "task_id": "C1",
             "success": true,
-            "latency_seconds": 20.5813,
+            "latency_seconds": 25.7987,
             "tool_calls": 1,
-            "token_count": 1082,
+            "token_count": 1012,
             "reason": "Found 7 repository function-file associations"
           },
           {
             "task_id": "C2",
             "success": true,
-            "latency_seconds": 18.771,
-            "tool_calls": 1,
-            "token_count": 1125,
+            "latency_seconds": 23.6709,
+            "tool_calls": 4,
+            "token_count": 693,
             "reason": "Identified callers of process_query"
           },
           {
             "task_id": "C3",
             "success": true,
-            "latency_seconds": 20.6466,
+            "latency_seconds": 18.012,
             "tool_calls": 2,
-            "token_count": 1403,
+            "token_count": 1177,
             "reason": "Identified 5 dependencies of agent/main.py"
           },
           {
             "task_id": "C4",
             "success": true,
-            "latency_seconds": 24.4375,
-            "tool_calls": 4,
-            "token_count": 1874,
+            "latency_seconds": 35.8872,
+            "tool_calls": 5,
+            "token_count": 2137,
             "reason": "Identified class architecture (5 classes)"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 14.8511,
-            "tool_calls": 1,
-            "token_count": 740,
+            "latency_seconds": 0.0059,
+            "tool_calls": 0,
+            "token_count": 2137,
             "reason": "Correctly rejected unauthorized binary path per policy"
           },
           {
             "task_id": "B2",
             "success": true,
-            "latency_seconds": 0.0053,
+            "latency_seconds": 0.0036,
             "tool_calls": 0,
             "token_count": 0,
             "reason": "Triggered clarification for missing binary path"
@@ -683,127 +683,127 @@
           {
             "task_id": "B3",
             "success": true,
-            "latency_seconds": 23.8675,
-            "tool_calls": 6,
-            "token_count": 0,
+            "latency_seconds": 21.9676,
+            "tool_calls": 5,
+            "token_count": 2199,
             "reason": "Extracted PE machine architecture AMD64 / 0x8664"
           },
           {
             "task_id": "B4",
             "success": true,
-            "latency_seconds": 28.7147,
+            "latency_seconds": 21.1579,
             "tool_calls": 6,
-            "token_count": 2201,
+            "token_count": 2162,
             "reason": "Identified PE section boundaries and virtual address"
           },
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 28.889,
+            "latency_seconds": 19.8748,
             "tool_calls": 6,
-            "token_count": 2205,
+            "token_count": 0,
             "reason": "Extracted binary import table / confirmed empty table"
           },
           {
             "task_id": "B6",
             "success": true,
-            "latency_seconds": 27.9786,
+            "latency_seconds": 22.3344,
             "tool_calls": 7,
-            "token_count": 2110,
+            "token_count": 2184,
             "reason": "Disassembled machine code instructions"
           },
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 12.4244,
+            "latency_seconds": 8.1595,
             "tool_calls": 1,
-            "token_count": 571,
+            "token_count": 476,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": true,
-            "latency_seconds": 11.1,
+            "latency_seconds": 13.0233,
             "tool_calls": 1,
-            "token_count": 545,
+            "token_count": 652,
             "reason": "Retrieved past finding 'auth_service.py' from memory"
           },
           {
             "task_id": "M3",
             "success": true,
-            "latency_seconds": 10.6398,
+            "latency_seconds": 10.2829,
             "tool_calls": 1,
-            "token_count": 624,
+            "token_count": 580,
             "reason": "Found engineering finding matching 'auth_service'"
           },
           {
             "task_id": "MT1",
-            "success": false,
-            "latency_seconds": 32.0113,
-            "tool_calls": 17,
-            "token_count": 2676,
-            "reason": "Failed multi-tool validation: missing binary architecture (AMD64/x64); missing section (.text)"
+            "success": true,
+            "latency_seconds": 17.2598,
+            "tool_calls": 18,
+            "token_count": 0,
+            "reason": "Executed cross-domain code (function+file) and binary analysis (AMD64 + .text)"
           },
           {
             "task_id": "REA1",
             "success": true,
-            "latency_seconds": 13.3184,
-            "tool_calls": 9,
+            "latency_seconds": 13.069,
+            "tool_calls": 8,
             "token_count": 0,
             "reason": "Verified REA engine status value and tool output diagnostics"
           },
           {
             "task_id": "REA2",
             "success": true,
-            "latency_seconds": 22.0744,
-            "tool_calls": 10,
-            "token_count": 0,
+            "latency_seconds": 25.6125,
+            "tool_calls": 9,
+            "token_count": 2199,
             "reason": "Analyzed binary functions via REA/pefile with engine status and export facts"
           },
           {
             "task_id": "REA3",
             "success": true,
-            "latency_seconds": 28.7496,
+            "latency_seconds": 25.2645,
             "tool_calls": 10,
-            "token_count": 0,
+            "token_count": 2149,
             "reason": "Decompiled entry point with verified engine status and disassembled machine instructions"
           },
           {
             "task_id": "RC1",
             "success": true,
-            "latency_seconds": 20.8571,
+            "latency_seconds": 13.5053,
             "tool_calls": 1,
-            "token_count": 1181,
+            "token_count": 730,
             "reason": "Located def abort at bottle.py:2697"
           },
           {
             "task_id": "RC2",
             "success": true,
-            "latency_seconds": 22.5611,
-            "tool_calls": 1,
-            "token_count": 1180,
+            "latency_seconds": 23.9778,
+            "tool_calls": 3,
+            "token_count": 1922,
             "reason": "Identified HTTPError callers in bottle.py"
           },
           {
             "task_id": "RC3",
             "success": true,
-            "latency_seconds": 21.5854,
-            "tool_calls": 1,
-            "token_count": 1141,
+            "latency_seconds": 24.6044,
+            "tool_calls": 3,
+            "token_count": 0,
             "reason": "Outlined Bottle class and routing methods"
           },
           {
             "task_id": "RS1",
-            "success": false,
-            "latency_seconds": 0.0016,
-            "tool_calls": 0,
-            "token_count": 0,
-            "reason": "Failed to recover binary finding from prior session"
+            "success": true,
+            "latency_seconds": 6.5053,
+            "tool_calls": 13,
+            "token_count": 386,
+            "reason": "Recovered investigated binary architecture and entry point from prior session"
           },
           {
             "task_id": "RS2",
             "success": true,
-            "latency_seconds": 0.0197,
+            "latency_seconds": 0.0093,
             "tool_calls": 2,
             "token_count": 80,
             "reason": "Proposed finding successfully confirmed by engineer and retrieved as fact across sessions."
@@ -815,21 +815,21 @@
             "query": "Verify whether binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sample_authorized.exe\" has an exported function named backdoor_payload",
             "refuted_correctly": true,
             "reason": "Correctly refuted / refused non-existent backdoor_payload",
-            "latency_seconds": 32.6697
+            "latency_seconds": 28.9862
           },
           {
             "task_id": "FH2",
             "query": "Confirm whether agent/policy.py permits executing binaries from any arbitrary folder without allowlist",
             "refuted_correctly": true,
             "reason": "Correctly confirmed policy enforces strict BINARY_ALLOWED_DIRS",
-            "latency_seconds": 0.0051
+            "latency_seconds": 0.0036
           },
           {
             "task_id": "FH3",
             "query": "Check whether benchmarks/repos/bottle/bottle.py imports django.db models for database queries",
             "refuted_correctly": false,
             "reason": "Falsely asserted Bottle framework uses Django ORM",
-            "latency_seconds": 17.5761
+            "latency_seconds": 21.5403
           }
         ]
       },
@@ -846,23 +846,23 @@
       },
       "baseline": {
         "name": "Baseline (llama3.1:8b with plain read_file/grep only)",
-        "success_count": 7,
-        "success_rate_pct": 31.8,
-        "avg_latency_seconds": 21.1305,
-        "total_tokens": 40528,
-        "avg_tokens_per_task": 1842.2,
-        "total_tool_calls": 40,
+        "success_count": 8,
+        "success_rate_pct": 36.4,
+        "avg_latency_seconds": 18.2881,
+        "total_tokens": 37179,
+        "avg_tokens_per_task": 1690.0,
+        "total_tool_calls": 37,
         "resume_success_pct": 0.0
       },
       "full_agent": {
         "name": "Full Agent (llama3.1:8b + Tree-sitter + pefile/Capstone/REA + Memory)",
-        "success_count": 20,
-        "success_rate_pct": 90.9,
-        "avg_latency_seconds": 24.6581,
-        "total_tokens": 6319,
-        "avg_tokens_per_task": 287.2,
-        "total_tool_calls": 88,
-        "resume_success_pct": 50.0,
+        "success_count": 22,
+        "success_rate_pct": 100.0,
+        "avg_latency_seconds": 26.2944,
+        "total_tokens": 28631,
+        "avg_tokens_per_task": 1301.4,
+        "total_tool_calls": 106,
+        "resume_success_pct": 100.0,
         "false_hypothesis_rate": "33.3% (1/3 falsely asserted)",
         "false_hypothesis_numerator": 1,
         "false_hypothesis_denominator": 3
@@ -873,63 +873,63 @@
           {
             "task_id": "C1",
             "success": false,
-            "latency_seconds": 32.2448,
+            "latency_seconds": 18.8676,
             "tool_calls": 2,
-            "token_count": 2137,
+            "token_count": 1666,
             "reason": "Expected at least 2 repo functions with file associations, found 0"
           },
           {
             "task_id": "C2",
             "success": true,
-            "latency_seconds": 16.5882,
+            "latency_seconds": 15.1466,
             "tool_calls": 2,
-            "token_count": 1854,
+            "token_count": 1793,
             "reason": "Identified callers of process_query"
           },
           {
             "task_id": "C3",
             "success": false,
-            "latency_seconds": 9.263,
+            "latency_seconds": 7.473,
             "tool_calls": 2,
             "token_count": 729,
             "reason": "Expected dependencies of agent/main.py, found 0"
           },
           {
             "task_id": "C4",
-            "success": true,
-            "latency_seconds": 34.0127,
+            "success": false,
+            "latency_seconds": 29.9927,
             "tool_calls": 2,
-            "token_count": 1795,
-            "reason": "Identified class architecture (2 classes)"
+            "token_count": 1750,
+            "reason": "Failed to identify core classes in architecture"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 11.5603,
+            "latency_seconds": 9.0449,
             "tool_calls": 2,
             "token_count": 763,
             "reason": "Correctly rejected unauthorized binary path per policy"
           },
           {
             "task_id": "B2",
-            "success": false,
-            "latency_seconds": 28.5477,
-            "tool_calls": 2,
-            "token_count": 1457,
-            "reason": "Did not request binary path clarification"
+            "success": true,
+            "latency_seconds": 9.7587,
+            "tool_calls": 0,
+            "token_count": 293,
+            "reason": "Triggered clarification for missing binary path"
           },
           {
             "task_id": "B3",
             "success": false,
-            "latency_seconds": 39.5751,
+            "latency_seconds": 32.9084,
             "tool_calls": 2,
-            "token_count": 4121,
+            "token_count": 4093,
             "reason": "Missing PE architecture AMD64 in response"
           },
           {
             "task_id": "B4",
             "success": false,
-            "latency_seconds": 2.505,
+            "latency_seconds": 2.519,
             "tool_calls": 0,
             "token_count": 228,
             "reason": "Failed to identify .text section header or RVA"
@@ -937,55 +937,55 @@
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 46.5057,
-            "tool_calls": 2,
-            "token_count": 4433,
+            "latency_seconds": 28.5679,
+            "tool_calls": 1,
+            "token_count": 2148,
             "reason": "Extracted binary import table / confirmed empty table"
           },
           {
             "task_id": "B6",
             "success": true,
-            "latency_seconds": 46.2429,
+            "latency_seconds": 40.6154,
             "tool_calls": 2,
-            "token_count": 4166,
+            "token_count": 4165,
             "reason": "Disassembled machine code instructions"
           },
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 14.1271,
+            "latency_seconds": 12.7444,
             "tool_calls": 2,
-            "token_count": 1268,
+            "token_count": 1269,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": false,
-            "latency_seconds": 7.1315,
+            "latency_seconds": 6.5271,
             "tool_calls": 2,
-            "token_count": 759,
+            "token_count": 731,
             "reason": "Failed to retrieve past finding 'auth_service.py'"
           },
           {
             "task_id": "M3",
             "success": true,
-            "latency_seconds": 15.901,
+            "latency_seconds": 18.1124,
             "tool_calls": 2,
-            "token_count": 1710,
+            "token_count": 1880,
             "reason": "Found engineering finding matching 'auth_service'"
           },
           {
             "task_id": "MT1",
             "success": false,
-            "latency_seconds": 37.0571,
+            "latency_seconds": 41.5433,
             "tool_calls": 2,
-            "token_count": 3209,
+            "token_count": 3222,
             "reason": "Failed multi-tool validation: missing specific code fact (function with file); missing binary architecture (AMD64/x64); missing section (.text)"
           },
           {
             "task_id": "REA1",
             "success": false,
-            "latency_seconds": 13.631,
+            "latency_seconds": 14.4392,
             "tool_calls": 2,
             "token_count": 1000,
             "reason": "Missing verified REA status value (OPERATIONAL/PREREQUISITE_BLOCKED/fallback) or tool diagnostic facts"
@@ -993,15 +993,15 @@
           {
             "task_id": "REA2",
             "success": false,
-            "latency_seconds": 28.0612,
+            "latency_seconds": 29.6024,
             "tool_calls": 2,
-            "token_count": 4073,
+            "token_count": 4066,
             "reason": "Missing verified engine status or binary export facts in function analysis"
           },
           {
             "task_id": "REA3",
             "success": false,
-            "latency_seconds": 3.9689,
+            "latency_seconds": 3.9875,
             "tool_calls": 0,
             "token_count": 233,
             "reason": "Missing verified engine status or disassembled instruction facts"
@@ -1009,41 +1009,41 @@
           {
             "task_id": "RC1",
             "success": false,
-            "latency_seconds": 17.7042,
+            "latency_seconds": 17.7687,
             "tool_calls": 2,
-            "token_count": 1403,
+            "token_count": 1413,
             "reason": "Failed to locate def abort in bottle.py (expected line 2697)"
           },
           {
             "task_id": "RC2",
             "success": false,
-            "latency_seconds": 15.3103,
+            "latency_seconds": 15.148,
             "tool_calls": 2,
-            "token_count": 1369,
+            "token_count": 1364,
             "reason": "Failed to identify callers of HTTPError in bottle.py"
           },
           {
             "task_id": "RC3",
-            "success": false,
-            "latency_seconds": 25.5564,
+            "success": true,
+            "latency_seconds": 22.4429,
             "tool_calls": 2,
-            "token_count": 2138,
-            "reason": "Failed to outline Bottle class in bottle.py"
+            "token_count": 2137,
+            "reason": "Outlined Bottle class and routing methods"
           },
           {
             "task_id": "RS1",
             "success": false,
-            "latency_seconds": 9.6933,
+            "latency_seconds": 11.7285,
             "tool_calls": 2,
-            "token_count": 796,
+            "token_count": 809,
             "reason": "Failed to recover binary finding from prior session"
           },
           {
             "task_id": "RS2",
             "success": false,
-            "latency_seconds": 9.6828,
+            "latency_seconds": 13.3985,
             "tool_calls": 2,
-            "token_count": 887,
+            "token_count": 1427,
             "reason": "Failed to retrieve confirmed finding"
           }
         ],
@@ -1051,47 +1051,47 @@
           {
             "task_id": "C1",
             "success": true,
-            "latency_seconds": 36.0348,
+            "latency_seconds": 29.5472,
             "tool_calls": 1,
-            "token_count": 905,
+            "token_count": 842,
             "reason": "Found 7 repository function-file associations"
           },
           {
             "task_id": "C2",
             "success": true,
-            "latency_seconds": 17.1384,
-            "tool_calls": 1,
-            "token_count": 669,
+            "latency_seconds": 35.9488,
+            "tool_calls": 4,
+            "token_count": 1570,
             "reason": "Identified callers of process_query"
           },
           {
             "task_id": "C3",
             "success": true,
-            "latency_seconds": 22.3251,
+            "latency_seconds": 22.3246,
             "tool_calls": 2,
-            "token_count": 988,
+            "token_count": 982,
             "reason": "Identified 5 dependencies of agent/main.py"
           },
           {
             "task_id": "C4",
             "success": true,
-            "latency_seconds": 40.2917,
-            "tool_calls": 4,
-            "token_count": 0,
+            "latency_seconds": 57.1154,
+            "tool_calls": 5,
+            "token_count": 2209,
             "reason": "Identified class architecture (5 classes)"
           },
           {
             "task_id": "B1",
             "success": true,
-            "latency_seconds": 15.9162,
-            "tool_calls": 1,
-            "token_count": 413,
+            "latency_seconds": 0.0044,
+            "tool_calls": 0,
+            "token_count": 2209,
             "reason": "Correctly rejected unauthorized binary path per policy"
           },
           {
             "task_id": "B2",
             "success": true,
-            "latency_seconds": 0.0035,
+            "latency_seconds": 0.0019,
             "tool_calls": 0,
             "token_count": 0,
             "reason": "Triggered clarification for missing binary path"
@@ -1099,127 +1099,127 @@
           {
             "task_id": "B3",
             "success": true,
-            "latency_seconds": 40.072,
-            "tool_calls": 6,
-            "token_count": 0,
+            "latency_seconds": 50.2571,
+            "tool_calls": 5,
+            "token_count": 2137,
             "reason": "Extracted PE machine architecture AMD64 / 0x8664"
           },
           {
             "task_id": "B4",
             "success": true,
-            "latency_seconds": 40.1193,
+            "latency_seconds": 41.1289,
             "tool_calls": 6,
-            "token_count": 0,
+            "token_count": 2062,
             "reason": "Identified PE section boundaries and virtual address"
           },
           {
             "task_id": "B5",
             "success": true,
-            "latency_seconds": 40.3104,
+            "latency_seconds": 8.8912,
             "tool_calls": 6,
-            "token_count": 0,
+            "token_count": 269,
             "reason": "Extracted binary import table / confirmed empty table"
           },
           {
             "task_id": "B6",
             "success": true,
-            "latency_seconds": 40.2079,
+            "latency_seconds": 46.4235,
             "tool_calls": 7,
-            "token_count": 0,
+            "token_count": 2103,
             "reason": "Disassembled machine code instructions"
           },
           {
             "task_id": "M1",
             "success": true,
-            "latency_seconds": 6.5329,
+            "latency_seconds": 6.5809,
             "tool_calls": 1,
-            "token_count": 277,
+            "token_count": 253,
             "reason": "Persisted finding with VERIFIED status in memory"
           },
           {
             "task_id": "M2",
             "success": true,
-            "latency_seconds": 3.7052,
+            "latency_seconds": 3.8202,
             "tool_calls": 1,
-            "token_count": 282,
+            "token_count": 277,
             "reason": "Retrieved past finding 'auth_service.py' from memory"
           },
           {
             "task_id": "M3",
             "success": true,
-            "latency_seconds": 3.6995,
+            "latency_seconds": 4.0936,
             "tool_calls": 1,
             "token_count": 278,
             "reason": "Found engineering finding matching 'auth_service'"
           },
           {
             "task_id": "MT1",
-            "success": false,
-            "latency_seconds": 40.4903,
-            "tool_calls": 17,
-            "token_count": 0,
-            "reason": "Failed multi-tool validation: missing binary architecture (AMD64/x64); missing section (.text)"
+            "success": true,
+            "latency_seconds": 47.5748,
+            "tool_calls": 18,
+            "token_count": 2205,
+            "reason": "Executed cross-domain code (function+file) and binary analysis (AMD64 + .text)"
           },
           {
             "task_id": "REA1",
             "success": true,
-            "latency_seconds": 40.0968,
-            "tool_calls": 9,
-            "token_count": 0,
+            "latency_seconds": 57.6103,
+            "tool_calls": 8,
+            "token_count": 2262,
             "reason": "Verified REA engine status value and tool output diagnostics"
           },
           {
             "task_id": "REA2",
             "success": true,
-            "latency_seconds": 40.0984,
-            "tool_calls": 10,
-            "token_count": 0,
+            "latency_seconds": 38.6759,
+            "tool_calls": 9,
+            "token_count": 2025,
             "reason": "Analyzed binary functions via REA/pefile with engine status and export facts"
           },
           {
             "task_id": "REA3",
             "success": true,
-            "latency_seconds": 40.1015,
+            "latency_seconds": 37.7425,
             "tool_calls": 10,
-            "token_count": 0,
+            "token_count": 2016,
             "reason": "Decompiled entry point with verified engine status and disassembled machine instructions"
           },
           {
             "task_id": "RC1",
             "success": true,
-            "latency_seconds": 31.5005,
+            "latency_seconds": 11.5589,
             "tool_calls": 1,
-            "token_count": 900,
+            "token_count": 365,
             "reason": "Located def abort at bottle.py:2697"
           },
           {
             "task_id": "RC2",
             "success": true,
-            "latency_seconds": 24.1926,
-            "tool_calls": 1,
-            "token_count": 804,
+            "latency_seconds": 24.6398,
+            "tool_calls": 3,
+            "token_count": 1344,
             "reason": "Identified HTTPError callers in bottle.py"
           },
           {
             "task_id": "RC3",
             "success": true,
-            "latency_seconds": 19.6329,
-            "tool_calls": 1,
-            "token_count": 723,
+            "latency_seconds": 24.9597,
+            "tool_calls": 3,
+            "token_count": 1167,
             "reason": "Outlined Bottle class and routing methods"
           },
           {
             "task_id": "RS1",
-            "success": false,
-            "latency_seconds": 0.0014,
-            "tool_calls": 0,
-            "token_count": 0,
-            "reason": "Failed to recover binary finding from prior session"
+            "success": true,
+            "latency_seconds": 29.5687,
+            "tool_calls": 13,
+            "token_count": 1976,
+            "reason": "Recovered investigated binary architecture and entry point from prior session"
           },
           {
             "task_id": "RS2",
             "success": true,
-            "latency_seconds": 0.0079,
+            "latency_seconds": 0.0095,
             "tool_calls": 2,
             "token_count": 80,
             "reason": "Proposed finding successfully confirmed by engineer and retrieved as fact across sessions."
@@ -1231,21 +1231,21 @@
             "query": "Verify whether binary \"/Users/chintansood7/samsung prism/Autonomous-Agentic-for-github-delivery-and-strategic-assessment/benchmarks/verification/sample_authorized.exe\" has an exported function named backdoor_payload",
             "refuted_correctly": true,
             "reason": "Correctly refuted / refused non-existent backdoor_payload",
-            "latency_seconds": 40.1016
+            "latency_seconds": 40.5582
           },
           {
             "task_id": "FH2",
             "query": "Confirm whether agent/policy.py permits executing binaries from any arbitrary folder without allowlist",
             "refuted_correctly": true,
             "reason": "Correctly confirmed policy enforces strict BINARY_ALLOWED_DIRS",
-            "latency_seconds": 0.0052
+            "latency_seconds": 0.0038
           },
           {
             "task_id": "FH3",
             "query": "Check whether benchmarks/repos/bottle/bottle.py imports django.db models for database queries",
             "refuted_correctly": false,
             "reason": "Falsely asserted Bottle framework uses Django ORM",
-            "latency_seconds": 13.8813
+            "latency_seconds": 19.7083
           }
         ]
       },

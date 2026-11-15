@@ -269,7 +269,7 @@ class EngineeringMemory:
         target_status: str = STATUS_CONFIRMED,
     ) -> dict[str, Any]:
         """
-        Promote only a PROPOSED or HYPOTHESIS finding to CONFIRMED/VERIFIED.
+        Promote a PROPOSED, HYPOTHESIS, or VERIFIED finding to CONFIRMED.
         Rejected findings cannot be silently resurrected by confirmation.
         """
         allowed_targets = {STATUS_CONFIRMED, STATUS_VERIFIED}
@@ -288,7 +288,7 @@ class EngineeringMemory:
                 """
                 UPDATE findings
                 SET verification_status = ?, confirmed_by = ?, confirmed_at = ?, updated_at = ?
-                WHERE id = ? AND verification_status IN (?, ?)
+                WHERE id = ? AND verification_status IN (?, ?, ?)
                 """,
                 (
                     target_status,
@@ -298,6 +298,7 @@ class EngineeringMemory:
                     memory_id,
                     STATUS_PROPOSED,
                     STATUS_HYPOTHESIS,
+                    STATUS_VERIFIED,
                 ),
             )
             if cursor.rowcount == 0:
@@ -311,7 +312,7 @@ class EngineeringMemory:
                     message = (
                         f"Finding id={memory_id} cannot be confirmed from "
                         f"status '{existing['verification_status']}'. "
-                        "Only PROPOSED or HYPOTHESIS findings can be confirmed."
+                        "Only PROPOSED, HYPOTHESIS, or VERIFIED findings can be confirmed."
                     )
                 return {"updated": False, "message": message}
 

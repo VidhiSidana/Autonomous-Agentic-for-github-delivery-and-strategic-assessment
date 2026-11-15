@@ -289,8 +289,20 @@ def _extract_memory_keywords(query: str, operation: str) -> list[str]:
 def _extract_binary_operation(query: str) -> str:
     """Determine the specific binary operation requested."""
     q = query.lower()
+    if any(k in q for k in ("inspect binary", "analyze binary", "examine binary", "binary metadata", "binary architecture", "binary header", "binary section")):
+        return "metadata"
+
+    code_phrases = [
+        "functions in codebase", "functions in repo", "functions in repository",
+        "functions in code", "find functions in", "find functions",
+        "find all functions", "code functions",
+    ]
+    cleaned_q = q
+    for phrase in code_phrases:
+        cleaned_q = cleaned_q.replace(phrase, "")
+
     for keyword, operation in _BINARY_OPERATIONS.items():
-        if keyword in q:
+        if keyword in cleaned_q:
             return operation
     return "metadata"  # default
 

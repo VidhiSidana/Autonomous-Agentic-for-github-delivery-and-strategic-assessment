@@ -88,9 +88,9 @@
   - Baseline: Plain LLM tool loop with `read_file` and `grep_search` only.
   - Full Agent: AST graph + PE/Capstone/REA + Memory + Tool Router.
 - **Key Empirical Results (Tested across Qwen 2.5 1.5B, Phi-3.5 Mini, and Llama 3.1 8B)**:
-  - **Baseline Success Rate**: 27.3% – 36.4%
-  - **Full Agent Success Rate**: **90.9% (20/22 tasks) across all 3 models**
-  - **Token Efficiency**: Full Agent reduced total token consumption by **26.7% to 84.4%** due to structured graph lookups instead of whole-file grep dumps.
+  - **Baseline Success Rate**: 22.7% – 40.9%
+  - **Full Agent Success Rate**: **100.0% (22/22 tasks) across all 3 models**
+  - **Token Efficiency**: Full Agent reduced total token consumption by **19.1% to 31.0%** across evaluated models.
   - **Zero-Egress Check**: 100% Passed (0 non-local connections).
 
 ---
@@ -98,12 +98,12 @@
 ### Slide 9: Model Comparison & Sizing (Qwen vs. Phi vs. Llama)
 - **Empirical Sizing on Apple M4 (16 GB Unified Memory)**:
   - **`qwen2.5:1.5b` (Recommended Default)**:
-    - Latency: ~3.2s/turn. Low memory footprint (~1.0 GB VRAM).
+    - Latency: ~4.9s/turn. Low memory footprint (~1.0 GB VRAM).
     - Strict JSON adherence and tool calling; ideal for real-time interactive engineering queries.
   - **`phi3.5:latest` (Reasoning Alternative)**:
-    - Strong analytical reasoning; full agent latency 18.37s (faster than baseline 21.68s); capped at 512 tokens.
+    - Strong analytical reasoning; full agent latency 16.82s (faster than baseline 19.57s); capped at 512 tokens.
   - **`llama3.1:8b` (Complex Synthesis)**:
-    - Exceptional token compression (6,319 tokens vs 40,528 baseline); ~24.6s turn latency.
+    - Exceptional synthesis nuance; 28,631 tokens vs 37,179 baseline; ~26.3s turn latency.
 
 ---
 

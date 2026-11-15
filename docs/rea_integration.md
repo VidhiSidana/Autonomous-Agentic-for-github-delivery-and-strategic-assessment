@@ -109,7 +109,7 @@ To enable full native decompilation via REA on a production or developer worksta
 2. **Java Development Kit (JDK 17+)**:
    `winget install Microsoft.OpenJDK.21` and ensure `JAVA_HOME` is set in system environment variables.
 3. **Ghidra**:
-   Download Ghidra release zip from [ghidra-sre.org](https://ghidra-sre.org), extract to `C:\Tools\ghidra`, and set `GHIDRA_INSTALL_DIR=C:\Tools\ghidra`.
+   Download Ghidra release zip from [ghidra-sre.org](https://ghidra-sre.org), extract to a local tools directory (e.g. `%USERPROFILE%\tools\ghidra`), and set `GHIDRA_INSTALL_DIR` to that path.
 4. **REA Agents MCP Server**:
    ```powershell
    npm install -g rea-agents
